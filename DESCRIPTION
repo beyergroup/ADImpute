@@ -1,0 +1,19 @@
+Package: ADImpute
+Type: Package
+Title: Network-based scRNA-seq Dropout Imputation
+Version: 1.0.0
+Author: Ana Carolina Leote
+Maintainer: Ana Carolina Leote <ana.carolina.leote@uni-koeln.de>
+Description: ADImpute predicts unmeasured gene expression values from single cell
+             RNA-sequencing data (dropout imputation). This R-package combines multiple
+             dropout imputation methods, including a novel gene regulatory network-based method.
+License: CC0
+Encoding: UTF-8
+LazyData: false
+Imports:
+    biomaRt,
+    data.table,
+    SAVER,
+    scImpute,
+    snow
+RoxygenNote: 6.1.1
