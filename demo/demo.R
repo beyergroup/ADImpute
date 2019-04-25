@@ -2,7 +2,7 @@
 
 devtools::load_all("../")
 
-network_path = # <absolute path to network.coefficients.rds file>
+network_path = # <absolute path to .rds or .txt coefficients file>
 
 # Load demo data (counts) and convert to TPM
 data("demo_data", package = "ADImpute")
@@ -14,13 +14,13 @@ methods_pergene <- EvaluateMethods(data = TPM,
                                    training.ratio = .7,
                                    mask.ratio = .2,
                                    training.only = T,
-                                   split.seed = 1,
-                                   mask.seed = 2,
+                                   split.seed = 12,
+                                   mask.seed = 34,
                                    type = "TPM",
                                    cell.clusters = 2,
                                    cores = 4,
                                    cluster.type = "SOCK",
-                                   network.coefficients = network_path,
+                                   network.path = network_path,
                                    drop.exclude = T)
 
 # Impute full dataset
@@ -31,5 +31,5 @@ imputed <- Impute(method.choice = methods_pergene,
                   cell.clusters = 2,
                   cores = 4,
                   cluster.type = "SOCK",
-                  network.coefficients = network_path,
+                  network.path = network_path,
                   drop.exclude = T)

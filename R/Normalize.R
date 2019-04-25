@@ -3,8 +3,8 @@
 #' @description \code{NormalizeTPM} performs TPM normalization, with possibility
 #' to log the result
 #'
-#' @usage \code{NormalizeTPM(data, transcript.length = ADImpute::transcript_length,
-#' log = T, scale = 1, pseudo.count = 1)}
+#' @usage \code{NormalizeTPM(data, transcript.length = NULL,
+#' log = F, scale = 1, pseudo.count = 1)}
 #'
 #' @param data matrix; raw data (genes as rows and samples as columns)
 #' @param transcript.length matrix with at least 2 columns: "hgnc_symbol" and
@@ -25,8 +25,7 @@ NormalizeTPM <- function(data,
                          transcript.length = NULL,
                          log = F,
                          scale = 1,
-                         pseudo.count = 1,
-                         ...){
+                         pseudo.count = 1){
 
   if (is.null(transcript.length)){
 

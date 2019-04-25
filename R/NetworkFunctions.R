@@ -1,3 +1,49 @@
+#' @title Network loading
+#'
+#' @usage \code{ReadNetwork(network.path)}
+#'
+#' @description \code{ReadNetwork} loads the matrix of network coefficients
+#'
+#' @param network.path character; path to .txt or .rds file with network
+#' coefficients
+#'
+#' @return matrix with network coefficients and intercept in the first column
+#'
+ReadNetwork <- function(network.path){
+
+  if (grepl(network.path, pattern = ".txt")){
+
+    cat("Reading .txt file with network coefficients\n")
+
+    m <- readLines(network.path)
+    cnames <- m[1]
+    cnames <- strsplit(cnames, split = "\t")[[1]]
+    mm <- sapply(m[-1], function(x) strsplit(x, split = "\t")[[1]],
+                 simplify = T, USE.NAMES = F)
+    mm <- t(mm)
+    rnames <- mm[,1]
+    mm <- mm[,-1]
+    storage.mode(mm) <- "numeric"
+    rownames(mm) <- rnames
+    colnames(mm) <- cnames
+
+    return(mm)
+
+  } else if (grepl(network.path, pattern = ".rds")){
+
+    cat("Reading .rds file with network coefficients\n")
+
+    load(network.path)
+
+    return(network.coefficients)
+
+  } else {
+
+    stop("Please input txt or rds file")
+  }
+
+}
+
 #' @title Data trimming
 #'
 #' @usage \code{ArrangeData(data, network.path = NULL)}
@@ -7,16 +53,16 @@
 #'
 #' @param data matrix with entries equal to zero to be imputed (genes as rows
 #' and samples as columns)
-#' @param network.coefficients matrix; coefficients of the gene regulatory
-#' network (first column as intercept)
+#' @param network.path character; path to .txt or .rds file with network
+#' coefficients
 #'
 #' @return list; data matrix, network coefficients matrix and intercept for
 #' genes common between the data matrix and the network
 #'
 ArrangeData <- function(data,
-                        network.coefficients = NULL){
+                        network.path = NULL){
 
-  load(network.coefficients)
+  network.coefficients <- ReadNetwork(network.path)
 
   O <- network.coefficients[,1]
   network_matrix <- network.coefficients[,-1]
@@ -38,16 +84,18 @@ ArrangeData <- function(data,
 
 #' @title Data centering
 #'
-#' @usage \code{CenterData(data)}
+#' @usage \code{CenterData(data, drop.exclude = T)}
 #'
 #' @description \code{CenterData} centers expression of each gene at 0
 #'
 #' @param data matrix of gene expression to be centered row-wise (genes as rows
 #' and samples as columns)
+#' @param drop.exclude logical; should zeros be discarded for the calculation
+#' of genewise average expression levels? (defaults to T)
 #'
 #' @return list; row-wise centers and centered data
 #'
-CenterData <- function(data, drop.exclude = F){
+CenterData <- function(data, drop.exclude = T){
 
   cat("Centering expression of each gene at 0\n")
 
@@ -73,7 +121,7 @@ CenterData <- function(data, drop.exclude = F){
 #' @title Network-based parallel imputation
 #'
 #' @usage \code{ImputeNetParallel(dropout.matrix, arranged, cores = 4,
-#' cluster.type = "SOCK", max.iter = 20)}
+#' cluster.type = "SOCK", max.iter = 50)}
 #'
 #' @description \code{ImputeNetParallel} implements network-based imputation
 #' in parallel

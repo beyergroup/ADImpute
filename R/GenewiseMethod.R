@@ -8,7 +8,7 @@
 #' @param data matrix; raw counts (genes as rows and samples as columns)
 #' @param ratio numeric; ratio of the samples to be used for training
 #' @param training.only logical; if TRUE define only a training dataset, if
-#' FALSE writes and returns both training and validation sets (defaults to T)
+#' FALSE writes both training and validation sets (defaults to T)
 #' @param seed integer; optional seed (defaults to NULL, random selection of
 #' samples to use for training)
 #'
@@ -22,7 +22,9 @@ SplitData <- function(data,
                       ratio = .7,
                       training.only = T,
                       seed = NULL){
-
+  # For reproducibility
+  if (!is.null(seed))
+      set.seed(seed)
   # Randomly select samples according to given ratio
   training_samples <- sample(colnames(data))[1:round(ncol(data) * ratio)]
   training_data    <- data[, training_samples]
@@ -50,6 +52,7 @@ SplitData <- function(data,
 #' entries of each row of \code{data} to zero
 #'
 #' @param data matrix; raw counts (genes as rows and samples as columns)
+#' @param write.to.file logical; should the output be written to a file?
 #' @param filename character; name of output file to write masked data to
 #' @param mask numeric; ratio of total non-zero samples to be masked per gene
 #' (defaults to .1)
@@ -146,41 +149,6 @@ MaskData <- function(data,
 #' @return MSE of all imputations for a given gene, for each of the three
 #' methods: scImpute, average expression (baseline) and network.
 #'
-ComputeMSEGenewise_old <- function(real,
-                               masked,
-                               scimputed,
-                               baseline,
-                               network){
-
-  index <- scimputed[masked] != 0 # do not assess performance if value is not imputed
-  if (sum(index) == 0){
-    scimputed_mse <- NA
-  } else{
-    scimputed_mse <- sum( (scimputed[masked] - real[masked]) ^ 2, na.rm = T) /
-      sum(masked, na.rm = T)
-  }
-
-  # baseline always imputes, even if with 0 - check only if there are masked values
-  if (sum(masked) == 0){
-    baseline_mse <- NA
-  } else{
-    baseline_mse <- sum( (baseline[masked] - real[masked]) ^ 2, na.rm = T) /
-      sum(masked, na.rm = T)
-  }
-
-  index <- network[masked] != 0 # do not assess performance if value is not imputed
-  if (sum(index) == 0){
-    net_mse <- NA
-  } else{
-    net_mse <- sum( (network[masked] - real[masked]) ^ 2, na.rm = T) /
-      sum(masked, na.rm = T)
-  }
-
-  return(c("scimpute" = scimputed_mse,
-           "baseline" = baseline_mse,
-           "network"  = net_mse))
-}
-
 ComputeMSEGenewise <- function(real,
                                masked,
                                scimputed,

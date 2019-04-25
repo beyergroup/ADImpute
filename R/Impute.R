@@ -1,8 +1,8 @@
 #' @title Use scImpute
 #'
 #' @usage \code{ImputeScImpute(count_path, infile, outfile = "rds", out_dir,
-#' labeled, drop_thre, Kcluster, labels, ncores = 4, type = "TPM",
-#' transcript.length = ADImpute::transcript_length, genelen = NULL)}
+#' labeled, drop_thre, Kcluster, labels = NULL, ncores = 4, type = "TPM",
+#' transcript.length = NULL, genelen = NULL)}
 #'
 #' @description \code{ImputeScImpute} uses the scImpute package for dropout
 #' imputation
@@ -30,7 +30,9 @@
 #' @param ncores A integer specifying the number of cores used for parallel
 #' computation
 #' @param type A character specifying the type of values in the expression
-#' matrix. Can be "count" (default) or "TPM"
+#' matrix. Can be "count" or "TPM"
+#' @param transcript.length matrix with at least 2 columns: "hgnc_symbol" and
+#' "transcript_length"
 #' @param genelen An integer vector giving the length of each gene. Order must
 #' match the gene orders in the expression matrix. genelen must be specified if
 #' \code{type = "count"}
@@ -109,37 +111,10 @@ ImputeScImpute <- function(count_path,
   return(out)
 }
 
-ImputeScImpute005 <- function(count_path,
-                              infile,
-                              outfile = "txt",
-                              out_dir,
-                              labeled,
-                              drop_thre,
-                              Kcluster,
-                              labels,
-                              ncores = 4){
-
-  # Call scImpute
-  scImpute::scimpute(count_path = count_path,
-                     infile = infile,
-                     outfile = outfile,
-                     out_dir = out_dir,
-                     labeled = labeled,
-                     drop_thre = drop_thre,
-                     Kcluster = Kcluster,
-                     labels = labels,
-                     ncores = ncores)
-
-  # Read scImpute output
-  out <- as.matrix(read.delim(paste0(out_dir, "scimpute_count.txt")))
-
-  return(out)
-}
-
 
 #' @title Impute using average expression across all cells
 #'
-#' @usage ImputeBaseline(data, write.to.file = T, ...)
+#' @usage ImputeBaseline(data, write.to.file = T, drop.exclude = T, ...)
 #'
 #' @description \code{ImputeBaseline} imputes dropouts using gene averages
 #' across cells
@@ -148,11 +123,12 @@ ImputeScImpute005 <- function(count_path,
 #' and samples as columns)
 #' @param write.to.file logical; should a file with the imputation results be
 #' written?
-#'
+#' @param drop.exclude logical; should zeros be discarded for the calculation
+#' of genewise average expression levels? (defaults to T)
 #' @return matrix; imputation results considering the average expression
 #' values of genes
 #'
-ImputeBaseline <- function(data, write.to.file = T, drop.exclude = F, ...){
+ImputeBaseline <- function(data, write.to.file = T, drop.exclude = T, ...){
 
   dropouts <- data == 0
 
@@ -188,16 +164,18 @@ ImputeBaseline <- function(data, write.to.file = T, drop.exclude = F, ...){
 #' @title Network-based imputation
 #'
 #' @usage \code{ImputeNetwork(data, network.path = NULL, cores = 4,
-#' cluster.type = "SOCK", write.to.file = T, ...)}
+#' cluster.type = "SOCK", write.to.file = T, drop.exclude = T, ...)}
 #'
 #' @param data matrix with entries equal to zero to be imputed, already
 #' normalized (genes as rows and samples as columns)
-#' @param network.coefficients matrix; coefficients of the gene regulatory
-#' network (first column as intercept)
+#' @param network.path character; path to .txt or .rds file with network
+#' coefficients
 #' @param cores integer; number of cores to use (parallel computation if cores
 #' > 1)
 #' @param write.to.file logical; should a file with the imputation results be
 #' written?
+#' @param drop.exclude logical; should zeros be discarded for the calculation
+#' of genewise average expression levels? (defaults to T)
 #'
 #' @details Imputes dropouts using a gene regulatory network trained on external
 #' data, as provided in \code{network.path}. Dropout expression values are
@@ -209,15 +187,15 @@ ImputeBaseline <- function(data, write.to.file = T, drop.exclude = F, ...){
 #' @seealso \code{\link{ImputeNetParallel}}
 #'
 ImputeNetwork <- function(data,
-                          network.coefficients = NULL,
+                          network.path = NULL,
                           cores = 4,
                           cluster.type = "SOCK",
                           write.to.file = T,
-                          drop.exclude = F,
+                          drop.exclude = T,
                           ...){
 
   # Limit data and network to genes common to both
-  arranged <- ArrangeData(data, network.coefficients)
+  arranged <- ArrangeData(data, network.path)
 
   cat("Dimensions of data matrix:",
       dim(arranged$data)[1], "x", dim(arranged$data)[2],

@@ -1,10 +1,10 @@
 #' @title Imputation method evaluation on training set
 #'
 #' @usage \code{EvaluateMethods(data, training.ratio = .7, training.only = T,
-#' mask.ratio = .1, split.seed = NULL, mask.seed = NULL, log = F, scale = 1,
+#' mask.ratio = .1, split.seed = NULL, mask.seed = NULL, scale = 1,
 #' pseudo.count = 1, labels = NULL, cell.clusters = NULL, drop_thre = NULL,
-#' cores = 4, cluster.type = "SOCK", network.path = "../network/network.rds",
-#' ...)}
+#' type = "TPM", cores = 4, cluster.type = "SOCK", network.path = NULL,
+#' transcript.length = NULL, drop.exclude = T, ...)}
 #'
 #' @description \code{EvaluateMethods} returns the best-performing imputation
 #' method for each gene in the dataset
@@ -28,12 +28,16 @@
 #' @param cell.clusters integer; number of cell subpopulations
 #' @param drop_thre numeric; between 0 and 1 specifying the threshold to
 #' determine dropout values
+#' @param type A character specifying the type of values in the expression
+#' matrix. Can be "count" or "TPM"
 #' @param cores integer; number of cores used for paralell computation
 #' @param cluster.type character; either "SOCK" or "MPI"
-#' @param network.coefficients matrix; coefficients of the gene regulatory
-#' network (first column as intercept)
+#' @param network.path character; path to .txt or .rds file with network
+#' coefficients
 #' @param transcript.length matrix with at least 2 columns: "hgnc_symbol" and
 #' "transcript_length"
+#' @param drop.exclude logical; should zeros be discarded for the calculation
+#' of genewise average expression levels? (defaults to T)
 #'
 #' @details For each gene, a fraction (\code{mask.ratio}) of the quantified
 #' expression values are set to zero and imputed according to 3 different
@@ -64,9 +68,9 @@ EvaluateMethods <- function(data,
                             type = "TPM",
                             cores = 4,
                             cluster.type = "SOCK",
-                            network.coefficients = NULL,
+                            network.path = NULL,
                             transcript.length = NULL,
-                            drop.exclude = F,
+                            drop.exclude = T,
                             ...){
 
   # Check arguments
@@ -130,7 +134,7 @@ EvaluateMethods <- function(data,
   # Run Net
   cat("Imputing training data using network information\n")
   net <- ImputeNetwork(log_masked_training_norm,
-                       network.coefficients,
+                       network.path,
                        cores,
                        cluster.type,
                        drop.exclude = drop.exclude,
@@ -153,9 +157,9 @@ EvaluateMethods <- function(data,
 #' @title Dropout imputation using gene-specific best-performing methods
 #'
 #' @usage \code{Impute(data, method.choice, scale = 1, pseudo.count = 1,
-#' count_path, labels = NULL, cell.clusters = NULL, drop_thre = NULL, cores = 4,
-#' cluster.type = "SOCK", type = "TPM", network.path = "../network/network.rds",
-#' ...)}
+#' count_path, labels = NULL, cell.clusters = NULL, drop_thre = NULL,
+#' type = "TPM", cores = 4, cluster.type = "SOCK", network.path = NULL,
+#' transcript.length = NULL, drop.exclude = T, ...)}
 #'
 #' @description \code{Impute} performs dropout imputation based on the
 #' performance results obtained in the training data, coupled to normalization
@@ -174,12 +178,16 @@ EvaluateMethods <- function(data,
 #' @param cell.clusters integer; number of cell subpopulations
 #' @param drop_thre numeric; between 0 and 1 specifying the threshold to
 #' determine dropout values
+#' @param type A character specifying the type of values in the expression
+#' matrix. Can be "count" or "TPM"
 #' @param cores integer; number of cores used for paralell computation
 #' @param cluster.type character; either "SOCK" or "MPI"
-#' @param network.coefficients matrix; coefficients of the gene regulatory
-#' network (first column as intercept)
+#' @param network.path character; path to .txt or .rds file with network
+#' coefficients
 #' @param transcript.length matrix with at least 2 columns: "hgnc_symbol" and
 #' "transcript_length"
+#' @param drop.exclude logical; should zeros be discarded for the calculation
+#' of genewise average expression levels? (defaults to T)
 #'
 #' @return matrix; imputed and normalized expression values
 #'
@@ -203,9 +211,9 @@ Impute <- function(data,
                    type = "TPM",
                    cores = 4,
                    cluster.type = "SOCK",
-                   network.coefficients = NULL,
+                   network.path = NULL,
                    transcript.length = NULL,
-                   drop.exclude = F,
+                   drop.exclude = T,
                    ...){
 
   # Check arguments
@@ -252,9 +260,9 @@ Impute <- function(data,
   WriteTXT(baseline_norm, "Baseline/baseline_imputed_norm.txt")
 
   # Run Net
-  cat("Imputing validation data using network information\n")
+  cat("Imputing data using network information\n")
   net <- ImputeNetwork(log_masked_norm,
-                       network.coefficients,
+                       network.path,
                        cores,
                        cluster.type,
                        drop.exclude = drop.exclude,
