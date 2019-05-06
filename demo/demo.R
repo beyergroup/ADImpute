@@ -8,6 +8,7 @@ network_path = # <absolute path to .rds or .txt coefficients file>
 data("demo_data", package = "ADImpute")
 TPM <- NormalizeTPM(demo_data)
 WriteTXT(TPM, "TPM.txt")
+tpm_path <- paste0(getwd(),"/TPM.txt")
 
 # Train method to obtain optimal per gene
 methods_pergene <- EvaluateMethods(data = TPM,
@@ -26,7 +27,7 @@ methods_pergene <- EvaluateMethods(data = TPM,
 # Impute full dataset
 imputed <- Impute(method.choice = methods_pergene,
                   data = TPM,
-                  count_path = "/data/public/adesous1/scDropImp/networkinference/ADImpute/demo/TPM.txt",
+                  count_path = tpm_path,
                   type = "TPM",
                   cell.clusters = 2,
                   cores = 4,
