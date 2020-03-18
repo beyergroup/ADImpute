@@ -12,7 +12,7 @@
 \item{ratio}{numeric; ratio of the samples to be used for training}
 
 \item{training.only}{logical; if TRUE define only a training dataset, if
-FALSE writes and returns both training and validation sets (defaults to T)}
+FALSE writes both training and validation sets (defaults to T)}
 
 \item{seed}{integer; optional seed (defaults to NULL, random selection of
 samples to use for training)}

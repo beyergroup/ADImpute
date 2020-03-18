@@ -4,8 +4,7 @@
 \alias{ChooseMethod}
 \title{Method choice per gene}
 \usage{
-\code{ChooseMethod(real, masked, scimpute, baseline, network,
-write.to.file = T)}
+\code{ChooseMethod(real, masked, imputed, write.to.file = T)}
 }
 \arguments{
 \item{real}{matrix; original gene expression data, i.e. before masking
@@ -14,13 +13,10 @@ write.to.file = T)}
 \item{masked}{matrix, logical indicating which entries were masked
 (genes as rows and samples as columns)}
 
-\item{baseline}{matrix; results of baseline imputation}
-
-\item{network}{matrix; results of network imputation}
+\item{imputed}{list; list of matrices with imputation results for all
+considered methods}
 
 \item{write.to.file}{logical; should the output be written to a file?}
-
-\item{scimputed}{matrix; results of scImpute}
 }
 \value{
 character; best performing method in the training set for each gene

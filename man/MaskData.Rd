@@ -10,6 +10,8 @@ seed = NULL)}
 \arguments{
 \item{data}{matrix; raw counts (genes as rows and samples as columns)}
 
+\item{write.to.file}{logical; should the output be written to a file?}
+
 \item{filename}{character; name of output file to write masked data to}
 
 \item{mask}{numeric; ratio of total non-zero samples to be masked per gene

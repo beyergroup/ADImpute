@@ -5,7 +5,7 @@
 \title{Network-based parallel imputation}
 \usage{
 \code{ImputeNetParallel(dropout.matrix, arranged, cores = 4,
-cluster.type = "SOCK", max.iter = 20)}
+cluster.type = "SOCK", max.iter = 50)}
 }
 \arguments{
 \item{dropout.matrix}{matrix, logical; dropout entries in the data matrix

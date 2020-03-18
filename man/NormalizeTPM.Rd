@@ -4,14 +4,14 @@
 \alias{NormalizeTPM}
 \title{TPM normalization}
 \usage{
-\code{NormalizeTPM(data, transcript.length.file = NULL, log = T,
-scale = 1, pseudo.count = 1)}
+\code{NormalizeTPM(data, transcript.length = NULL,
+log = F, scale = 1, pseudo.count = 1)}
 }
 \arguments{
 \item{data}{matrix; raw data (genes as rows and samples as columns)}
 
-\item{transcript.length.file}{character; path to .txt file with at least 2
-columns: "hgnc_symbol" and "transcript_length"}
+\item{transcript.length}{matrix with at least 2 columns: "hgnc_symbol" and
+"transcript_length"}
 
 \item{log}{logical; log TPMs?}
 

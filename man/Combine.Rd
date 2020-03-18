@@ -4,20 +4,17 @@
 \alias{Combine}
 \title{Combine imputation methods}
 \usage{
-\code{Combine(data, method.choice, scimputed, baseline, net, write.to.file = T)}
+\code{Combine(data, method.choice, imputed, write.to.file = T)}
 }
 \arguments{
 \item{data}{matrix with entries equal to zero to be imputed, already
 normalized (genes as rows and samples as columns)}
 
+\item{imputed}{list; list of matrices with imputation results for all
+considered methods}
+
 \item{method.choice}{named character; vector with the best performing method
 per gene}
-
-\item{scimputed}{matrix; data imputed by scimputed}
-
-\item{baseline}{matrix; data imputed by baseline method}
-
-\item{net}{matrix; data imputed by network method}
 
 \item{write.to.file}{logical; should a file with the imputation results be
 written?}
@@ -26,13 +23,10 @@ written?}
 matrix; imputation results combining the best performing method
 per gene
 }
+\description{
+Combine imputation methods
+}
 \details{
 Combines imputation results from all methods according to training
 results provided in \code{method.choice}
-}
-\seealso{
-\code{\link{ImputeBaseline}},
-\code{\link{ImputeNetwork}},
-\code{\link{ImputeScImpute}},
-\code{\link{scImpute::scimpute}}
 }

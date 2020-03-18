@@ -4,7 +4,7 @@
 \alias{ComputeMSEGenewise}
 \title{Computation of MSE per gene}
 \usage{
-\code{ComputeMSEGenewise(real, masked, scimputed, baseline, network)}
+\code{ComputeMSEGenewise(real, masked, imputed)}
 }
 \arguments{
 \item{real}{numeric; vector of original expression of a given gene (before
@@ -13,17 +13,10 @@ masking)}
 \item{masked}{logical; vector indicating which entries were masked for a
 given gene}
 
-\item{scimputed}{numeric; vector of results of scImpute for a given gene}
-
-\item{baseline}{numeric; vector of results of baseline imputation for a
-given gene}
-
-\item{network}{numeric; vector of results of network imputation for a given
-gene}
+\item{imputed}{matrix; imputation results for a given imputation method}
 }
 \value{
-MSE of all imputations for a given gene, for each of the three
-methods: scImpute, average expression (baseline) and network.
+MSE of all imputations indicated by \code{masked}
 }
 \description{
 \code{ComputeMSEGenewise} computes the MSE of dropout

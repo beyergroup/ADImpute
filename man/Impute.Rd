@@ -4,13 +4,18 @@
 \alias{Impute}
 \title{Dropout imputation using gene-specific best-performing methods}
 \usage{
-\code{Impute(data, method.choice, scale = 1, pseudo.count = 1,
-count_path, labels = NULL, cell.clusters = NULL, drop_thre = NULL, cores = 4,
-cluster.type = "SOCK", type = "TPM", network.path = "../network/network.rds",
-...)}
+\code{Impute(data, do = "Ensemble", method.choice, scale = 1, pseudo.count = 1,
+count_path, labels = NULL, cell.clusters = NULL, drop_thre = NULL,
+type = "TPM", cores = 4, cluster.type = "SOCK", network.path = NULL,
+transcript.length = NULL, drop.exclude = T, ...)}
 }
 \arguments{
 \item{data}{matrix; raw counts (genes as rows and samples as columns)}
+
+\item{do}{character; choice of methods to be used for imputation. Currently
+supported methods are \code{"Baseline"}, \code{"DrImpute"},
+\code{"Network"}, \code{"scImpute"}, \code{"SCRABBLE"} and \code{"Ensemble"}.
+Not case-sensitive. Can include one or more methods.}
 
 \item{method.choice}{character; best performing method in training data for
 each gene}
@@ -31,15 +36,25 @@ to avoid log(0) (defaults to 1)}
 \item{drop_thre}{numeric; between 0 and 1 specifying the threshold to
 determine dropout values}
 
+\item{type}{A character specifying the type of values in the expression
+matrix. Can be "count" or "TPM"}
+
 \item{cores}{integer; number of cores used for paralell computation}
 
 \item{cluster.type}{character; either "SOCK" or "MPI"}
 
-\item{network.path}{character; path to .rds file containing network
-coefficients and intercept}
+\item{network.path}{character; path to .txt or .rds file with network
+coefficients}
+
+\item{transcript.length}{matrix with at least 2 columns: "hgnc_symbol" and
+"transcript_length"}
+
+\item{drop.exclude}{logical; should zeros be discarded for the calculation
+of genewise average expression levels? (defaults to T)}
 }
 \value{
-matrix; imputed and normalized expression values
+list of imputation results (normalized, log-transformed) for all
+selected methods in \code{do}
 }
 \description{
 \code{Impute} performs dropout imputation based on the
@@ -48,12 +63,33 @@ using \code{normalization.function}
 }
 \details{
 Values that are 0 in \code{data} are imputed according to the
-best-performing methods indicated in \code{methods}.
+best-performing methods indicated in \code{method.choice}. Currently
+supported methods are:
+\itemize{
+ \item \code{Baseline}: imputation with average expression across all cells
+ in the dataset. See \code{\link{ImputeBaseline}}.
+ \item Previously published approaches: \code{DrImpute}, \code{scImpute} and
+ \code{SCRABBLE}.
+ \item \code{Network}: leverages information from a gene regulatory network
+ to predicted expression of genes that are not quantified based on
+ quantified interacting genes, in the same cell. See
+ \code{\link{ImputeNetwork}}.
+ \item \code{Ensemble}: is based on results on a training subset of the data at
+ hand, indicating which method best predicts the expression of each gene.
+ These results are supplied via \code{method.choice}. Applies the imputation
+ results of the best performing method to the zero entries of each gene.
+}
+If \code{"Ensemble"} is included in \code{do}, \code{method.choice} has to
+be provided (use output from \code{EvaluateMethods()}).
+\code{Impute} creates a directory \code{imputation} containing the
+imputation results of all methods in \code{do}.
 }
 \seealso{
 \code{\link{EvaluateMethods}},
 \code{\link{ImputeBaseline}},
+\code{\link{ImputeDrImpute}},
 \code{\link{ImputeNetwork}},
+\code{\link{ImputeSAVER}},
 \code{\link{ImputeScImpute}},
-\code{\link{scimpute}}
+\code{\link{ImputeSCRABBLE}}
 }

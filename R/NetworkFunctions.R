@@ -1,49 +1,3 @@
-#' @title Network loading
-#'
-#' @usage \code{ReadNetwork(network.path)}
-#'
-#' @description \code{ReadNetwork} loads the matrix of network coefficients
-#'
-#' @param network.path character; path to .txt or .rds file with network
-#' coefficients
-#'
-#' @return matrix with network coefficients and intercept in the first column
-#'
-ReadNetwork <- function(network.path){
-
-  if (grepl(network.path, pattern = ".txt")){
-
-    cat("Reading .txt file with network coefficients\n")
-
-    m <- readLines(network.path)
-    cnames <- m[1]
-    cnames <- strsplit(cnames, split = "\t")[[1]]
-    mm <- sapply(m[-1], function(x) strsplit(x, split = "\t")[[1]],
-                 simplify = T, USE.NAMES = F)
-    mm <- t(mm)
-    rnames <- mm[,1]
-    mm <- mm[,-1]
-    storage.mode(mm) <- "numeric"
-    rownames(mm) <- rnames
-    colnames(mm) <- cnames
-
-    return(mm)
-
-  } else if (grepl(network.path, pattern = ".rds")){
-
-    cat("Reading .rds file with network coefficients\n")
-
-    load(network.path)
-
-    return(network.coefficients)
-
-  } else {
-
-    stop("Please input txt or rds file")
-  }
-
-}
-
 #' @title Data trimming
 #'
 #' @usage \code{ArrangeData(data, network.path = NULL)}
@@ -64,8 +18,8 @@ ArrangeData <- function(data,
 
   network.coefficients <- ReadNetwork(network.path)
 
-  O <- network.coefficients[,1]
-  network_matrix <- network.coefficients[,-1]
+  O <- network.coefficients[,1] # network intercept
+  network_matrix <- network.coefficients[,-1] # network coefficients
 
   comm_targ <- intersect(rownames(network_matrix), rownames(data))
   comm_pred <- intersect(colnames(network_matrix), rownames(data))
@@ -117,7 +71,6 @@ CenterData <- function(data, drop.exclude = T){
 }
 
 
-
 #' @title Network-based parallel imputation
 #'
 #' @usage \code{ImputeNetParallel(dropout.matrix, arranged, cores = 4,
@@ -143,6 +96,7 @@ ImputeNetParallel <- function(dropout.matrix,
                               max.iter = 50){
 
   cluster <- snow::makeCluster(cores, type = cluster.type)
+  snow::clusterEvalQ(cluster, options(matprod = "internal"))
 
   dropouts <- intersect(rownames(dropout.matrix)[rowSums(dropout.matrix) != 0],
                         rownames(arranged$network)) # dropouts in at least one cell
@@ -165,10 +119,11 @@ ImputeNetParallel <- function(dropout.matrix,
     }
 
     # Print progress
-    if ( (i %% 10) == 0)
-      cat("Iteration", i, "\n")
+    if ( (i %% 5) == 0)
+      cat("Iteration", i, "/", max.iter, "\n")
 
-    new <- round(O + snow::parMM(cluster, network, imp[predictors, ]), 2) # expression = intercept + (network coefficients * predictor expr.)
+    options(matprod = "internal")
+    new <- round(snow::parMM(cluster, network, imp[predictors, ]), 2) # expression = network coefficients * predictor expr.
 
     # Check convergence
     if (any(new[dropout.matrix[dropouts, ]] != imp[dropouts, ][
@@ -189,4 +144,50 @@ ImputeNetParallel <- function(dropout.matrix,
   cat("Network imputation complete\n")
 
   return(imp)
+}
+
+
+#' @title Network loading
+#'
+#' @usage \code{ReadNetwork(network.path)}
+#'
+#' @description \code{ReadNetwork} loads the matrix of network coefficients
+#'
+#' @param network.path character; path to .txt or .rds file with network
+#' coefficients
+#'
+#' @return matrix with network coefficients and intercept in the first column
+#'
+ReadNetwork <- function(network.path){
+
+  if (grepl(network.path, pattern = ".txt")){
+
+    cat("Reading .txt file with network coefficients\n")
+
+    m <- readLines(network.path)
+    cnames <- m[1]
+    cnames <- strsplit(cnames, split = "\t")[[1]]
+    mm <- sapply(m[-1], function(x) strsplit(x, split = "\t")[[1]],
+                 simplify = T, USE.NAMES = F)
+    mm <- t(mm)
+    rnames <- mm[,1]
+    mm <- mm[,-1]
+    storage.mode(mm) <- "numeric"
+    rownames(mm) <- rnames
+    colnames(mm) <- cnames
+
+    return(mm)
+
+  } else if (grepl(network.path, pattern = ".rds")){
+
+    cat("Reading .rds file with network coefficients\n")
+
+    load(network.path)
+
+    return(network.coefficients)
+
+  } else {
+    stop("Please input txt or rds file\n")
+  }
+
 }

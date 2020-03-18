@@ -10,8 +10,8 @@
 \item{data}{matrix with entries equal to zero to be imputed (genes as rows
 and samples as columns)}
 
-\item{network.path}{path to .rds file containing network coefficients and
-intercept}
+\item{network.path}{character; path to .txt or .rds file with network
+coefficients}
 }
 \value{
 list; data matrix, network coefficients matrix and intercept for

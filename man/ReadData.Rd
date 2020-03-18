@@ -8,9 +8,11 @@
 }
 \arguments{
 \item{path}{character; path to input file}
+
+\item{...}{additional arguments to \code{data.table::fread()}}
 }
 \value{
-data.frame; raw counts (genes as rows and samples as columns)
+matrix; raw counts (genes as rows and samples as columns)
 }
 \description{
 \code{ReadData} reads data from raw input file (.txt or .csv)

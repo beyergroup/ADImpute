@@ -1,3 +1,35 @@
+#' @title RPM normalization
+#'
+#' @description \code{NormalizeRPM} performs RPM normalization, with possibility
+#' to log the result
+#'
+#' @usage \code{NormalizeTPM(data, log = F, scale = 1, pseudo.count = 1)}
+#'
+#' @param data matrix; raw data (genes as rows and samples as columns)
+#' @param log logical; log RPMs?
+#' @param scale integer; scale factor to divide RPMs by
+#' @param pseudocount numeric; if \code{log = T}, value to add to RPMs in order
+#' to avoid taking \code{log(0)}
+#'
+#' @return matrix; library size normalized data
+#'
+NormalizeRPM <- function(data,
+                         log = F,
+                         scale = 1,
+                         pseudo.count = 1){
+
+  # divide by million RPK in sample - transcripts per million (TPM)
+  data <- sweep(data, 2, STATS = colSums(data) / ( 10 ^ 6), FUN = "/")
+
+  data <- data / scale
+
+  if (log)
+    data <- log2(data + pseudo.count)
+
+  return(data)
+}
+
+
 #' @title TPM normalization
 #'
 #' @description \code{NormalizeTPM} performs TPM normalization, with possibility

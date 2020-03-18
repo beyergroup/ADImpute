@@ -5,10 +5,10 @@
 \title{Imputation method evaluation on training set}
 \usage{
 \code{EvaluateMethods(data, training.ratio = .7, training.only = T,
-mask.ratio = .1, split.seed = NULL, mask.seed = NULL, log = F, scale = 1,
-pseudo.count = 1, labels = NULL, cell.clusters = NULL, drop_thre = NULL,
-cores = 4, cluster.type = "SOCK", network.path = "../network/network.rds",
-...)}
+mask.ratio = .1, split.seed = NULL, mask.seed = NULL, scale = 1,
+pseudo.count = 1, labels = NULL, cell.clusters = 2, drop_thre = NULL,
+type = "TPM", cores = 4, cluster.type = "SOCK", network.path = NULL,
+transcript.length = NULL, drop.exclude = T, bulk = NULL, ...)}
 }
 \arguments{
 \item{data}{matrix; normalized counts, not logged (genes as rows and samples
@@ -41,12 +41,24 @@ to avoid log(0) (defaults to 1)}
 \item{drop_thre}{numeric; between 0 and 1 specifying the threshold to
 determine dropout values}
 
+\item{type}{A character specifying the type of values in the expression
+matrix. Can be "count" or "TPM"}
+
 \item{cores}{integer; number of cores used for paralell computation}
 
 \item{cluster.type}{character; either "SOCK" or "MPI"}
 
-\item{network.path}{character; path to .rds file containing network
-coefficients and intercept}
+\item{network.path}{character; path to .txt or .rds file with network
+coefficients}
+
+\item{transcript.length}{matrix with at least 2 columns: "hgnc_symbol" and
+"transcript_length"}
+
+\item{drop.exclude}{logical; should zeros be discarded for the calculation
+of genewise average expression levels? (defaults to T)}
+
+\item{bulk}{vector of reference bulk RNA-seq, if available (average across
+samples)}
 }
 \value{
 character; best performing method in the training set for each gene
@@ -65,7 +77,9 @@ method resulting in a lowest imputation error for each gene is chosen.
 }
 \seealso{
 \code{\link{ImputeBaseline}},
+\code{\link{ImputeDrImpute}},
 \code{\link{ImputeNetwork}},
+\code{\link{ImputeSAVER}},
 \code{\link{ImputeScImpute}},
-\code{\link{scimpute}}
+\code{\link{ImputeSCRABBLE}}
 }

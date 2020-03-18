@@ -5,23 +5,32 @@
 \title{Network-based imputation}
 \usage{
 \code{ImputeNetwork(data, network.path = NULL, cores = 4,
-cluster.type = "SOCK", write.to.file = T, ...)}
+cluster.type = "SOCK", write.to.file = T, drop.exclude = T, ...)}
 }
 \arguments{
-\item{data}{matrix with entries equal to zero to be imputed, already
-normalized (genes as rows and samples as columns)}
+\item{data}{matrix with entries equal to zero to be imputed, normalized
+and log2-transformed (genes as rows and samples as columns)}
 
-\item{network.path}{character; path to .rds file containing network
-coefficients and intercept}
+\item{network.path}{character; path to .txt or .rds file with network
+coefficients}
 
-\item{cores}{integer; number of cores to use (parallel computation if cores
-> 1)}
+\item{cores}{integer; number of cores to use}
+
+\item{cluster.type}{character; either "SOCK" or "MPI"}
 
 \item{write.to.file}{logical; should a file with the imputation results be
 written?}
+
+\item{drop.exclude}{logical; should zeros be discarded for the calculation
+of genewise average expression levels? (defaults to T)}
+
+\item{...}{additional arguments to \code{ImputeNetParallel}}
 }
 \value{
 matrix; imputation results incorporating network information
+}
+\description{
+Network-based imputation
 }
 \details{
 Imputes dropouts using a gene regulatory network trained on external

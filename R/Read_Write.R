@@ -5,8 +5,9 @@
 #' @usage \code{ReadData(path, ...)}
 #'
 #' @param path character; path to input file
+#' @param ... additional arguments to \code{data.table::fread()}
 #'
-#' @return data.frame; raw counts (genes as rows and samples as columns)
+#' @return matrix; raw counts (genes as rows and samples as columns)
 #'
 ReadData <- function(path, ...){
 
@@ -50,7 +51,6 @@ ReadData <- function(path, ...){
 
 
 
-
 WriteTXT <- function(object, file){
 
   write.table(object, file, quote = F, sep = "\t")
@@ -66,3 +66,4 @@ WriteCSV <- function(object, file){
 
   return(NULL)
 }
+

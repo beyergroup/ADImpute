@@ -5,8 +5,8 @@
 \title{Use scImpute}
 \usage{
 \code{ImputeScImpute(count_path, infile, outfile = "rds", out_dir,
-labeled, drop_thre, Kcluster, labels, ncores = 4, type = "TPM",
-transcript.length.file = NULL, genelen = NULL)}
+labeled, drop_thre, Kcluster, labels = NULL, ncores = 4, type = "TPM",
+transcript.length = NULL, genelen = NULL)}
 }
 \arguments{
 \item{count_path}{A character specifying the full path of the raw count
@@ -41,7 +41,10 @@ should have at least two cells for imputation}
 computation}
 
 \item{type}{A character specifying the type of values in the expression
-matrix. Can be "count" (default) or "TPM"}
+matrix. Can be "count" or "TPM"}
+
+\item{transcript.length}{matrix with at least 2 columns: "hgnc_symbol" and
+"transcript_length"}
 
 \item{genelen}{An integer vector giving the length of each gene. Order must
 match the gene orders in the expression matrix. genelen must be specified if
