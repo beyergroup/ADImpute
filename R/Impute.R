@@ -118,7 +118,8 @@ ImputeBaseline <- function(data,
 #'
 ImputeDrImpute <- function(data, write.to.file = T){
 
-  res <- DrImpute(data)
+  res <- DrImpute(as.matrix(data))
+  colnames(res) <- colnames(data)
 
   if(write.to.file){
     dir.create("DrImpute")
@@ -328,12 +329,11 @@ ImputeScImpute <- function(count_path,
     data   <- data[common, ]
     count_path <- paste0(strsplit(count_path,
                                   split = paste0("\\.", infile))[[1]][1],
-                         "_red",
-                         paste0(".", infile))
+                         "_red.csv")
     infile <- "csv"
     WriteCSV(data, count_path)
     genelen <- as.integer(med_length[match(common, med_length$hgnc_symbol), 2])
-
+    saveRDS(genelength, paste0(out_dir,"genelength.rds"))
   }
 
   # Call scImpute

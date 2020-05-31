@@ -258,6 +258,7 @@ Impute <- function(data,
                    transcript.length = NULL,
                    drop.exclude = T,
                    bulk = NULL,
+                   true.zero.thr = NULL,
                    ...){
 
   imputed <- list()
@@ -372,5 +373,46 @@ Impute <- function(data,
     imputed$Ensemble <- Combine(log_masked_norm, imputed, method.choice)
   }
 
-  return(imputed)
+  # Estimate true zeros
+  if(!is.null(true.zero.thr)){
+
+    # error to run scImpute first
+
+    # Get genelen if needed
+    if (type == "TPM"){
+      count_path <- paste0(strsplit(count_path,
+                                    split = paste0("\\.", infile))[[1]][1],
+                           "_red",
+                           paste0(".", infile))
+      infile <- "csv"
+      # compute dropout probabilities according to scImpute
+      droprob <- GetDropoutProbabilities(infile = infile, count_path = count_path,
+                                         out_dir = "scImpute/", type = type,
+                                         genelen = readRDS(paste0("outdir","genelength.rds")),
+                                         drop_thre = true.zero.thr, data = read.csv(count_path))
+      WriteTXT(droprob, "dropout_probability.txt")
+
+      # apply thresholds
+      zerofiltered <- lapply(imputed, SetBiologicalZeros, drop_probs = droprob, thre = true.zero.thr,
+                             was_zero = data == 0)
+
+    } else {
+      # compute dropout probabilities according to scImpute
+      droprob <- GetDropoutProbabilities(infile = infile, count_path = count_path,
+                                         out_dir = "scImpute/", type = type, genelen = NULL,
+                                         drop_thre = true.zero.thr, data = data)
+      WriteTXT(droprob, "dropout_probability.txt")
+
+      # apply thresholds
+      zerofiltered <- lapply(imputed, SetBiologicalZeros, drop_probs = droprob, thre = true.zero.thr,
+                             was_zero = data == 0)
+    }
+
+    return(list("imputations" = imputed, "zerofiltered" = zerofiltered))
+
+  } else{
+
+    return(imputed)
+  }
+
 }

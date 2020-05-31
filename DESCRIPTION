@@ -13,7 +13,9 @@ LazyData: false
 Imports:
     biomaRt,
     data.table,
+    DrImpute,
     SAVER,
     scImpute,
+    SCRABBLE,
     snow
 RoxygenNote: 6.1.1

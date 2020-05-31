@@ -74,7 +74,7 @@ CenterData <- function(data, drop.exclude = T){
 #' @title Network-based parallel imputation
 #'
 #' @usage \code{ImputeNetParallel(dropout.matrix, arranged, cores = 4,
-#' cluster.type = "SOCK", max.iter = 50)}
+#' cluster.type = "SOCK", type = "iteration", max.iter = 50)}
 #'
 #' @description \code{ImputeNetParallel} implements network-based imputation
 #' in parallel
@@ -84,6 +84,8 @@ CenterData <- function(data, drop.exclude = T){
 #' @param arranged list; output of \code{\link{ArrangeData}}
 #' @param cores integer; number of cores used for paralell computation
 #' @param cluster.type character; either "SOCK" or "MPI"
+#' @param type character; either "iteration", for an iterative solution, or
+#' "pseudoinv", to use Moore-Penrose pseudo-inversion as a solution.
 #' @param max.iter numeric; maximum number of iterations for network
 #' imputation. Set to -1 to remove limit (not recommended)
 #'
@@ -93,10 +95,11 @@ ImputeNetParallel <- function(dropout.matrix,
                               arranged,
                               cores = 4,
                               cluster.type = "SOCK",
+                              type = "iteration",
                               max.iter = 50){
 
   cluster <- snow::makeCluster(cores, type = cluster.type)
-  snow::clusterEvalQ(cluster, options(matprod = "internal"))
+  # snow::clusterEvalQ(cluster, options(matprod = "internal"))
 
   dropouts <- intersect(rownames(dropout.matrix)[rowSums(dropout.matrix) != 0],
                         rownames(arranged$network)) # dropouts in at least one cell
@@ -104,39 +107,47 @@ ImputeNetParallel <- function(dropout.matrix,
   predictors <- colnames(arranged$network)[
     colSums(arranged$network[dropouts, ]) != 0] # all available predictors of the dropouts
 
-  imp     <- arranged$centered
-  network <- arranged$network[dropouts, predictors]
-  O       <- arranged$O[dropouts]
+  arranged$network <- arranged$network[dropouts, predictors]
 
-  i <- 1
-  repeat{
+  if(type == "iteration"){
 
-    # Limit number of iterations
-    if (max.iter != -1){
-      if (i > max.iter)
+    i <- 1
+    repeat{
 
+      # Limit number of iterations
+      if (max.iter != -1){
+        if (i > max.iter)
+          break
+      }
+
+      # Print progress
+      if ( (i %% 5) == 0)
+        cat("Iteration", i, "/", max.iter, "\n")
+
+      new <- round(snow::parMM(cluster, arranged$network, arranged$centered[predictors, ]), 2) # expression = network coefficients * predictor expr.
+
+      # Check convergence
+      if (any(new[dropout.matrix[dropouts, ]] != arranged$centered[dropouts, ][
+        dropout.matrix[dropouts, ]])){
+
+        arranged$centered[dropouts, ][dropout.matrix[dropouts, ]] <-
+          new[dropout.matrix[dropouts, ]]
+      }
+      else{
         break
+      }
+
+      i <- i + 1
     }
 
-    # Print progress
-    if ( (i %% 5) == 0)
-      cat("Iteration", i, "/", max.iter, "\n")
+    imp <- arranged$centered
 
-    options(matprod = "internal")
-    new <- round(snow::parMM(cluster, network, imp[predictors, ]), 2) # expression = network coefficients * predictor expr.
+  } else{
 
-    # Check convergence
-    if (any(new[dropout.matrix[dropouts, ]] != imp[dropouts, ][
-      dropout.matrix[dropouts, ]])){
+    imp <- parSapply(cl = cluster, 1:ncol(arranged$centered),
+                         PseudoInverseSolution_percell, arranged, dropout.matrix)
+    colnames(imp) <- colnames(arranged$centered)
 
-      imp[dropouts, ][dropout.matrix[dropouts, ]] <-
-        new[dropout.matrix[dropouts, ]]
-    }
-    else{
-      break
-    }
-
-    i <- i + 1
   }
 
   snow::stopCluster(cluster)
@@ -145,6 +156,80 @@ ImputeNetParallel <- function(dropout.matrix,
 
   return(imp)
 }
+
+
+#' @title Network-based parallel imputation - Moore-Penrose pseudoinversion
+#'
+#' @usage \code{PseudoInverseSolution_percell(cell, arranged, dropout_mat,
+#' thr = 0.01)}
+#'
+#' @description \code{PseudoInverseSolution_percell} applies Moore-Penrose
+#' pseudo-inversion to compute the solution of network imputation for each
+#' cell
+#'
+#' @param cell numeric; index of the column corresponding to current cell
+#' @param arranged list; output of \code{\link{ArrangeData}}
+#' @param dropout_mat matrix, logical; dropout entries in the data matrix
+#' (genes as rows and samples as columns)
+#' @param thr numeric; tolerance threshold to detect zero singular values
+#'
+#' @return matrix; imputation results incorporating network information
+#'
+PseudoInverseSolution_percell <- function(cell, arranged, dropout_mat, thr = 0.01){
+
+  cat("Starting cell pseudo-inversion\n")
+  expr <- arranged$centered[,cell]
+  drop_ind <- dropout_mat[,cell]
+
+  # restrict network rows and columns to the dropouts in the data (the only ones that need to be predicted)
+  net <- arranged$network[intersect(rownames(arranged$network), names(expr)[drop_ind]),
+                          intersect(colnames(arranged$network), names(expr))]
+
+  # restrict to targets that are predictable and predictors that are predictive
+  net <- net[,which(colSums(net != 0) != 0)]
+
+  # Problem: matrix is not squared.
+  # Solution: take only the targets that are predictive / predictors that are targets (intersect of rows & cols)
+  squares <- intersect(rownames(net), colnames(net))
+  squared_A <- net[squares,squares]
+
+  # determinant of I-squared_A is 0 for all cells: get pseudo-inverse
+  library(MASS)
+  cat("Computing pseudoinverse\n")
+  pinv <- ginv(diag(nrow(squared_A))-squared_A, tol = thr)
+  rownames(pinv) <- rownames(squared_A)
+  colnames(pinv) <- colnames(squared_A)
+
+  # find C (quantified predictors)
+  findC <- function(inverse, net){
+    targets <- rownames(inverse)
+    full <- net[targets, !(colnames(net) %in% targets), drop = F]
+    C_mat <- full[,colSums(full != 0) != 0, drop = F]
+    C <- C_mat%*%expr[colnames(C_mat)]
+    return(C)
+  }
+  cat("Computing fixed contribution\n")
+  C <- findC(pinv, net)
+
+  # Y = pinv.C
+  solution <- pinv%*%C
+
+  # uninvertible cases or dropouts with all predictors quantified
+  cat("Adding remaining genes\n")
+  remaining <- names(expr)[drop_ind]
+  remaining <- remaining[!(remaining %in% rownames(solution))]
+  net <- arranged$network[intersect(remaining, rownames(arranged$network)),
+                          intersect(names(expr), colnames(arranged$network))]
+  net <- net[,which(colSums(net != 0) != 0)]
+  remaining_solution <- net%*%expr[colnames(net)]
+
+  full_solution <- rbind(solution, remaining_solution)
+  final <- arranged$centered[,cell]
+  final[rownames(full_solution)] <- full_solution
+
+  return(final)
+}
+
 
 
 #' @title Network loading

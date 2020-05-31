@@ -4,20 +4,20 @@ devtools::load_all("../")
 
 network_path = # <absolute path to .rds or .txt coefficients file>
 
-# Load demo data (counts) and convert to TPM
+# Load demo data (counts) and normalize
 data("demo_data", package = "ADImpute")
-TPM <- NormalizeTPM(demo_data)
-WriteTXT(TPM, "TPM.txt")
-tpm_path <- paste0(getwd(),"/TPM.txt")
+RPM <- NormalizeRPM(demo_data)
+WriteTXT(RPM, "RPM.txt")
+rpm_path <- paste0(getwd(),"/RPM.txt")
 
 # Train method to obtain optimal per gene
-methods_pergene <- EvaluateMethods(data = TPM,
+methods_pergene <- EvaluateMethods(data = RPM,
                                    training.ratio = .7,
                                    mask.ratio = .2,
                                    training.only = T,
                                    split.seed = 12,
                                    mask.seed = 34,
-                                   type = "TPM",
+                                   type = "count",
                                    cell.clusters = 2,
                                    cores = 4,
                                    cluster.type = "SOCK",
@@ -25,10 +25,11 @@ methods_pergene <- EvaluateMethods(data = TPM,
                                    drop.exclude = T)
 
 # Impute full dataset
-imputed <- Impute(method.choice = methods_pergene,
-                  data = TPM,
-                  count_path = tpm_path,
-                  type = "TPM",
+imputed <- Impute(do = "Ensemble",
+                  method.choice = methods_pergene,
+                  data = RPM,
+                  count_path = rpm_path,
+                  type = "count",
                   cell.clusters = 2,
                   cores = 4,
                   cluster.type = "SOCK",
