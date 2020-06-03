@@ -1,0 +1,67 @@
+---
+title: "ADImpute_tutorial"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{ADImpute_tutorial}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+devtools::load_all("../")
+library(DrImpute)
+library(SCRABBLE)
+```
+
+Be sure to download the regulatory network file (.rds or .txt) from https://github.com/anacarolinaleote/ADImpute. Provide the full path to the downloaded file:
+```{r}
+network_path <- paste0(getwd(),"/../network.coefficients.rds")
+```
+
+Load demo data and normalize:
+```{r}
+data("demo_data", package = "ADImpute")
+RPM <- NormalizeRPM(demo_data)
+WriteTXT(RPM, "RPM.txt")
+rpm_path <- paste0(getwd(),"/RPM.txt")
+```
+
+Evaluate methods to determine the best performing imputation method for each gene:
+```{r, warning=FALSE}
+methods_pergene <- EvaluateMethods(data = RPM,
+                                   training.ratio = .7,
+                                   mask.ratio = .2,
+                                   training.only = T,
+                                   split.seed = 12,
+                                   mask.seed = 34,
+                                   type = "count",
+                                   cell.clusters = 2,
+                                   cores = 1,
+                                   cluster.type = "SOCK",
+                                   network.path = network_path,
+                                   drop.exclude = T)
+head(methods_pergene)
+```
+
+For each gene, the best performing method is now computed. Next, impute according to best performing method:
+```{r, warning=FALSE}
+imputed <- Impute(do = "Ensemble",
+                  method.choice = methods_pergene,
+                  data = RPM,
+                  count_path = rpm_path,
+                  type = "count",
+                  cell.clusters = 2,
+                  cores = 2,
+                  cluster.type = "SOCK",
+                  network.path = network_path,
+                  drop.exclude = T)
+str(imputed)
+```
+
