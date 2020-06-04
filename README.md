@@ -11,7 +11,7 @@ devtools::install_github("anacarolinaleote/ADImpute")
 library(ADImpute)
 ```
 
-For an example of the usage of the ADImpute package, follow the 20-minute [tutorial](https://aanacarolinaleote/ADImpute/vignettes/ADImpute_tutorial.Rmd).
+For an example of the usage of the ADImpute package, follow the 20-minute [tutorial](https://anacarolinaleote/ADImpute/vignettes/ADImpute_tutorial.Rmd).
 
 ADImpute was developed and tested in R 3.4.4 on Fedora release 27.
 
