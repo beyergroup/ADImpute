@@ -4,11 +4,11 @@
 \alias{EvaluateMethods}
 \title{Imputation method evaluation on training set}
 \usage{
-\code{EvaluateMethods(data, training.ratio = .7, training.only = T,
+EvaluateMethods(data, training.ratio = .7, training.only = T,
 mask.ratio = .1, split.seed = NULL, mask.seed = NULL, scale = 1,
 pseudo.count = 1, labels = NULL, cell.clusters = 2, drop_thre = NULL,
 type = "TPM", cores = 4, cluster.type = "SOCK", network.path = NULL,
-transcript.length = NULL, drop.exclude = T, bulk = NULL, ...)}
+transcript.length = NULL, drop.exclude = T, bulk = NULL, ...)
 }
 \arguments{
 \item{data}{matrix; normalized counts, not logged (genes as rows and samples
@@ -59,6 +59,8 @@ of genewise average expression levels? (defaults to T)}
 
 \item{bulk}{vector of reference bulk RNA-seq, if available (average across
 samples)}
+
+\item{...}{additional parameters to pass to network-based imputation}
 }
 \value{
 character; best performing method in the training set for each gene

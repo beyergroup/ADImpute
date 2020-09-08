@@ -4,8 +4,7 @@
 \alias{ImputeSAVER}
 \title{Use SAVER}
 \usage{
-\code{ImputeSAVER(data, cores = 4, try.mean = F,
-write.to.file = T)}
+ImputeSAVER(data, cores, try.mean = F, write.to.file = T)
 }
 \arguments{
 \item{data}{matrix with entries equal to zero to be imputed, normalized
@@ -27,5 +26,5 @@ matrix; imputation results from SAVER
 imputation
 }
 \seealso{
-\code{\link{SAVER::saver}}
+\code{\link[SAVER]{saver}}
 }

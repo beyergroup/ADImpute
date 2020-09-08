@@ -4,7 +4,7 @@
 \alias{ImputeSCRABBLE}
 \title{Use SCRABBLE}
 \usage{
-\code{ImputeSCRABBLE(data, bulk = NULL, write.to.file = T)}
+ImputeSCRABBLE(data, bulk = NULL, write.to.file = T)
 }
 \arguments{
 \item{data}{matrix with entries equal to zero to be imputed, normalized
@@ -24,5 +24,5 @@ matrix; imputation results from SCRABBLE
 imputation
 }
 \seealso{
-\code{\link{SCRABBLE::scrabble}}
+\code{\link[SCRABBLE]{scrabble}}
 }

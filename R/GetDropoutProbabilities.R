@@ -24,9 +24,9 @@ read_count <-
   function (filetype, path, out_dir, type, genelen)
   {
     if(filetype == "csv") {
-      raw_count = read.csv(path, header = TRUE, row.names = 1)
+      raw_count = utils::read.csv(path, header = TRUE, row.names = 1)
     }else if(filetype == "txt") {
-      raw_count = read.table(path, header = TRUE, row.names = 1)
+      raw_count = utils::read.table(path, header = TRUE, row.names = 1)
     }else if(filetype == "rds") {
       raw_count = readRDS(path)
     }else{
@@ -57,15 +57,15 @@ read_count <-
 find_va_genes = function(parslist, subcount){
   point = log10(1.01)
   valid_genes = which( (rowSums(subcount) > point * ncol(subcount)) &
-                         complete.cases(parslist) )
+                         stats::complete.cases(parslist) )
   if(length(valid_genes) == 0) return(valid_genes)
   # find out genes that violate assumption
   mu = parslist[, "mu"]
   sgene1 = which(mu <= log10(1+1.01))
   # sgene2 = which(mu <= log10(10+1.01) & mu - parslist[,5] > log10(1.01))
 
-  dcheck1 = dgamma(mu+1, shape = parslist[, "alpha"], rate = parslist[, "beta"])
-  dcheck2 = dnorm(mu+1, mean = parslist[, "mu"], sd = parslist[, "sigma"])
+  dcheck1 = stats::dgamma(mu+1, shape = parslist[, "alpha"], rate = parslist[, "beta"])
+  dcheck2 = stats::dnorm(mu+1, mean = parslist[, "mu"], sd = parslist[, "sigma"])
   sgene3 = which(dcheck1 >= dcheck2 & mu <= 1)
   sgene = union(sgene1, sgene3)
   valid_genes = setdiff(valid_genes, sgene)
@@ -76,8 +76,8 @@ find_va_genes = function(parslist, subcount){
 calculate_weight <-
   function (x, paramt)
   {
-    pz1 = paramt[1] * dgamma(x, shape = paramt[2], rate = paramt[3])
-    pz2 = (1 - paramt[1]) * dnorm(x, mean = paramt[4], sd = paramt[5])
+    pz1 = paramt[1] * stats::dgamma(x, shape = paramt[2], rate = paramt[3])
+    pz2 = (1 - paramt[1]) * stats::dnorm(x, mean = paramt[4], sd = paramt[5])
     pz = pz1/(pz1 + pz2)
     pz[pz1 == 0] = 0
     return(cbind(pz, 1 - pz))

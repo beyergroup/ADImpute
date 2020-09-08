@@ -20,7 +20,7 @@
 
 #' @title Data trimming
 #'
-#' @usage \code{ArrangeData(data, network.path = NULL)}
+#' @usage ArrangeData(data, network.path = NULL)
 #'
 #' @description \code{ArrangeData} finds common genes to the network and
 #' provided data and limits both datasets to these
@@ -58,7 +58,7 @@ ArrangeData <- function(data,
 
 #' @title Data centering
 #'
-#' @usage \code{CenterData(data, drop.exclude = T)}
+#' @usage CenterData(data, drop.exclude = T)
 #'
 #' @description \code{CenterData} centers expression of each gene at 0
 #'
@@ -93,8 +93,8 @@ CenterData <- function(data, drop.exclude = T){
 
 #' @title Network-based parallel imputation
 #'
-#' @usage \code{ImputeNetParallel(dropout.matrix, arranged, cores = 4,
-#' cluster.type = "SOCK", type = "iteration", max.iter = 50)}
+#' @usage ImputeNetParallel(dropout.matrix, arranged, cores = 4,
+#' cluster.type = "SOCK", type = "iteration", max.iter = 50)
 #'
 #' @description \code{ImputeNetParallel} implements network-based imputation
 #' in parallel
@@ -164,8 +164,8 @@ ImputeNetParallel <- function(dropout.matrix,
 
   } else{
 
-    imp <- parSapply(cl = cluster, 1:ncol(arranged$centered),
-                         PseudoInverseSolution_percell, arranged, dropout.matrix)
+    imp <- snow::parSapply(cl = cluster, 1:ncol(arranged$centered),
+                           PseudoInverseSolution_percell, arranged, dropout.matrix)
     colnames(imp) <- colnames(arranged$centered)
 
   }
@@ -180,8 +180,8 @@ ImputeNetParallel <- function(dropout.matrix,
 
 #' @title Network-based parallel imputation - Moore-Penrose pseudoinversion
 #'
-#' @usage \code{PseudoInverseSolution_percell(cell, arranged, dropout_mat,
-#' thr = 0.01)}
+#' @usage PseudoInverseSolution_percell(cell, arranged, dropout_mat,
+#' thr = 0.01)
 #'
 #' @description \code{PseudoInverseSolution_percell} applies Moore-Penrose
 #' pseudo-inversion to compute the solution of network imputation for each
@@ -214,9 +214,8 @@ PseudoInverseSolution_percell <- function(cell, arranged, dropout_mat, thr = 0.0
   squared_A <- net[squares,squares]
 
   # determinant of I-squared_A is 0 for all cells: get pseudo-inverse
-  library(MASS)
   cat("Computing pseudoinverse\n")
-  pinv <- ginv(diag(nrow(squared_A))-squared_A, tol = thr)
+  pinv <- MASS::ginv(diag(nrow(squared_A))-squared_A, tol = thr)
   rownames(pinv) <- rownames(squared_A)
   colnames(pinv) <- colnames(squared_A)
 
@@ -254,7 +253,7 @@ PseudoInverseSolution_percell <- function(cell, arranged, dropout_mat, thr = 0.0
 
 #' @title Network loading
 #'
-#' @usage \code{ReadNetwork(network.path)}
+#' @usage ReadNetwork(network.path)
 #'
 #' @description \code{ReadNetwork} loads the matrix of network coefficients
 #'

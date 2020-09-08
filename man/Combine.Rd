@@ -4,7 +4,7 @@
 \alias{Combine}
 \title{Combine imputation methods}
 \usage{
-\code{Combine(data, method.choice, imputed, write.to.file = T)}
+Combine(data, imputed, method.choice, write.to.file = T)
 }
 \arguments{
 \item{data}{matrix with entries equal to zero to be imputed, already

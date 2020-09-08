@@ -20,7 +20,7 @@
 
 #' @title Computation of MSE per gene
 #'
-#' @usage \code{ComputeMSEGenewise(real, masked, imputed, baseline)}
+#' @usage ComputeMSEGenewise(real, masked, imputed, baseline)
 #'
 #' @description \code{ComputeMSEGenewise} computes the MSE of dropout
 #' imputation for a given gene.
@@ -61,7 +61,7 @@ ComputeMSEGenewise <- function(real,
 
 #' @title Method choice per gene
 #'
-#' @usage \code{ChooseMethod(real, masked, imputed, write.to.file = T)}
+#' @usage ChooseMethod(real, masked, imputed, write.to.file = T)
 #'
 #' @description \code{ChooseMethod} determines the method for dropout
 #' imputation based on performance on each gene in training data
@@ -121,8 +121,8 @@ ChooseMethod <- function(real,
 
 #' @title Masking of entries for performance evaluation
 #'
-#' @usage \code{MaskData(data, write.to.file = T, filename, mask = .1,
-#' seed = NULL)}
+#' @usage MaskData(data, write.to.file = T, filename, mask = .1,
+#' seed = NULL)
 #'
 #' @description \code{MaskData} sets a portion (\code{mask}) of the non-zero
 #' entries of each row of \code{data} to zero
@@ -214,7 +214,7 @@ MaskData <- function(data,
 #' @description \code{SplitData} selects a portion (\code{ratio}) of samples
 #' (columns in \code{data}) to be used as training set
 #'
-#' @usage \code{SplitData(data, ratio = .7, training.only = T, seed = NULL)}
+#' @usage SplitData(data, ratio = .7, training.only = T, seed = NULL)
 #'
 #' @param data matrix; raw counts (genes as rows and samples as columns)
 #' @param ratio numeric; ratio of the samples to be used for training

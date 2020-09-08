@@ -4,7 +4,7 @@
 \alias{CenterData}
 \title{Data centering}
 \usage{
-\code{CenterData(data, drop.exclude = T)}
+CenterData(data, drop.exclude = T)
 }
 \arguments{
 \item{data}{matrix of gene expression to be centered row-wise (genes as rows

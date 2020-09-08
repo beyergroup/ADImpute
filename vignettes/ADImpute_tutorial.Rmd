@@ -8,16 +8,13 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
+is_check <- ("CheckExEnv" %in% search()) || any(c("_R_CHECK_TIMINGS_",
+             "_R_CHECK_LICENSE_") %in% names(Sys.getenv()))
+knitr::opts_chunk$set(eval = !is_check, collapse = TRUE, comment = "#>")
 ```
 
 ```{r setup}
-devtools::load_all("../")
-library(DrImpute)
-library(SCRABBLE)
+library(ADImpute)
 ```
 
 Be sure to download the regulatory network file (.rds or .txt) from https://github.com/anacarolinaleote/ADImpute. Provide the full path to the downloaded file:
@@ -27,8 +24,8 @@ network_path <- paste0(getwd(),"/../network.coefficients.rds")
 
 Load demo data and normalize:
 ```{r}
-data("demo_data", package = "ADImpute")
-RPM <- NormalizeRPM(demo_data)
+data("demo_data_50cells", package = "ADImpute")
+RPM <- NormalizeRPM(demo_data_50cells)
 WriteTXT(RPM, "RPM.txt")
 rpm_path <- paste0(getwd(),"/RPM.txt")
 ```
@@ -43,7 +40,7 @@ methods_pergene <- EvaluateMethods(data = RPM,
                                    mask.seed = 34,
                                    type = "count",
                                    cell.clusters = 2,
-                                   cores = 1,
+                                   cores = 2,
                                    cluster.type = "SOCK",
                                    network.path = network_path,
                                    drop.exclude = T)

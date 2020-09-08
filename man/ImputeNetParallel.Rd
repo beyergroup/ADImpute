@@ -4,8 +4,8 @@
 \alias{ImputeNetParallel}
 \title{Network-based parallel imputation}
 \usage{
-\code{ImputeNetParallel(dropout.matrix, arranged, cores = 4,
-cluster.type = "SOCK", max.iter = 50)}
+ImputeNetParallel(dropout.matrix, arranged, cores = 4,
+cluster.type = "SOCK", type = "iteration", max.iter = 50)
 }
 \arguments{
 \item{dropout.matrix}{matrix, logical; dropout entries in the data matrix
@@ -16,6 +16,9 @@ cluster.type = "SOCK", max.iter = 50)}
 \item{cores}{integer; number of cores used for paralell computation}
 
 \item{cluster.type}{character; either "SOCK" or "MPI"}
+
+\item{type}{character; either "iteration", for an iterative solution, or
+"pseudoinv", to use Moore-Penrose pseudo-inversion as a solution.}
 
 \item{max.iter}{numeric; maximum number of iterations for network
 imputation. Set to -1 to remove limit (not recommended)}

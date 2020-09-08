@@ -4,7 +4,7 @@
 \alias{ComputeMSEGenewise}
 \title{Computation of MSE per gene}
 \usage{
-\code{ComputeMSEGenewise(real, masked, imputed)}
+ComputeMSEGenewise(real, masked, imputed, baseline)
 }
 \arguments{
 \item{real}{numeric; vector of original expression of a given gene (before
@@ -14,6 +14,8 @@ masking)}
 given gene}
 
 \item{imputed}{matrix; imputation results for a given imputation method}
+
+\item{baseline}{logical; is this baseline imputation?}
 }
 \value{
 MSE of all imputations indicated by \code{masked}

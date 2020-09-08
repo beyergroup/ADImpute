@@ -23,15 +23,17 @@
 #' @description \code{NormalizeRPM} performs RPM normalization, with possibility
 #' to log the result
 #'
-#' @usage \code{NormalizeTPM(data, log = F, scale = 1, pseudo.count = 1)}
+#' @usage NormalizeRPM(data, log = F, scale = 1, pseudo.count = 1)
 #'
 #' @param data matrix; raw data (genes as rows and samples as columns)
 #' @param log logical; log RPMs?
 #' @param scale integer; scale factor to divide RPMs by
-#' @param pseudocount numeric; if \code{log = T}, value to add to RPMs in order
+#' @param pseudo.count numeric; if \code{log = T}, value to add to RPMs in order
 #' to avoid taking \code{log(0)}
 #'
 #' @return matrix; library size normalized data
+#'
+#' @export
 #'
 NormalizeRPM <- function(data,
                          log = F,
@@ -55,15 +57,15 @@ NormalizeRPM <- function(data,
 #' @description \code{NormalizeTPM} performs TPM normalization, with possibility
 #' to log the result
 #'
-#' @usage \code{NormalizeTPM(data, transcript.length = NULL,
-#' log = F, scale = 1, pseudo.count = 1)}
+#' @usage NormalizeTPM(data, transcript.length = NULL,
+#' log = F, scale = 1, pseudo.count = 1)
 #'
 #' @param data matrix; raw data (genes as rows and samples as columns)
 #' @param transcript.length matrix with at least 2 columns: "hgnc_symbol" and
 #' "transcript_length"
 #' @param log logical; log TPMs?
 #' @param scale integer; scale factor to divide TPMs by
-#' @param pseudocount numeric; if \code{log = T}, value to add to TPMs in order
+#' @param pseudo.count numeric; if \code{log = T}, value to add to TPMs in order
 #' to avoid taking \code{log(0)}
 #'
 #' @details Gene length is estimated as the median of the lengths of all
@@ -72,6 +74,7 @@ NormalizeRPM <- function(data,
 #'
 #' @return matrix; normalized data (for transcript length and library size)
 #'
+#' @export
 #'
 NormalizeTPM <- function(data,
                          transcript.length = NULL,
@@ -81,7 +84,7 @@ NormalizeTPM <- function(data,
 
   if (is.null(transcript.length)){
 
-    data("transcript_length", package = "ADImpute")
+    # data("transcript_length", package = "ADImpute")
     tr_length <- transcript_length
     rm(transcript_length)
 
@@ -90,9 +93,9 @@ NormalizeTPM <- function(data,
   }
 
   # Median length of all transcripts for a given gene
-  med_length <- aggregate(x = tr_length$transcript_length,
-                          by = list("hgnc_symbol" = tr_length$hgnc_symbol),
-                          FUN = median)
+  med_length <- stats::aggregate(x = tr_length$transcript_length,
+                                 by = list("hgnc_symbol" = tr_length$hgnc_symbol),
+                                 FUN = stats::median)
   common <- intersect(rownames(data), med_length$hgnc_symbol)
   data   <- data[common, ]
 

@@ -4,7 +4,7 @@
 \alias{ReadNetwork}
 \title{Network loading}
 \usage{
-\code{ReadNetwork(network.path)}
+ReadNetwork(network.path)
 }
 \arguments{
 \item{network.path}{character; path to .txt or .rds file with network

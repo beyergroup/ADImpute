@@ -4,9 +4,9 @@
 \alias{ImputeScImpute}
 \title{Use scImpute}
 \usage{
-\code{ImputeScImpute(count_path, infile, outfile = "rds", out_dir,
+ImputeScImpute(count_path, infile, outfile = "rds", out_dir,
 labeled, drop_thre, Kcluster, labels = NULL, ncores = 4, type = "TPM",
-transcript.length = NULL, genelen = NULL)}
+transcript.length = NULL, genelen = NULL)
 }
 \arguments{
 \item{count_path}{A character specifying the full path of the raw count
@@ -58,5 +58,5 @@ matrix; imputation results from scImpute
 imputation
 }
 \seealso{
-\code{\link{scImpute::scimpute}}
+\code{\link[scImpute]{scimpute}}
 }

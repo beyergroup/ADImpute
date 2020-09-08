@@ -20,11 +20,11 @@
 
 #' @title Imputation method evaluation on training set
 #'
-#' @usage \code{EvaluateMethods(data, training.ratio = .7, training.only = T,
+#' @usage EvaluateMethods(data, training.ratio = .7, training.only = T,
 #' mask.ratio = .1, split.seed = NULL, mask.seed = NULL, scale = 1,
 #' pseudo.count = 1, labels = NULL, cell.clusters = 2, drop_thre = NULL,
 #' type = "TPM", cores = 4, cluster.type = "SOCK", network.path = NULL,
-#' transcript.length = NULL, drop.exclude = T, bulk = NULL, ...)}
+#' transcript.length = NULL, drop.exclude = T, bulk = NULL, ...)
 #'
 #' @description \code{EvaluateMethods} returns the best-performing imputation
 #' method for each gene in the dataset
@@ -60,6 +60,7 @@
 #' of genewise average expression levels? (defaults to T)
 #' @param bulk vector of reference bulk RNA-seq, if available (average across
 #' samples)
+#' @param ... additional parameters to pass to network-based imputation
 #'
 #' @details For each gene, a fraction (\code{mask.ratio}) of the quantified
 #' expression values are set to zero and imputed according to 3 different
@@ -76,6 +77,8 @@
 #' \code{\link{ImputeSAVER}},
 #' \code{\link{ImputeScImpute}},
 #' \code{\link{ImputeSCRABBLE}}
+#'
+#' @export
 #'
 EvaluateMethods <- function(data,
                             training.ratio = .7,
@@ -99,7 +102,7 @@ EvaluateMethods <- function(data,
 
   # Check arguments
   if (is.null(transcript.length)){
-    data("transcript_length", package = "ADImpute")
+    # data("transcript_length", package = "ADImpute")
     transcript.length <- transcript_length
     rm(transcript_length)
   }
@@ -190,10 +193,11 @@ EvaluateMethods <- function(data,
 
 #' @title Dropout imputation using gene-specific best-performing methods
 #'
-#' @usage \code{Impute(data, do = "Ensemble", method.choice, scale = 1, pseudo.count = 1,
-#' count_path, labels = NULL, cell.clusters = NULL, drop_thre = NULL,
-#' type = "TPM", cores = 4, cluster.type = "SOCK", network.path = NULL,
-#' transcript.length = NULL, drop.exclude = T, ...)}
+#' @usage Impute(data, do = "Ensemble", method.choice = NULL, scale = 1,
+#' pseudo.count = 1, count_path, labels = NULL, cell.clusters = 2,
+#' drop_thre = NULL, type = "TPM", cores = 4, cluster.type = "SOCK",
+#' network.path = NULL, transcript.length = NULL, drop.exclude = T,
+#' bulk = NULL, true.zero.thr = NULL, ...)
 #'
 #' @description \code{Impute} performs dropout imputation based on the
 #' performance results obtained in the training data, coupled to normalization
@@ -228,6 +232,12 @@ EvaluateMethods <- function(data,
 #' of genewise average expression levels? (defaults to T)
 #' @param bulk vector of reference bulk RNA-seq, if available (average across
 #' samples)
+#' @param true.zero.thr if set to NULL (default), no true zero estimation is
+#' performed. Set to numeric value between 0 and 1 for estimation. Value
+#' corresponds to the threshold used to determine true zeros: if the probability
+#' of dropout is lower than \code{true.zero.thr}, the imputed entries are set
+#' to zero.
+#' @param ... additional parameters to pass to network-based imputation
 #'
 #' @return list of imputation results (normalized, log-transformed) for all
 #' selected methods in \code{do}
@@ -254,6 +264,13 @@ EvaluateMethods <- function(data,
 #' \code{Impute} creates a directory \code{imputation} containing the
 #' imputation results of all methods in \code{do}.
 #'
+#' @examples
+#' # Normalize demo data
+#' norm_data <- NormalizeRPM(demo_data_50cells)
+#' # Impute with particular methods
+#' imputed_data <- Impute(do = c("Baseline","DrImpute"), data = norm_data,
+#' cores = 1)
+#'
 #' @seealso \code{\link{EvaluateMethods}},
 #' \code{\link{ImputeBaseline}},
 #' \code{\link{ImputeDrImpute}},
@@ -262,12 +279,14 @@ EvaluateMethods <- function(data,
 #' \code{\link{ImputeScImpute}},
 #' \code{\link{ImputeSCRABBLE}}
 #'
+#' @export
+#'
 Impute <- function(data,
                    do = "Ensemble",
                    method.choice = NULL,
                    scale = 1,
                    pseudo.count = 1,
-                   count_path,
+                   count_path = NULL,
                    labels = NULL,
                    cell.clusters = 2,
                    drop_thre = NULL,
@@ -285,7 +304,7 @@ Impute <- function(data,
 
   # Check arguments
   if (is.null(transcript.length)){
-    data("transcript_length", package = "ADImpute")
+    # data("transcript_length", package = "ADImpute")
     transcript.length <- transcript_length
     rm(transcript_length)
   }
@@ -394,6 +413,15 @@ Impute <- function(data,
   }
 
   # Estimate true zeros
+
+  if(any(grep(".txt", count_path))){
+    infile <- "txt"
+  } else if(any(grep(".rds", count_path))){
+    infile <- "rds"
+  } else if (any(grep(".csv", count_path))){
+    infile <- "csv"
+  }
+
   if(!is.null(true.zero.thr)){
 
     # error to run scImpute first
@@ -409,7 +437,7 @@ Impute <- function(data,
       droprob <- GetDropoutProbabilities(infile = infile, count_path = count_path,
                                          out_dir = "scImpute/", type = type,
                                          genelen = readRDS(paste0("outdir","genelength.rds")),
-                                         drop_thre = true.zero.thr, data = read.csv(count_path))
+                                         drop_thre = true.zero.thr, data = utils::read.csv(count_path))
       WriteTXT(droprob, "dropout_probability.txt")
 
       # apply thresholds

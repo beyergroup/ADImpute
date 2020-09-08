@@ -4,8 +4,8 @@
 \alias{ImputeNetwork}
 \title{Network-based imputation}
 \usage{
-\code{ImputeNetwork(data, network.path = NULL, cores = 4,
-cluster.type = "SOCK", write.to.file = T, drop.exclude = T, ...)}
+ImputeNetwork(data, network.path = NULL, cores = 4,
+cluster.type = "SOCK", write.to.file = T, drop.exclude = T, ...)
 }
 \arguments{
 \item{data}{matrix with entries equal to zero to be imputed, normalized

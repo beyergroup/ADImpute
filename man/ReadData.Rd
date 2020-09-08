@@ -4,7 +4,7 @@
 \alias{ReadData}
 \title{Data read}
 \usage{
-\code{ReadData(path, ...)}
+ReadData(path, ...)
 }
 \arguments{
 \item{path}{character; path to input file}

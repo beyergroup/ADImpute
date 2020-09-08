@@ -4,8 +4,8 @@
 \alias{MaskData}
 \title{Masking of entries for performance evaluation}
 \usage{
-\code{MaskData(data, write.to.file = T, filename, mask = .1,
-seed = NULL)}
+MaskData(data, write.to.file = T, filename, mask = .1,
+seed = NULL)
 }
 \arguments{
 \item{data}{matrix; raw counts (genes as rows and samples as columns)}

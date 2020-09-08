@@ -4,8 +4,8 @@
 \alias{NormalizeTPM}
 \title{TPM normalization}
 \usage{
-\code{NormalizeTPM(data, transcript.length = NULL,
-log = F, scale = 1, pseudo.count = 1)}
+NormalizeTPM(data, transcript.length = NULL,
+log = F, scale = 1, pseudo.count = 1)
 }
 \arguments{
 \item{data}{matrix; raw data (genes as rows and samples as columns)}
@@ -17,7 +17,7 @@ log = F, scale = 1, pseudo.count = 1)}
 
 \item{scale}{integer; scale factor to divide TPMs by}
 
-\item{pseudocount}{numeric; if \code{log = T}, value to add to TPMs in order
+\item{pseudo.count}{numeric; if \code{log = T}, value to add to TPMs in order
 to avoid taking \code{log(0)}}
 }
 \value{

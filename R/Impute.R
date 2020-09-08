@@ -20,7 +20,7 @@
 
 #' @title Combine imputation methods
 #'
-#' @usage \code{Combine(data, method.choice, imputed, write.to.file = T)}
+#' @usage Combine(data, imputed, method.choice, write.to.file = T)
 #'
 #' @param data matrix with entries equal to zero to be imputed, already
 #' normalized (genes as rows and samples as columns)
@@ -120,9 +120,10 @@ ImputeBaseline <- function(data,
 }
 
 
+
 #' @title Use DrImpute
 #'
-#' @usage \code{ImputeDrImpute(data, write.to.file = T)}
+#' @usage ImputeDrImpute(data, write.to.file = T)
 #'
 #' @description \code{ImputeDrImpute} uses the DrImpute package for dropout
 #' imputation
@@ -134,11 +135,11 @@ ImputeBaseline <- function(data,
 #'
 #' @return matrix; imputation results from DrImpute
 #'
-#' @seealso \code{\link{DrImpute::DrImpute}}
+#' @seealso \code{\link[DrImpute]{DrImpute}}
 #'
 ImputeDrImpute <- function(data, write.to.file = T){
 
-  res <- DrImpute(as.matrix(data))
+  res <- DrImpute::DrImpute(as.matrix(data))
   colnames(res) <- colnames(data)
 
   if(write.to.file){
@@ -152,8 +153,8 @@ ImputeDrImpute <- function(data, write.to.file = T){
 
 #' @title Network-based imputation
 #'
-#' @usage \code{ImputeNetwork(data, network.path = NULL, cores = 4,
-#' cluster.type = "SOCK", write.to.file = T, drop.exclude = T, ...)}
+#' @usage ImputeNetwork(data, network.path = NULL, cores = 4,
+#' cluster.type = "SOCK", write.to.file = T, drop.exclude = T, ...)
 #'
 #' @param data matrix with entries equal to zero to be imputed, normalized
 #' and log2-transformed (genes as rows and samples as columns)
@@ -225,10 +226,10 @@ ImputeNetwork <- function(data,
 }
 
 
+
 #' @title Use SAVER
 #'
-#' @usage \code{ImputeSAVER(data, cores = 4, try.mean = F,
-#' write.to.file = T)}
+#' @usage ImputeSAVER(data, cores, try.mean = F, write.to.file = T)
 #'
 #' @description \code{ImputeSAVER} uses the SAVER package for dropout
 #' imputation
@@ -243,7 +244,7 @@ ImputeNetwork <- function(data,
 #'
 #' @return matrix; imputation results from SAVER
 #'
-#' @seealso \code{\link{SAVER::saver}}
+#' @seealso \code{\link[SAVER]{saver}}
 #'
 ImputeSAVER <- function(data, cores, try.mean = F, write.to.file = T){
 
@@ -265,11 +266,12 @@ ImputeSAVER <- function(data, cores, try.mean = F, write.to.file = T){
 }
 
 
+
 #' @title Use scImpute
 #'
-#' @usage \code{ImputeScImpute(count_path, infile, outfile = "rds", out_dir,
+#' @usage ImputeScImpute(count_path, infile, outfile = "rds", out_dir,
 #' labeled, drop_thre, Kcluster, labels = NULL, ncores = 4, type = "TPM",
-#' transcript.length = NULL, genelen = NULL)}
+#' transcript.length = NULL, genelen = NULL)
 #'
 #' @description \code{ImputeScImpute} uses the scImpute package for dropout
 #' imputation
@@ -306,7 +308,7 @@ ImputeSAVER <- function(data, cores, try.mean = F, write.to.file = T){
 #'
 #' @return matrix; imputation results from scImpute
 #'
-#' @seealso \code{\link{scImpute::scimpute}}
+#' @seealso \code{\link[scImpute]{scimpute}}
 #'
 ImputeScImpute <- function(count_path,
                            infile,
@@ -321,12 +323,14 @@ ImputeScImpute <- function(count_path,
                            transcript.length = NULL,
                            genelen = NULL){
 
+
+
   # Get genlen if needed
   if (type == "TPM"){
 
     if (is.null(transcript.length)){
 
-      data("transcript_length", package = "ADImpute")
+      # data("transcript_length", package = "ADImpute")
       tr_length <- transcript_length
       rm(transcript_length)
 
@@ -335,15 +339,15 @@ ImputeScImpute <- function(count_path,
     }
 
     # Median length of all transcripts for a given gene
-    med_length <- aggregate(x = tr_length$transcript_length,
-                            by = list("hgnc_symbol" = tr_length$hgnc_symbol),
-                            FUN = median)
+    med_length <- stats::aggregate(x = tr_length$transcript_length,
+                                   by = list("hgnc_symbol" = tr_length$hgnc_symbol),
+                                   FUN = stats::median)
     if (infile == "txt"){
-      data <- read.table(count_path)
+      data <- utils::read.table(count_path)
     } else if (infile == "rds"){
       data <- readRDS(count_path)
     }else{
-      data <- read.csv(count_path)
+      data <- utils::read.csv(count_path)
     }
     common <- intersect(rownames(data), med_length$hgnc_symbol)
     data   <- data[common, ]
@@ -376,9 +380,10 @@ ImputeScImpute <- function(count_path,
 }
 
 
+
 #' @title Use SCRABBLE
 #'
-#' @usage \code{ImputeSCRABBLE(data, bulk = NULL, write.to.file = T)}
+#' @usage ImputeSCRABBLE(data, bulk = NULL, write.to.file = T)
 #'
 #' @description \code{ImputeSCRABBLE} uses the SCRABBLE package for dropout
 #' imputation
@@ -392,7 +397,7 @@ ImputeScImpute <- function(count_path,
 #'
 #' @return matrix; imputation results from SCRABBLE
 #'
-#' @seealso \code{\link{SCRABBLE::scrabble}}
+#' @seealso \code{\link[SCRABBLE]{scrabble}}
 #'
 ImputeSCRABBLE <- function(data, bulk = NULL, write.to.file = T){
 

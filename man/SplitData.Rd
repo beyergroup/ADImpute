@@ -4,7 +4,7 @@
 \alias{SplitData}
 \title{Selection of samples for training}
 \usage{
-\code{SplitData(data, ratio = .7, training.only = T, seed = NULL)}
+SplitData(data, ratio = .7, training.only = T, seed = NULL)
 }
 \arguments{
 \item{data}{matrix; raw counts (genes as rows and samples as columns)}

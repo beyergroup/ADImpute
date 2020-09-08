@@ -4,7 +4,7 @@
 \alias{ArrangeData}
 \title{Data trimming}
 \usage{
-\code{ArrangeData(data, network.path = NULL)}
+ArrangeData(data, network.path = NULL)
 }
 \arguments{
 \item{data}{matrix with entries equal to zero to be imputed (genes as rows

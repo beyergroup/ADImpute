@@ -4,10 +4,11 @@
 \alias{Impute}
 \title{Dropout imputation using gene-specific best-performing methods}
 \usage{
-\code{Impute(data, do = "Ensemble", method.choice, scale = 1, pseudo.count = 1,
-count_path, labels = NULL, cell.clusters = NULL, drop_thre = NULL,
-type = "TPM", cores = 4, cluster.type = "SOCK", network.path = NULL,
-transcript.length = NULL, drop.exclude = T, ...)}
+Impute(data, do = "Ensemble", method.choice = NULL, scale = 1,
+pseudo.count = 1, count_path, labels = NULL, cell.clusters = 2,
+drop_thre = NULL, type = "TPM", cores = 4, cluster.type = "SOCK",
+network.path = NULL, transcript.length = NULL, drop.exclude = T,
+bulk = NULL, true.zero.thr = NULL, ...)
 }
 \arguments{
 \item{data}{matrix; raw counts (genes as rows and samples as columns)}
@@ -51,6 +52,17 @@ coefficients}
 
 \item{drop.exclude}{logical; should zeros be discarded for the calculation
 of genewise average expression levels? (defaults to T)}
+
+\item{bulk}{vector of reference bulk RNA-seq, if available (average across
+samples)}
+
+\item{true.zero.thr}{if set to NULL (default), no true zero estimation is
+performed. Set to numeric value between 0 and 1 for estimation. Value
+corresponds to the threshold used to determine true zeros: if the probability
+of dropout is lower than \code{true.zero.thr}, the imputed entries are set
+to zero.}
+
+\item{...}{additional parameters to pass to network-based imputation}
 }
 \value{
 list of imputation results (normalized, log-transformed) for all
@@ -83,6 +95,14 @@ If \code{"Ensemble"} is included in \code{do}, \code{method.choice} has to
 be provided (use output from \code{EvaluateMethods()}).
 \code{Impute} creates a directory \code{imputation} containing the
 imputation results of all methods in \code{do}.
+}
+\examples{
+# Normalize demo data
+norm_data <- NormalizeRPM(demo_data_50cells)
+# Impute with particular methods
+imputed_data <- Impute(do = c("Baseline","DrImpute"), data = norm_data,
+cores = 1)
+
 }
 \seealso{
 \code{\link{EvaluateMethods}},

@@ -4,7 +4,7 @@
 \alias{ImputeDrImpute}
 \title{Use DrImpute}
 \usage{
-\code{ImputeDrImpute(data, write.to.file = T)}
+ImputeDrImpute(data, write.to.file = T)
 }
 \arguments{
 \item{data}{matrix with entries equal to zero to be imputed, normalized
@@ -21,5 +21,5 @@ matrix; imputation results from DrImpute
 imputation
 }
 \seealso{
-\code{\link{DrImpute::DrImpute}}
+\code{\link[DrImpute]{DrImpute}}
 }

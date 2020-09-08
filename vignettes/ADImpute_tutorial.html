@@ -70,15 +70,12 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 
 
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">devtools<span class="op">::</span><span class="kw">load_all</span>(<span class="st">&quot;../&quot;</span>)
-<span class="co">#&gt; Loading ADImpute</span>
-<span class="kw">library</span>(DrImpute)
-<span class="kw">library</span>(SCRABBLE)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(ADImpute)</code></pre></div>
 <p>Be sure to download the regulatory network file (.rds or .txt) from <a href="https://github.com/anacarolinaleote/ADImpute" class="uri">https://github.com/anacarolinaleote/ADImpute</a>. Provide the full path to the downloaded file:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">network_path &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="kw">getwd</span>(),<span class="st">&quot;/../network.coefficients.rds&quot;</span>)</code></pre></div>
 <p>Load demo data and normalize:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">data</span>(<span class="st">&quot;demo_data&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;ADImpute&quot;</span>)
-RPM &lt;-<span class="st"> </span><span class="kw">NormalizeRPM</span>(demo_data)
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">data</span>(<span class="st">&quot;demo_data_50cells&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;ADImpute&quot;</span>)
+RPM &lt;-<span class="st"> </span><span class="kw">NormalizeRPM</span>(demo_data_50cells)
 <span class="kw">WriteTXT</span>(RPM, <span class="st">&quot;RPM.txt&quot;</span>)
 <span class="co">#&gt; NULL</span>
 rpm_path &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="kw">getwd</span>(),<span class="st">&quot;/RPM.txt&quot;</span>)</code></pre></div>
@@ -91,22 +88,18 @@ rpm_path &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span clas
                                    <span class="dt">mask.seed =</span> <span class="dv">34</span>,
                                    <span class="dt">type =</span> <span class="st">&quot;count&quot;</span>,
                                    <span class="dt">cell.clusters =</span> <span class="dv">2</span>,
-                                   <span class="dt">cores =</span> <span class="dv">4</span>,
+                                   <span class="dt">cores =</span> <span class="dv">2</span>,
                                    <span class="dt">cluster.type =</span> <span class="st">&quot;SOCK&quot;</span>,
                                    <span class="dt">network.path =</span> network_path,
                                    <span class="dt">drop.exclude =</span> T)
-<span class="co">#&gt; Warning in rm(transcript_length): object 'transcript_length' not found</span>
-<span class="co">#&gt; Warning in dir.create(&quot;training&quot;): 'training' already exists</span>
 <span class="co">#&gt; Selecting training data</span>
 <span class="co">#&gt; Masking training data</span>
 <span class="co">#&gt; original sparcity 0.50 </span>
 <span class="co">#&gt; final sparcity 0.64 </span>
 <span class="co">#&gt; Imputing training data using scImpute</span>
-<span class="co">#&gt; Warning in dir.create(&quot;scImpute&quot;): 'scImpute' already exists</span>
 <span class="co">#&gt; [1] &quot;reading in raw count matrix ...&quot;</span>
-<span class="co">#&gt; Warning in dir.create(out_dir, recursive = TRUE): 'scImpute' already exists</span>
 <span class="co">#&gt; [1] &quot;number of genes in raw count matrix 19097&quot;</span>
-<span class="co">#&gt; [1] &quot;number of cells in raw count matrix 70&quot;</span>
+<span class="co">#&gt; [1] &quot;number of cells in raw count matrix 35&quot;</span>
 <span class="co">#&gt; [1] &quot;reading finished!&quot;</span>
 <span class="co">#&gt; [1] &quot;imputation starts ...&quot;</span>
 <span class="co">#&gt; [1] &quot;searching candidate neighbors ... &quot;</span>
@@ -114,7 +107,7 @@ rpm_path &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span clas
 <span class="co">#&gt; [1] &quot;dimension reduction ...&quot;</span>
 <span class="co">#&gt; [1] &quot;calculating cell distances ...&quot;</span>
 <span class="co">#&gt; [1] &quot;cluster sizes:&quot;</span>
-<span class="co">#&gt; [1] 37 33</span>
+<span class="co">#&gt; [1] 19 16</span>
 <span class="co">#&gt; [1] &quot;estimating dropout probability for type 1 ...&quot;</span>
 <span class="co">#&gt; [1] &quot;searching for valid genes ...&quot;</span>
 <span class="co">#&gt; [1] &quot;imputing dropout values for type 1 ...&quot;</span>
@@ -123,18 +116,15 @@ rpm_path &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span clas
 <span class="co">#&gt; [1] &quot;imputing dropout values for type 2 ...&quot;</span>
 <span class="co">#&gt; [1] &quot;writing imputed count matrix ...&quot;</span>
 <span class="co">#&gt; Imputing training data using SCRABBLE</span>
-<span class="co">#&gt; Warning in dir.create(&quot;SCRABBLE&quot;): 'SCRABBLE' already exists</span>
 <span class="co">#&gt; Taking average of single cell data as reference bulk for SCRABBLE imputation.</span>
-<span class="co">#&gt; [1] &quot;SCRABBLE begins the imputation of the data with 19097 genes and 70 cells&quot;</span>
+<span class="co">#&gt; [1] &quot;SCRABBLE begins the imputation of the data with 19097 genes and 35 cells&quot;</span>
 <span class="co">#&gt; [1] &quot;Imputation initialization is finished&quot;</span>
 <span class="co">#&gt; [1] &quot;... ....&quot;</span>
 <span class="co">#&gt; [1] &quot;Imputation is finished&quot;</span>
-<span class="co">#&gt; Warning in dir.create(&quot;SCRABBLE&quot;): 'SCRABBLE' already exists</span>
 <span class="co">#&gt; Imputing training data using average expression</span>
-<span class="co">#&gt; Warning in dir.create(&quot;Baseline&quot;): 'Baseline' already exists</span>
 <span class="co">#&gt; Imputing training data using network information</span>
 <span class="co">#&gt; Reading .rds file with network coefficients</span>
-<span class="co">#&gt; Dimensions of data matrix: 16903 x 70 </span>
+<span class="co">#&gt; Dimensions of data matrix: 16903 x 35 </span>
 <span class="co">#&gt; Dimensions of network matrix: 16723 x 14173 </span>
 <span class="co">#&gt; Centering expression of each gene at 0</span>
 <span class="co">#&gt; Starting network-based imputation</span>
@@ -149,19 +139,18 @@ rpm_path &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span clas
 <span class="co">#&gt; Iteration 45 / 50 </span>
 <span class="co">#&gt; Iteration 50 / 50 </span>
 <span class="co">#&gt; Network imputation complete</span>
-<span class="co">#&gt; Warning in dir.create(&quot;Network&quot;): 'Network' already exists</span>
 <span class="co">#&gt; Imputing training data using DrImpute</span>
-<span class="co">#&gt; [2020-06-01 21:46:28] number of cells: 70</span>
-<span class="co">#&gt; [2020-06-01 21:46:28] number of genes: 19097</span>
-<span class="co">#&gt; [2020-06-01 21:46:28] % zero events (X=0): 64.3%</span>
-<span class="co">#&gt; [2020-06-01 21:46:28] % robustly expressed events (X&gt;5): 29.1%</span>
-<span class="co">#&gt; [2020-06-01 21:46:28] # of CPU cores: 1</span>
-<span class="co">#&gt; [2020-06-01 21:46:30] imputing zeros</span>
-<span class="co">#&gt; [2020-06-01 21:46:32] % zero events after imputation: 40.7%</span>
-<span class="co">#&gt; Imputation errors computed for 16161 genes</span>
+<span class="co">#&gt; [2020-06-14 12:01:58] number of cells: 35</span>
+<span class="co">#&gt; [2020-06-14 12:01:58] number of genes: 19097</span>
+<span class="co">#&gt; [2020-06-14 12:01:58] % zero events (X=0): 64.1%</span>
+<span class="co">#&gt; [2020-06-14 12:01:58] % robustly expressed events (X&gt;5): 29.2%</span>
+<span class="co">#&gt; [2020-06-14 12:01:58] # of CPU cores: 1</span>
+<span class="co">#&gt; [2020-06-14 12:01:59] imputing zeros</span>
+<span class="co">#&gt; [2020-06-14 12:02:01] % zero events after imputation: 45.3%</span>
+<span class="co">#&gt; Imputation errors computed for 15532 genes</span>
 <span class="kw">head</span>(methods_pergene)
 <span class="co">#&gt;       MKL2      CD109      ABTB1      MAST2       KAT5       WWC2 </span>
-<span class="co">#&gt; &quot;Baseline&quot;  &quot;Network&quot; &quot;SCRABBLE&quot;  &quot;Network&quot;  &quot;Network&quot; &quot;SCRABBLE&quot;</span></code></pre></div>
+<span class="co">#&gt; &quot;SCRABBLE&quot; &quot;SCRABBLE&quot;  &quot;Network&quot;  &quot;Network&quot; &quot;SCRABBLE&quot; &quot;DrImpute&quot;</span></code></pre></div>
 <p>For each gene, the best performing method is now computed. Next, impute according to best performing method:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">imputed &lt;-<span class="st"> </span><span class="kw">Impute</span>(<span class="dt">do =</span> <span class="st">&quot;Ensemble&quot;</span>,
                   <span class="dt">method.choice =</span> methods_pergene,
@@ -169,21 +158,20 @@ rpm_path &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span clas
                   <span class="dt">count_path =</span> rpm_path,
                   <span class="dt">type =</span> <span class="st">&quot;count&quot;</span>,
                   <span class="dt">cell.clusters =</span> <span class="dv">2</span>,
-                  <span class="dt">cores =</span> <span class="dv">4</span>,
+                  <span class="dt">cores =</span> <span class="dv">2</span>,
                   <span class="dt">cluster.type =</span> <span class="st">&quot;SOCK&quot;</span>,
                   <span class="dt">network.path =</span> network_path,
                   <span class="dt">drop.exclude =</span> T)
-<span class="co">#&gt; Warning in rm(transcript_length): object 'transcript_length' not found</span>
 <span class="co">#&gt; Imputing data using SCRABBLE</span>
 <span class="co">#&gt; Taking average of single cell data as reference bulk for SCRABBLE imputation.</span>
-<span class="co">#&gt; [1] &quot;SCRABBLE begins the imputation of the data with 19097 genes and 100 cells&quot;</span>
+<span class="co">#&gt; [1] &quot;SCRABBLE begins the imputation of the data with 19097 genes and 50 cells&quot;</span>
 <span class="co">#&gt; [1] &quot;Imputation initialization is finished&quot;</span>
 <span class="co">#&gt; [1] &quot;... ....&quot;</span>
 <span class="co">#&gt; [1] &quot;Imputation is finished&quot;</span>
 <span class="co">#&gt; Imputing data using average expression</span>
 <span class="co">#&gt; Imputing data using network information</span>
 <span class="co">#&gt; Reading .rds file with network coefficients</span>
-<span class="co">#&gt; Dimensions of data matrix: 16903 x 100 </span>
+<span class="co">#&gt; Dimensions of data matrix: 16903 x 50 </span>
 <span class="co">#&gt; Dimensions of network matrix: 16723 x 14173 </span>
 <span class="co">#&gt; Centering expression of each gene at 0</span>
 <span class="co">#&gt; Starting network-based imputation</span>
@@ -199,36 +187,36 @@ rpm_path &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span clas
 <span class="co">#&gt; Iteration 50 / 50 </span>
 <span class="co">#&gt; Network imputation complete</span>
 <span class="co">#&gt; Imputing data using DrImpute</span>
-<span class="co">#&gt; [2020-06-01 21:55:48] number of cells: 100</span>
-<span class="co">#&gt; [2020-06-01 21:55:48] number of genes: 19097</span>
-<span class="co">#&gt; [2020-06-01 21:55:48] % zero events (X=0): 49.4%</span>
-<span class="co">#&gt; [2020-06-01 21:55:48] % robustly expressed events (X&gt;5): 39.8%</span>
-<span class="co">#&gt; [2020-06-01 21:55:48] # of CPU cores: 1</span>
-<span class="co">#&gt; [2020-06-01 21:55:50] imputing zeros</span>
-<span class="co">#&gt; [2020-06-01 21:55:53] % zero events after imputation: 25.1%</span>
+<span class="co">#&gt; [2020-06-14 12:09:49] number of cells: 50</span>
+<span class="co">#&gt; [2020-06-14 12:09:49] number of genes: 19097</span>
+<span class="co">#&gt; [2020-06-14 12:09:49] % zero events (X=0): 49.4%</span>
+<span class="co">#&gt; [2020-06-14 12:09:49] % robustly expressed events (X&gt;5): 39.7%</span>
+<span class="co">#&gt; [2020-06-14 12:09:49] # of CPU cores: 1</span>
+<span class="co">#&gt; [2020-06-14 12:09:50] imputing zeros</span>
+<span class="co">#&gt; [2020-06-14 12:09:52] % zero events after imputation: 30.0%</span>
 <span class="co">#&gt; Combining imputation results into ensemble</span>
 <span class="kw">str</span>(imputed)
 <span class="co">#&gt; List of 5</span>
-<span class="co">#&gt;  $ SCRABBLE: num [1:19097, 1:100] 0.623 5.768 0.47 5.742 4.391 ...</span>
+<span class="co">#&gt;  $ SCRABBLE: num [1:19097, 1:50] 3.08 5.85 0 2.7 1.59 ...</span>
 <span class="co">#&gt;   ..- attr(*, &quot;dimnames&quot;)=List of 2</span>
 <span class="co">#&gt;   .. ..$ : chr [1:19097] &quot;MKL2&quot; &quot;CD109&quot; &quot;ABTB1&quot; &quot;MAST2&quot; ...</span>
-<span class="co">#&gt;   .. ..$ : chr [1:100] &quot;H1_Exp1.049&quot; &quot;H1_Exp3.267&quot; &quot;H1_Exp3.266&quot; &quot;HFF_Batch3.153&quot; ...</span>
-<span class="co">#&gt;  $ Baseline: num [1:19097, 1:100] 0.619 5.768 2.092 5.742 4.391 ...</span>
+<span class="co">#&gt;   .. ..$ : chr [1:50] &quot;DEC_Batch1.069&quot; &quot;H1_Exp1.049&quot; &quot;NPC_Batch2.174&quot; &quot;H1_Exp3.267&quot; ...</span>
+<span class="co">#&gt;  $ Baseline: num [1:19097, 1:50] 4 4.05 2.08 2.54 3.57 ...</span>
 <span class="co">#&gt;   ..- attr(*, &quot;dimnames&quot;)=List of 2</span>
 <span class="co">#&gt;   .. ..$ : chr [1:19097] &quot;MKL2&quot; &quot;CD109&quot; &quot;ABTB1&quot; &quot;MAST2&quot; ...</span>
-<span class="co">#&gt;   .. ..$ : chr [1:100] &quot;H1_Exp1.049&quot; &quot;H1_Exp3.267&quot; &quot;H1_Exp3.266&quot; &quot;HFF_Batch3.153&quot; ...</span>
-<span class="co">#&gt;  $ Network : num [1:19097, 1:100] 0.619 5.768 1.95 5.742 4.391 ...</span>
+<span class="co">#&gt;   .. ..$ : chr [1:50] &quot;DEC_Batch1.069&quot; &quot;H1_Exp1.049&quot; &quot;NPC_Batch2.174&quot; &quot;H1_Exp3.267&quot; ...</span>
+<span class="co">#&gt;  $ Network : num [1:19097, 1:50] 2.97 2.32 2.06 1.69 3.28 ...</span>
 <span class="co">#&gt;   ..- attr(*, &quot;dimnames&quot;)=List of 2</span>
 <span class="co">#&gt;   .. ..$ : chr [1:19097] &quot;MKL2&quot; &quot;CD109&quot; &quot;ABTB1&quot; &quot;MAST2&quot; ...</span>
-<span class="co">#&gt;   .. ..$ : chr [1:100] &quot;H1_Exp1.049&quot; &quot;H1_Exp3.267&quot; &quot;H1_Exp3.266&quot; &quot;HFF_Batch3.153&quot; ...</span>
-<span class="co">#&gt;  $ DrImpute: num [1:19097, 1:100] 0.619 5.768 0.231 5.742 4.391 ...</span>
+<span class="co">#&gt;   .. ..$ : chr [1:50] &quot;DEC_Batch1.069&quot; &quot;H1_Exp1.049&quot; &quot;NPC_Batch2.174&quot; &quot;H1_Exp3.267&quot; ...</span>
+<span class="co">#&gt;  $ DrImpute: num [1:19097, 1:50] 1.773 1.317 0 1.116 0.462 ...</span>
 <span class="co">#&gt;   ..- attr(*, &quot;dimnames&quot;)=List of 2</span>
 <span class="co">#&gt;   .. ..$ : chr [1:19097] &quot;MKL2&quot; &quot;CD109&quot; &quot;ABTB1&quot; &quot;MAST2&quot; ...</span>
-<span class="co">#&gt;   .. ..$ : chr [1:100] &quot;H1_Exp1.049&quot; &quot;H1_Exp3.267&quot; &quot;H1_Exp3.266&quot; &quot;HFF_Batch3.153&quot; ...</span>
-<span class="co">#&gt;  $ Ensemble: num [1:19097, 1:100] 0.619 5.768 0.47 5.742 4.391 ...</span>
+<span class="co">#&gt;   .. ..$ : chr [1:50] &quot;DEC_Batch1.069&quot; &quot;H1_Exp1.049&quot; &quot;NPC_Batch2.174&quot; &quot;H1_Exp3.267&quot; ...</span>
+<span class="co">#&gt;  $ Ensemble: num [1:19097, 1:50] 3.08 5.85 2.06 1.69 1.59 ...</span>
 <span class="co">#&gt;   ..- attr(*, &quot;dimnames&quot;)=List of 2</span>
 <span class="co">#&gt;   .. ..$ : chr [1:19097] &quot;MKL2&quot; &quot;CD109&quot; &quot;ABTB1&quot; &quot;MAST2&quot; ...</span>
-<span class="co">#&gt;   .. ..$ : chr [1:100] &quot;H1_Exp1.049&quot; &quot;H1_Exp3.267&quot; &quot;H1_Exp3.266&quot; &quot;HFF_Batch3.153&quot; ...</span></code></pre></div>
+<span class="co">#&gt;   .. ..$ : chr [1:50] &quot;DEC_Batch1.069&quot; &quot;H1_Exp1.049&quot; &quot;NPC_Batch2.174&quot; &quot;H1_Exp3.267&quot; ...</span></code></pre></div>
 
 
 

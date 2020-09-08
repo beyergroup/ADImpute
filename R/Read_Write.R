@@ -22,12 +22,14 @@
 #'
 #' @description \code{ReadData} reads data from raw input file (.txt or .csv)
 #'
-#' @usage \code{ReadData(path, ...)}
+#' @usage ReadData(path, ...)
 #'
 #' @param path character; path to input file
 #' @param ... additional arguments to \code{data.table::fread()}
 #'
 #' @return matrix; raw counts (genes as rows and samples as columns)
+#'
+#' @export
 #'
 ReadData <- function(path, ...){
 
@@ -71,18 +73,40 @@ ReadData <- function(path, ...){
 
 
 
+#' @title Write txt file
+#'
+#' @description \code{WriteTXT} writes data to a tab-delimited output file
+#'
+#' @usage WriteTXT(object, file)
+#'
+#' @param object R object to write
+#' @param file character; path to output file
+#'
+#' @export
+#'
 WriteTXT <- function(object, file){
 
-  write.table(object, file, quote = F, sep = "\t")
+  utils::write.table(object, file, quote = F, sep = "\t")
 
   return(NULL)
 }
 
 
 
+#' @title Write csv file
+#'
+#' @description \code{WriteCSV} writes data to a comma-delimited output file
+#'
+#' @usage WriteCSV(object, file)
+#'
+#' @param object R object to write
+#' @param file character; path to output file
+#'
+#' @export
+#'
 WriteCSV <- function(object, file){
 
-  write.csv(object, file, sep = ",")
+  utils::write.csv(object, file, sep = ",")
 
   return(NULL)
 }
