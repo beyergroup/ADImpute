@@ -2,27 +2,32 @@ Package: ADImpute
 Type: Package
 Title: Adaptive Dropout Imputer (ADImpute)
 Version: 2.1.0
-Author: Ana Carolina Leote
-Maintainer: Ana Carolina Leote <ana.carolina.leote@uni-koeln.de>
-Description: ADImpute predicts unmeasured gene expression values from single cell
+Description: This package predicts unmeasured gene expression values from single cell
              RNA-sequencing data (dropout imputation). This R-package combines multiple
              dropout imputation methods, including a novel gene regulatory network-based method.
+Authors@R: person("Ana Carolina", "Leote", email = "anacarolinaleote@uni-koeln.de", role = c("cre","aut"), comment = c(ORCID = "0000-0003-0879-328X"))
 License: GPL-3 + file LICENSE
 Encoding: UTF-8
 LazyData: true
+Depends:
+    R (>= 2.10)
 Imports:
     biomaRt,
     data.table,
     DrImpute,
     MASS,
     SAVER,
-    scImpute,
-    SCRABBLE,
     snow,
     stats,
     utils
-RoxygenNote: 6.1.1
 Suggests: 
     knitr,
     rmarkdown
+biocViews:
+    GeneExpression,
+    Preprocessing,
+    SingleCell,
+    Transcriptomics
+RoxygenNote: 7.1.1
 VignetteBuilder: knitr
+

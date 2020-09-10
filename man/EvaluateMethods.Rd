@@ -4,15 +4,20 @@
 \alias{EvaluateMethods}
 \title{Imputation method evaluation on training set}
 \usage{
-EvaluateMethods(data, training.ratio = .7, training.only = T,
-mask.ratio = .1, split.seed = NULL, mask.seed = NULL, scale = 1,
-pseudo.count = 1, labels = NULL, cell.clusters = 2, drop_thre = NULL,
-type = "TPM", cores = 4, cluster.type = "SOCK", network.path = NULL,
-transcript.length = NULL, drop.exclude = T, bulk = NULL, ...)
+EvaluateMethods(data, do = c("Baseline", "DrImpute", "Network"),
+training.ratio = .7, training.only = T, mask.ratio = .1, split.seed = NULL,
+mask.seed = NULL, scale = 1, pseudo.count = 1, labels = NULL,
+cell.clusters = 2, drop_thre = NULL, type = "TPM", cores = 4,
+cluster.type = "SOCK", network.path = NULL, transcript.length = NULL,
+drop.exclude = T, bulk = NULL, ...)
 }
 \arguments{
 \item{data}{matrix; normalized counts, not logged (genes as rows and samples
 as columns)}
+
+\item{do}{character; choice of methods to be used for imputation. Currently
+supported methods are \code{"Baseline"}, \code{"DrImpute"} and
+\code{"Network"}. Not case-sensitive. Can include one or more methods.}
 
 \item{training.ratio}{numeric; ratio of samples to be used for training}
 
@@ -80,8 +85,5 @@ method resulting in a lowest imputation error for each gene is chosen.
 \seealso{
 \code{\link{ImputeBaseline}},
 \code{\link{ImputeDrImpute}},
-\code{\link{ImputeNetwork}},
-\code{\link{ImputeSAVER}},
-\code{\link{ImputeScImpute}},
-\code{\link{ImputeSCRABBLE}}
+\code{\link{ImputeNetwork}}
 }

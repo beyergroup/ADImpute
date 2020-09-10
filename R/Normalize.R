@@ -84,9 +84,7 @@ NormalizeTPM <- function(data,
 
   if (is.null(transcript.length)){
 
-    # data("transcript_length", package = "ADImpute")
-    tr_length <- transcript_length
-    rm(transcript_length)
+    tr_length <- ADImpute::transcript_length
 
   } else {
     tr_length <- transcript.length

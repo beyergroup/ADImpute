@@ -15,7 +15,7 @@ bulk = NULL, true.zero.thr = NULL, ...)
 
 \item{do}{character; choice of methods to be used for imputation. Currently
 supported methods are \code{"Baseline"}, \code{"DrImpute"},
-\code{"Network"}, \code{"scImpute"}, \code{"SCRABBLE"} and \code{"Ensemble"}.
+\code{"Network"}, and \code{"Ensemble"}.
 Not case-sensitive. Can include one or more methods.}
 
 \item{method.choice}{character; best performing method in training data for
@@ -98,7 +98,7 @@ imputation results of all methods in \code{do}.
 }
 \examples{
 # Normalize demo data
-norm_data <- NormalizeRPM(demo_data_50cells)
+norm_data <- NormalizeRPM(demo_data_50cells[1:100,])
 # Impute with particular methods
 imputed_data <- Impute(do = c("Baseline","DrImpute"), data = norm_data,
 cores = 1)
@@ -109,7 +109,5 @@ cores = 1)
 \code{\link{ImputeBaseline}},
 \code{\link{ImputeDrImpute}},
 \code{\link{ImputeNetwork}},
-\code{\link{ImputeSAVER}},
-\code{\link{ImputeScImpute}},
-\code{\link{ImputeSCRABBLE}}
+\code{\link{ImputeSAVER}}
 }

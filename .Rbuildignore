@@ -1,2 +1,5 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^network\.coefficients\.rds$
+^network\.coefficients\.zip$
+^R/Impute_extra\.R$
