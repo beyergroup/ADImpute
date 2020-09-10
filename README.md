@@ -1,6 +1,3 @@
----
-output: github_document
----
 
 <!-- badges: start -->
   [![Travis build status](https://travis-ci.com/anacarolinaleote/ADImpute.svg?branch=master)](https://travis-ci.com/anacarolinaleote/ADImpute)
