@@ -3,3 +3,4 @@
 ^network\.coefficients\.rds$
 ^network\.coefficients\.zip$
 ^R/Impute_extra\.R$
+^\.travis\.yml$

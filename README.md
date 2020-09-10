@@ -1,3 +1,11 @@
+---
+output: github_document
+---
+
+<!-- badges: start -->
+  [![Travis build status](https://travis-ci.com/anacarolinaleote/ADImpute.svg?branch=master)](https://travis-ci.com/anacarolinaleote/ADImpute)
+  <!-- badges: end -->
+
 # ADImpute
 ADImpute predicts unmeasured gene expression values from single cell RNA-sequencing data (dropout imputation). This R-package combines multiple dropout imputation methods, including a novel gene regulatory network-based method.
 
