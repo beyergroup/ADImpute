@@ -4,7 +4,7 @@
 \alias{ImputeSAVER}
 \title{Use SAVER}
 \usage{
-ImputeSAVER(data, cores, try.mean = F, write.to.file = T)
+ImputeSAVER(data, cores, try.mean = FALSE, write.to.file = TRUE)
 }
 \arguments{
 \item{data}{matrix with entries equal to zero to be imputed, normalized

@@ -9,7 +9,8 @@ A matrix of 50 random cells sampled from a publicly
 available dataset on hESC differention by Chu et al.
 }
 \source{
-\href{https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE75748}{GEO accession GSE75748}
+\href{https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE75748}{
+GEO accession GSE75748}
 }
 \usage{
 demo_data_50cells

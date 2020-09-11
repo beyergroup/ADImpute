@@ -61,9 +61,7 @@ ImputeScImpute <- function(count_path,
 
     if (is.null(transcript.length)){
 
-      # data("transcript_length", package = "ADImpute")
-      tr_length <- transcript_length
-      rm(transcript_length)
+      tr_length <- ADImpute::transcript_length
 
     } else{
       tr_length <- transcript.length
@@ -71,7 +69,7 @@ ImputeScImpute <- function(count_path,
 
     # Median length of all transcripts for a given gene
     med_length <- stats::aggregate(x = tr_length$transcript_length,
-                                   by = list("hgnc_symbol" = tr_length$hgnc_symbol),
+                  by = list("hgnc_symbol" = tr_length$hgnc_symbol),
                                    FUN = stats::median)
     if (infile == "txt"){
       data <- utils::read.table(count_path)
@@ -88,7 +86,7 @@ ImputeScImpute <- function(count_path,
     infile <- "csv"
     WriteCSV(data, count_path)
     genelen <- as.integer(med_length[match(common, med_length$hgnc_symbol), 2])
-    saveRDS(genelength, paste0(out_dir,"genelength.rds"))
+    saveRDS(genelen, paste0(out_dir,"genelength.rds"))
   }
 
   # Call scImpute
@@ -130,10 +128,11 @@ ImputeScImpute <- function(count_path,
 #'
 #' @seealso \code{\link[SCRABBLE]{scrabble}}
 #'
-ImputeSCRABBLE <- function(data, bulk = NULL, write.to.file = T){
+ImputeSCRABBLE <- function(data, bulk = NULL, write.to.file = TRUE){
 
   if(is.null(bulk)){
-    cat("Taking average of single cell data as reference bulk for SCRABBLE imputation.\n")
+    cat("Taking average of single cell data as reference bulk for
+        SCRABBLE imputation.\n")
     bulk <- rowMeans(data)
 
     res <- SCRABBLE::scrabble(list(data, bulk), parameter = c(1,1e-6,1e-4))

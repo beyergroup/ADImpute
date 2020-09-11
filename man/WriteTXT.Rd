@@ -11,6 +11,13 @@ WriteTXT(object, file)
 
 \item{file}{character; path to output file}
 }
+\value{
+Returns NULL
+}
 \description{
 \code{WriteTXT} writes data to a tab-delimited output file
+}
+\examples{
+WriteTXT(demo_data_50cells, file = "demo.txt")
+
 }

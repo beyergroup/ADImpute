@@ -11,6 +11,13 @@ WriteCSV(object, file)
 
 \item{file}{character; path to output file}
 }
+\value{
+Returns NULL
+}
 \description{
 \code{WriteCSV} writes data to a comma-delimited output file
+}
+\examples{
+WriteCSV(demo_data_50cells, file = "demo.csv")
+
 }

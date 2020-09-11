@@ -4,7 +4,7 @@
 \alias{MaskData}
 \title{Masking of entries for performance evaluation}
 \usage{
-MaskData(data, write.to.file = T, filename, mask = .1,
+MaskData(data, write.to.file = TRUE, filename, mask = .1,
 seed = NULL)
 }
 \arguments{

@@ -23,20 +23,23 @@
 #' @description \code{NormalizeRPM} performs RPM normalization, with possibility
 #' to log the result
 #'
-#' @usage NormalizeRPM(data, log = F, scale = 1, pseudo.count = 1)
+#' @usage NormalizeRPM(data, log = FALSE, scale = 1, pseudo.count = 1)
 #'
 #' @param data matrix; raw data (genes as rows and samples as columns)
 #' @param log logical; log RPMs?
 #' @param scale integer; scale factor to divide RPMs by
-#' @param pseudo.count numeric; if \code{log = T}, value to add to RPMs in order
-#' to avoid taking \code{log(0)}
+#' @param pseudo.count numeric; if \code{log = TRUE}, value to add to RPMs in
+#' order to avoid taking \code{log(0)}
 #'
 #' @return matrix; library size normalized data
+#'
+#' @examples
+#' demo <- NormalizeRPM(demo_data_50cells)
 #'
 #' @export
 #'
 NormalizeRPM <- function(data,
-                         log = F,
+                         log = FALSE,
                          scale = 1,
                          pseudo.count = 1){
 
@@ -58,7 +61,7 @@ NormalizeRPM <- function(data,
 #' to log the result
 #'
 #' @usage NormalizeTPM(data, transcript.length = NULL,
-#' log = F, scale = 1, pseudo.count = 1)
+#' log = FALSE, scale = 1, pseudo.count = 1)
 #'
 #' @param data matrix; raw data (genes as rows and samples as columns)
 #' @param transcript.length matrix with at least 2 columns: "hgnc_symbol" and
@@ -74,11 +77,14 @@ NormalizeRPM <- function(data,
 #'
 #' @return matrix; normalized data (for transcript length and library size)
 #'
+#' @examples
+#' demo <- NormalizeTPM(demo_data_50cells)
+#'
 #' @export
 #'
 NormalizeTPM <- function(data,
                          transcript.length = NULL,
-                         log = F,
+                         log = FALSE,
                          scale = 1,
                          pseudo.count = 1){
 

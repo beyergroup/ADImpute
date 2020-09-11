@@ -20,7 +20,7 @@
 
 #' @title Combine imputation methods
 #'
-#' @usage Combine(data, imputed, method.choice, write.to.file = T)
+#' @usage Combine(data, imputed, method.choice, write.to.file = TRUE)
 #'
 #' @param data matrix with entries equal to zero to be imputed, already
 #' normalized (genes as rows and samples as columns)
@@ -41,7 +41,7 @@
 Combine <- function(data,
                     imputed,
                     method.choice,
-                    write.to.file = T){
+                    write.to.file = TRUE){
 
   # all zeros are imputed
   dropouts <- data == 0
@@ -70,7 +70,7 @@ Combine <- function(data,
 
 #' @title Impute using average expression across all cells
 #'
-#' @usage ImputeBaseline(data, write.to.file = T, drop.exclude = T, ...)
+#' @usage ImputeBaseline(data, write.to.file = TRUE, drop.exclude = TRUE, ...)
 #'
 #' @description \code{ImputeBaseline} imputes dropouts using gene averages
 #' across cells
@@ -80,33 +80,33 @@ Combine <- function(data,
 #' @param write.to.file logical; should a file with the imputation results be
 #' written?
 #' @param drop.exclude logical; should zeros be discarded for the calculation
-#' of genewise average expression levels? (defaults to T)
+#' of genewise average expression levels? (defaults to TRUE)
 #' @param ... additional arguments to \code{saveRDS}
 #'
 #' @return matrix; imputation results considering the average expression
 #' values of genes
 #'
 ImputeBaseline <- function(data,
-                           write.to.file = T,
-                           drop.exclude = T,
+                           write.to.file = TRUE,
+                           drop.exclude = TRUE,
                            ...){
 
   dropouts <- data == 0
 
   # Compute mean expression levels across cells
   if (drop.exclude){
-    gene_avg <- apply(data, 1, function(x) mean(x[x != 0], na.rm = T))
+    gene_avg <- apply(data, 1, function(x) mean(x[x != 0], na.rm = TRUE))
     gene_avg[is.na(gene_avg)] <- 0
 
   } else{
-    gene_avg <- apply(data, 1, function(x) mean(x, na.rm = T))
+    gene_avg <- apply(data, 1, function(x) mean(x, na.rm = TRUE))
   }
 
   # Impute when dropout
   gene_avg_mat <- matrix(data = gene_avg,
                          nrow = nrow(data),
                          ncol = ncol(data),
-                         byrow = F,
+                         byrow = FALSE,
                          dimnames = dimnames(data))
   res <- data
   res[dropouts] <- gene_avg_mat[dropouts]
@@ -123,7 +123,7 @@ ImputeBaseline <- function(data,
 
 #' @title Use DrImpute
 #'
-#' @usage ImputeDrImpute(data, write.to.file = T)
+#' @usage ImputeDrImpute(data, write.to.file = TRUE)
 #'
 #' @description \code{ImputeDrImpute} uses the DrImpute package for dropout
 #' imputation
@@ -137,7 +137,7 @@ ImputeBaseline <- function(data,
 #'
 #' @seealso \code{\link[DrImpute]{DrImpute}}
 #'
-ImputeDrImpute <- function(data, write.to.file = T){
+ImputeDrImpute <- function(data, write.to.file = TRUE){
 
   res <- DrImpute::DrImpute(as.matrix(data))
   colnames(res) <- colnames(data)
@@ -154,7 +154,7 @@ ImputeDrImpute <- function(data, write.to.file = T){
 #' @title Network-based imputation
 #'
 #' @usage ImputeNetwork(data, network.path = NULL, cores = 4,
-#' cluster.type = "SOCK", write.to.file = T, drop.exclude = T, ...)
+#' cluster.type = "SOCK", write.to.file = TRUE, drop.exclude = TRUE, ...)
 #'
 #' @param data matrix with entries equal to zero to be imputed, normalized
 #' and log2-transformed (genes as rows and samples as columns)
@@ -165,7 +165,7 @@ ImputeDrImpute <- function(data, write.to.file = T){
 #' @param write.to.file logical; should a file with the imputation results be
 #' written?
 #' @param drop.exclude logical; should zeros be discarded for the calculation
-#' of genewise average expression levels? (defaults to T)
+#' of genewise average expression levels? (defaults to TRUE)
 #' @param ... additional arguments to \code{ImputeNetParallel}
 #'
 #' @details Imputes dropouts using a gene regulatory network trained on external
@@ -181,8 +181,8 @@ ImputeNetwork <- function(data,
                           network.path = NULL,
                           cores = 4,
                           cluster.type = "SOCK",
-                          write.to.file = T,
-                          drop.exclude = T,
+                          write.to.file = TRUE,
+                          drop.exclude = TRUE,
                           ...){
 
   # Limit data and network to genes common to both
@@ -229,7 +229,7 @@ ImputeNetwork <- function(data,
 
 #' @title Use SAVER
 #'
-#' @usage ImputeSAVER(data, cores, try.mean = F, write.to.file = T)
+#' @usage ImputeSAVER(data, cores, try.mean = FALSE, write.to.file = TRUE)
 #'
 #' @description \code{ImputeSAVER} uses the SAVER package for dropout
 #' imputation
@@ -246,12 +246,13 @@ ImputeNetwork <- function(data,
 #'
 #' @seealso \code{\link[SAVER]{saver}}
 #'
-ImputeSAVER <- function(data, cores, try.mean = F, write.to.file = T){
+ImputeSAVER <- function(data, cores, try.mean = FALSE, write.to.file = TRUE){
 
   dir.create("SAVER")
 
   if(try.mean){
-    imp_mean <- SAVER::saver(data, size.factor = 1, ncores = cores, null.model = T)
+    imp_mean <- SAVER::saver(data, size.factor = 1, ncores = cores,
+                             null.model = TRUE)
     saveRDS(object = imp_mean, file = "SAVER/SAVER_nullmodel.rds")
   }
 

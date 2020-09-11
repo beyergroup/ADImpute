@@ -7,7 +7,7 @@
 Impute(data, do = "Ensemble", method.choice = NULL, scale = 1,
 pseudo.count = 1, count_path, labels = NULL, cell.clusters = 2,
 drop_thre = NULL, type = "TPM", cores = 4, cluster.type = "SOCK",
-network.path = NULL, transcript.length = NULL, drop.exclude = T,
+network.path = NULL, transcript.length = NULL, drop.exclude = TRUE,
 bulk = NULL, true.zero.thr = NULL, ...)
 }
 \arguments{
@@ -51,7 +51,7 @@ coefficients}
 "transcript_length"}
 
 \item{drop.exclude}{logical; should zeros be discarded for the calculation
-of genewise average expression levels? (defaults to T)}
+of genewise average expression levels? (defaults to TRUE)}
 
 \item{bulk}{vector of reference bulk RNA-seq, if available (average across
 samples)}

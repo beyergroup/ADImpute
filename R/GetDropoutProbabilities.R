@@ -38,14 +38,18 @@ read_count <-
     print(paste("number of cells in raw count matrix", ncol(raw_count)))
 
     if(type == "TPM"){
-      if(length(genelen) != nrow(raw_count)) stop("number of genes in 'genelen' and count matrix do not match! ")
+      if(length(genelen) != nrow(raw_count))
+        stop("number of genes in 'genelen' and count matrix do not match! ")
       raw_count = sweep(raw_count, 1, genelen, FUN = "*")
     }
 
     totalCounts_by_cell = colSums(raw_count)
-    saveRDS(totalCounts_by_cell, file = paste0(out_dir, "totalCounts_by_cell.rds"))
+    saveRDS(totalCounts_by_cell,
+            file = paste0(out_dir, "totalCounts_by_cell.rds"))
     totalCounts_by_cell[totalCounts_by_cell == 0] = 1
-    raw_count = sweep(raw_count, MARGIN = 2, 10^6/totalCounts_by_cell, FUN = "*")
+    raw_count = sweep(raw_count, MARGIN = 2,
+                      10^6/totalCounts_by_cell,
+                      FUN = "*")
     if (min(raw_count) < 0) {
       stop("smallest read count cannot be negative!")
     }
@@ -64,8 +68,10 @@ find_va_genes = function(parslist, subcount){
   sgene1 = which(mu <= log10(1+1.01))
   # sgene2 = which(mu <= log10(10+1.01) & mu - parslist[,5] > log10(1.01))
 
-  dcheck1 = stats::dgamma(mu+1, shape = parslist[, "alpha"], rate = parslist[, "beta"])
-  dcheck2 = stats::dnorm(mu+1, mean = parslist[, "mu"], sd = parslist[, "sigma"])
+  dcheck1 = stats::dgamma(mu+1, shape = parslist[, "alpha"],
+                          rate = parslist[, "beta"])
+  dcheck2 = stats::dnorm(mu+1, mean = parslist[, "mu"],
+                         sd = parslist[, "sigma"])
   sgene3 = which(dcheck1 >= dcheck2 & mu <= 1)
   sgene = union(sgene1, sgene3)
   valid_genes = setdiff(valid_genes, sgene)
@@ -86,16 +92,18 @@ calculate_weight <-
 # -----------------------------------------------------------------------------
 
 
-GetDropoutProbabilities <- function(infile, count_path, out_dir, type, genelen, drop_thre, data){
+GetDropoutProbabilities <- function(infile, count_path, out_dir, type, genelen,
+                                    drop_thre, data){
 
-  count <- as.matrix(read_count(filetype = infile, path = count_path, out_dir = out_dir,
-                                type = type, genelen = genelen))
+  count <- as.matrix(read_count(filetype = infile, path = count_path,
+                                out_dir = out_dir, type = type,
+                                genelen = genelen))
 
   clust <- readRDS(paste0(out_dir, "clust.rds"))
 
   drop_probs <- list()
 
-  for(cc in 1:max(clust, na.rm = T)){
+  for(cc in seq_len(max(clust, na.rm = TRUE))){
 
     # code from scImpute ------------------------------------------------------
     cells = which(clust == cc)
@@ -107,7 +115,7 @@ GetDropoutProbabilities <- function(infile, count_path, out_dir, type, genelen, 
     subcount = count[valid_genes, cells, drop = FALSE]
     parslist = parslist[valid_genes, , drop = FALSE]
 
-    droprate = t(sapply(1:length(valid_genes), function(i) {
+    droprate = t(sapply(seq_along(valid_genes), function(i) {
       wt = calculate_weight(subcount[i, ], parslist[i, ])
       return(wt[, 1])
     }))

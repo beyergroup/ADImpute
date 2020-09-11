@@ -35,7 +35,7 @@ Evaluate methods to determine the best performing imputation method for each gen
 methods_pergene <- EvaluateMethods(data = RPM,
                                    training.ratio = .7,
                                    mask.ratio = .2,
-                                   training.only = T,
+                                   training.only = TRUE,
                                    split.seed = 12,
                                    mask.seed = 34,
                                    type = "count",
@@ -43,7 +43,7 @@ methods_pergene <- EvaluateMethods(data = RPM,
                                    cores = 2,
                                    cluster.type = "SOCK",
                                    network.path = network_path,
-                                   drop.exclude = T)
+                                   drop.exclude = TRUE)
 head(methods_pergene)
 ```
 
@@ -58,7 +58,7 @@ imputed <- Impute(do = "Ensemble",
                   cores = 2,
                   cluster.type = "SOCK",
                   network.path = network_path,
-                  drop.exclude = T)
+                  drop.exclude = TRUE)
 str(imputed)
 ```
 

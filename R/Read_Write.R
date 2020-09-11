@@ -37,9 +37,9 @@ ReadData <- function(path, ...){
   if (grepl(path, pattern = ".txt")){
 
     data <- data.frame(data.table::fread(file = path,
-                                         header = T,
+                                         header = TRUE,
                                          sep = "\t",
-                                         showProgress = T,
+                                         showProgress = TRUE,
                                          ...),
                        row.names = 1)
 
@@ -48,9 +48,9 @@ ReadData <- function(path, ...){
   } else if (grepl(path, pattern = ".csv")){
 
     data <- data.frame(data.table::fread(file = path,
-                                         header = T,
+                                         header = TRUE,
                                          sep = ",",
-                                         showProgress = T,
+                                         showProgress = TRUE,
                                          ...),
                        row.names = 1)
 
@@ -82,11 +82,16 @@ ReadData <- function(path, ...){
 #' @param object R object to write
 #' @param file character; path to output file
 #'
+#' @return Returns NULL
+#'
+#' @examples
+#' WriteTXT(demo_data_50cells, file = "demo.txt")
+#'
 #' @export
 #'
 WriteTXT <- function(object, file){
 
-  utils::write.table(object, file, quote = F, sep = "\t")
+  utils::write.table(object, file, quote = FALSE, sep = "\t")
 
   return(NULL)
 }
@@ -101,6 +106,11 @@ WriteTXT <- function(object, file){
 #'
 #' @param object R object to write
 #' @param file character; path to output file
+#'
+#' @return Returns NULL
+#'
+#' @examples
+#' WriteCSV(demo_data_50cells, file = "demo.csv")
 #'
 #' @export
 #'

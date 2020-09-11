@@ -4,7 +4,7 @@
 \alias{ImputeBaseline}
 \title{Impute using average expression across all cells}
 \usage{
-ImputeBaseline(data, write.to.file = T, drop.exclude = T, ...)
+ImputeBaseline(data, write.to.file = TRUE, drop.exclude = TRUE, ...)
 }
 \arguments{
 \item{data}{matrix with entries equal to zero to be imputed, normalized
@@ -14,7 +14,7 @@ and log2-transformed (genes as rows and samples as columns)}
 written?}
 
 \item{drop.exclude}{logical; should zeros be discarded for the calculation
-of genewise average expression levels? (defaults to T)}
+of genewise average expression levels? (defaults to TRUE)}
 
 \item{...}{additional arguments to \code{saveRDS}}
 }

@@ -5,11 +5,11 @@
 \title{Imputation method evaluation on training set}
 \usage{
 EvaluateMethods(data, do = c("Baseline", "DrImpute", "Network"),
-training.ratio = .7, training.only = T, mask.ratio = .1, split.seed = NULL,
-mask.seed = NULL, scale = 1, pseudo.count = 1, labels = NULL,
-cell.clusters = 2, drop_thre = NULL, type = "TPM", cores = 4,
+training.ratio = .7, training.only = TRUE, mask.ratio = .1,
+split.seed = NULL, mask.seed = NULL, scale = 1, pseudo.count = 1,
+labels = NULL, cell.clusters = 2, drop_thre = NULL, type = "TPM", cores = 4,
 cluster.type = "SOCK", network.path = NULL, transcript.length = NULL,
-drop.exclude = T, bulk = NULL, ...)
+drop.exclude = TRUE, bulk = NULL, ...)
 }
 \arguments{
 \item{data}{matrix; normalized counts, not logged (genes as rows and samples
@@ -22,7 +22,7 @@ supported methods are \code{"Baseline"}, \code{"DrImpute"} and
 \item{training.ratio}{numeric; ratio of samples to be used for training}
 
 \item{training.only}{logical; if TRUE define only a training dataset, if
-FALSE writes and returns both training and validation sets (defaults to T)}
+FALSE writes and returns both training and validation sets (defaults to TRUE)}
 
 \item{mask.ratio}{numeric; ratio of samples to be masked per gene}
 
@@ -60,7 +60,7 @@ coefficients}
 "transcript_length"}
 
 \item{drop.exclude}{logical; should zeros be discarded for the calculation
-of genewise average expression levels? (defaults to T)}
+of genewise average expression levels? (defaults to TRUE)}
 
 \item{bulk}{vector of reference bulk RNA-seq, if available (average across
 samples)}
@@ -81,6 +81,12 @@ methods: scImpute, baseline (average gene expression across all cells) or a
 network-based method. The imputation error is computed for each of the
 values in the original dataset that was set to 0, for each method. The
 method resulting in a lowest imputation error for each gene is chosen.
+}
+\examples{
+# Compare selected methods:
+method_choice <- EvaluateMethods(demo_data_50cells[1:100,],
+                                 do = c("Baseline", "DrImpute"))
+
 }
 \seealso{
 \code{\link{ImputeBaseline}},

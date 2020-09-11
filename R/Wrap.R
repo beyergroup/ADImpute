@@ -21,11 +21,11 @@
 #' @title Imputation method evaluation on training set
 #'
 #' @usage EvaluateMethods(data, do = c("Baseline", "DrImpute", "Network"),
-#' training.ratio = .7, training.only = T, mask.ratio = .1, split.seed = NULL,
-#' mask.seed = NULL, scale = 1, pseudo.count = 1, labels = NULL,
-#' cell.clusters = 2, drop_thre = NULL, type = "TPM", cores = 4,
+#' training.ratio = .7, training.only = TRUE, mask.ratio = .1,
+#' split.seed = NULL, mask.seed = NULL, scale = 1, pseudo.count = 1,
+#' labels = NULL, cell.clusters = 2, drop_thre = NULL, type = "TPM", cores = 4,
 #' cluster.type = "SOCK", network.path = NULL, transcript.length = NULL,
-#' drop.exclude = T, bulk = NULL, ...)
+#' drop.exclude = TRUE, bulk = NULL, ...)
 #'
 #' @description \code{EvaluateMethods} returns the best-performing imputation
 #' method for each gene in the dataset
@@ -37,7 +37,7 @@
 #' \code{"Network"}. Not case-sensitive. Can include one or more methods.
 #' @param training.ratio numeric; ratio of samples to be used for training
 #' @param training.only logical; if TRUE define only a training dataset, if
-#' FALSE writes and returns both training and validation sets (defaults to T)
+#' FALSE writes and returns both training and validation sets (defaults to TRUE)
 #' @param mask.ratio numeric; ratio of samples to be masked per gene
 #' @param split.seed integer; optional seed (defaults to NULL, random selection
 #' of samples to use for training)
@@ -61,7 +61,7 @@
 #' @param transcript.length matrix with at least 2 columns: "hgnc_symbol" and
 #' "transcript_length"
 #' @param drop.exclude logical; should zeros be discarded for the calculation
-#' of genewise average expression levels? (defaults to T)
+#' of genewise average expression levels? (defaults to TRUE)
 #' @param bulk vector of reference bulk RNA-seq, if available (average across
 #' samples)
 #' @param ... additional parameters to pass to network-based imputation
@@ -75,6 +75,11 @@
 #'
 #' @return character; best performing method in the training set for each gene
 #'
+#' @examples
+#' # Compare selected methods:
+#' method_choice <- EvaluateMethods(demo_data_50cells[1:100,],
+#'                                  do = c("Baseline", "DrImpute"))
+#'
 #' @seealso \code{\link{ImputeBaseline}},
 #' \code{\link{ImputeDrImpute}},
 #' \code{\link{ImputeNetwork}}
@@ -84,7 +89,7 @@
 EvaluateMethods <- function(data,
                             do = c("Baseline", "DrImpute", "Network"),
                             training.ratio = .7,
-                            training.only = T,
+                            training.only = TRUE,
                             mask.ratio = .1,
                             split.seed = NULL,
                             mask.seed = NULL,
@@ -98,7 +103,7 @@ EvaluateMethods <- function(data,
                             cluster.type = "SOCK",
                             network.path = NULL,
                             transcript.length = NULL,
-                            drop.exclude = T,
+                            drop.exclude = TRUE,
                             bulk = NULL,
                             ...){
 
@@ -121,7 +126,7 @@ EvaluateMethods <- function(data,
   # Mask selected training data
   cat("Masking training data\n")
   masked_training_norm <- MaskData(training_norm,
-                                   write.to.file = T,
+                                   write.to.file = TRUE,
                                    filename = "masked_training_norm.txt",
                                    mask = mask.ratio,
                                    seed = mask.seed)
@@ -133,9 +138,9 @@ EvaluateMethods <- function(data,
     cat("scImpute is not supported by default. Please check XXXX for details.\n")
     # cat("Imputing training data using scImpute\n")
     # dir.create("scImpute")
-    # labeled = F # by default consider the cell types are unknown
+    # labeled = FALSE # by default consider the cell types are unknown
     # if (!is.null(labels))
-    #   labeled <- T
+    #   labeled <- TRUE
     # train_imputed$scImpute <- ImputeScImpute(count_path = "masked_training_norm.txt",
     #                                          infile = "txt",
     #                                          outfile = "rds",
@@ -169,8 +174,9 @@ EvaluateMethods <- function(data,
     cat("Imputing training data using average expression\n")
     train_imputed$Baseline <- ImputeBaseline(log_masked_training_norm,
                                              drop.exclude = drop.exclude,
-                                             write.to.file = T)
-    baseline_norm <- round(scale * ( (2 ^ train_imputed$Baseline) - pseudo.count), 2)
+                                             write.to.file = TRUE)
+    baseline_norm <- round(scale * ( (2 ^ train_imputed$Baseline) -
+                                       pseudo.count), 2)
     WriteTXT(baseline_norm, "Baseline/baseline_imputed_norm.txt")
   }
 
@@ -182,7 +188,7 @@ EvaluateMethods <- function(data,
                                            cores,
                                            cluster.type,
                                            drop.exclude = drop.exclude,
-                                           write.to.file = T,
+                                           write.to.file = TRUE,
                                            ...)
     net_norm <- round(scale * ( (2 ^ train_imputed$Network) - pseudo.count), 2)
     WriteTXT(net_norm, "Network/network_imputed_norm.txt")
@@ -208,7 +214,7 @@ EvaluateMethods <- function(data,
 #' @usage Impute(data, do = "Ensemble", method.choice = NULL, scale = 1,
 #' pseudo.count = 1, count_path, labels = NULL, cell.clusters = 2,
 #' drop_thre = NULL, type = "TPM", cores = 4, cluster.type = "SOCK",
-#' network.path = NULL, transcript.length = NULL, drop.exclude = T,
+#' network.path = NULL, transcript.length = NULL, drop.exclude = TRUE,
 #' bulk = NULL, true.zero.thr = NULL, ...)
 #'
 #' @description \code{Impute} performs dropout imputation based on the
@@ -241,7 +247,7 @@ EvaluateMethods <- function(data,
 #' @param transcript.length matrix with at least 2 columns: "hgnc_symbol" and
 #' "transcript_length"
 #' @param drop.exclude logical; should zeros be discarded for the calculation
-#' of genewise average expression levels? (defaults to T)
+#' of genewise average expression levels? (defaults to TRUE)
 #' @param bulk vector of reference bulk RNA-seq, if available (average across
 #' samples)
 #' @param true.zero.thr if set to NULL (default), no true zero estimation is
@@ -305,7 +311,7 @@ Impute <- function(data,
                    cluster.type = "SOCK",
                    network.path = NULL,
                    transcript.length = NULL,
-                   drop.exclude = T,
+                   drop.exclude = TRUE,
                    bulk = NULL,
                    true.zero.thr = NULL,
                    ...){
@@ -317,7 +323,8 @@ Impute <- function(data,
     transcript.length <- ADImpute::transcript_length
   }
   if(is.null(method.choice) & ("ensemble" %in% tolower(do))){
-    stop("Please provide method.choice for Ensemble imputation. Consider running EvaluateMethods()\n")
+    stop("Please provide method.choice for Ensemble imputation.
+         Consider running EvaluateMethods()\n")
   }
 
   dir.create("imputation")
@@ -333,9 +340,9 @@ Impute <- function(data,
     cat("scImpute is not supported by default. Please check XXXX for details.\n")
     # cat("Imputing data using scImpute\n")
     # dir.create("scImpute")
-    # labeled = F # by default consider the cell types are unknown
+    # labeled = FALSE # by default consider the cell types are unknown
     # if (!is.null(labels)){
-    #   labeled = T
+    #   labeled = TRUE
     # }
     #
     # # Get type of input masked file
@@ -366,7 +373,7 @@ Impute <- function(data,
   # Run SAVER
   if("saver" %in% tolower(do)){
     cat("Imputing data using SAVER\n")
-    imputed$SAVER <- ImputeSAVER(data, cores, try.mean = F)
+    imputed$SAVER <- ImputeSAVER(data, cores, try.mean = FALSE)
     imputed$SAVER <- log2( (imputed$SAVER / scale) + pseudo.count)
     saver_norm <- round(scale * ( (2 ^ imputed$SAVER) - pseudo.count), 2)
     WriteTXT(saver_norm, "SAVER/SAVER_imputed_norm.txt")
@@ -389,7 +396,7 @@ Impute <- function(data,
     cat("Imputing data using average expression\n")
     imputed$Baseline <- ImputeBaseline(log_masked_norm,
                                        drop.exclude = drop.exclude,
-                                       write.to.file = T)
+                                       write.to.file = TRUE)
     baseline_norm <- round(scale * ( (2 ^ imputed$Baseline) - pseudo.count), 2)
     WriteTXT(baseline_norm, "Baseline/baseline_imputed_norm.txt")
   }
@@ -403,7 +410,7 @@ Impute <- function(data,
                                      cores,
                                      cluster.type,
                                      drop.exclude = drop.exclude,
-                                     write.to.file = T,
+                                     write.to.file = TRUE,
                                      ...)
     net_norm <- round(scale * ( (2 ^ imputed$Network) - pseudo.count), 2)
     WriteTXT(net_norm, "Network/network_imputed_norm.txt")
@@ -444,26 +451,31 @@ Impute <- function(data,
                            paste0(".", infile))
       infile <- "csv"
       # compute dropout probabilities according to scImpute
-      droprob <- GetDropoutProbabilities(infile = infile, count_path = count_path,
+      droprob <- GetDropoutProbabilities(infile = infile,
+                                         count_path = count_path,
                                          out_dir = "scImpute/", type = type,
-                                         genelen = readRDS(paste0("outdir","genelength.rds")),
-                                         drop_thre = true.zero.thr, data = utils::read.csv(count_path))
+                                         genelen = readRDS(paste0("outdir",
+                                                                  "genelength.rds")),
+                                         drop_thre = true.zero.thr,
+                                         data = utils::read.csv(count_path))
       WriteTXT(droprob, "dropout_probability.txt")
 
       # apply thresholds
-      zerofiltered <- lapply(imputed, SetBiologicalZeros, drop_probs = droprob, thre = true.zero.thr,
-                             was_zero = data == 0)
+      zerofiltered <- lapply(imputed, SetBiologicalZeros, drop_probs = droprob,
+                             thre = true.zero.thr, was_zero = data == 0)
 
     } else {
       # compute dropout probabilities according to scImpute
-      droprob <- GetDropoutProbabilities(infile = infile, count_path = count_path,
-                                         out_dir = "scImpute/", type = type, genelen = NULL,
+      droprob <- GetDropoutProbabilities(infile = infile,
+                                         count_path = count_path,
+                                         out_dir = "scImpute/", type = type,
+                                         genelen = NULL,
                                          drop_thre = true.zero.thr, data = data)
       WriteTXT(droprob, "dropout_probability.txt")
 
       # apply thresholds
-      zerofiltered <- lapply(imputed, SetBiologicalZeros, drop_probs = droprob, thre = true.zero.thr,
-                             was_zero = data == 0)
+      zerofiltered <- lapply(imputed, SetBiologicalZeros, drop_probs = droprob,
+                             thre = true.zero.thr, was_zero = data == 0)
     }
 
     return(list("imputations" = imputed, "zerofiltered" = zerofiltered))

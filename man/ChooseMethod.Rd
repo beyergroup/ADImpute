@@ -4,7 +4,7 @@
 \alias{ChooseMethod}
 \title{Method choice per gene}
 \usage{
-ChooseMethod(real, masked, imputed, write.to.file = T)
+ChooseMethod(real, masked, imputed, write.to.file = TRUE)
 }
 \arguments{
 \item{real}{matrix; original gene expression data, i.e. before masking

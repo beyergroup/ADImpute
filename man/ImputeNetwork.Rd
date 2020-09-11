@@ -5,7 +5,7 @@
 \title{Network-based imputation}
 \usage{
 ImputeNetwork(data, network.path = NULL, cores = 4,
-cluster.type = "SOCK", write.to.file = T, drop.exclude = T, ...)
+cluster.type = "SOCK", write.to.file = TRUE, drop.exclude = TRUE, ...)
 }
 \arguments{
 \item{data}{matrix with entries equal to zero to be imputed, normalized
@@ -22,7 +22,7 @@ coefficients}
 written?}
 
 \item{drop.exclude}{logical; should zeros be discarded for the calculation
-of genewise average expression levels? (defaults to T)}
+of genewise average expression levels? (defaults to TRUE)}
 
 \item{...}{additional arguments to \code{ImputeNetParallel}}
 }

@@ -4,7 +4,7 @@
 \alias{ImputeDrImpute}
 \title{Use DrImpute}
 \usage{
-ImputeDrImpute(data, write.to.file = T)
+ImputeDrImpute(data, write.to.file = TRUE)
 }
 \arguments{
 \item{data}{matrix with entries equal to zero to be imputed, normalized

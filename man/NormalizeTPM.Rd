@@ -32,3 +32,7 @@ Gene length is estimated as the median of the lengths of all
 transcripts for each gene, as obtained from biomaRt.
 Genes for which length information cannot be found in biomaRt are dropped.
 }
+\examples{
+demo <- NormalizeTPM(demo_data_50cells)
+
+}

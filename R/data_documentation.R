@@ -10,7 +10,8 @@
 #' endoderm. Genome Biol 17, 173 (2016).
 #' \href{https://doi.org/10.1186/s13059-016-1033-x}{DOI}
 #'
-#' @source \href{https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE75748}{GEO accession GSE75748}
+#' @source \href{https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE75748}{
+#' GEO accession GSE75748}
 #'
 "demo_data_50cells"
 

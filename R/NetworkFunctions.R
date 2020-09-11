@@ -58,28 +58,28 @@ ArrangeData <- function(data,
 
 #' @title Data centering
 #'
-#' @usage CenterData(data, drop.exclude = T)
+#' @usage CenterData(data, drop.exclude = TRUE)
 #'
 #' @description \code{CenterData} centers expression of each gene at 0
 #'
 #' @param data matrix of gene expression to be centered row-wise (genes as rows
 #' and samples as columns)
 #' @param drop.exclude logical; should zeros be discarded for the calculation
-#' of genewise average expression levels? (defaults to T)
+#' of genewise average expression levels? (defaults to TRUE)
 #'
 #' @return list; row-wise centers and centered data
 #'
-CenterData <- function(data, drop.exclude = T){
+CenterData <- function(data, drop.exclude = TRUE){
 
   cat("Centering expression of each gene at 0\n")
 
   if (drop.exclude){
-    center <- apply(data, 1, function(x) mean(x[x != 0], na.rm = T))
+    center <- apply(data, 1, function(x) mean(x[x != 0], na.rm = TRUE))
     center[is.na(center)] <- 0
     center <- round(center, 2)
 
   } else{
-    center <- round(apply(data, 1, function(x) mean(x, na.rm = T)), 2)
+    center <- round(apply(data, 1, function(x) mean(x, na.rm = TRUE)), 2)
   }
 
   names(center) <- rownames(data)
@@ -122,10 +122,10 @@ ImputeNetParallel <- function(dropout.matrix,
   # snow::clusterEvalQ(cluster, options(matprod = "internal"))
 
   dropouts <- intersect(rownames(dropout.matrix)[rowSums(dropout.matrix) != 0],
-                        rownames(arranged$network)) # dropouts in at least one cell
+                        rownames(arranged$network)) # dropouts in >= 1 cell
 
   predictors <- colnames(arranged$network)[
-    colSums(arranged$network[dropouts, ]) != 0] # all available predictors of the dropouts
+    colSums(arranged$network[dropouts, ]) != 0] # all available predictors
 
   arranged$network <- arranged$network[dropouts, predictors]
 
@@ -144,7 +144,9 @@ ImputeNetParallel <- function(dropout.matrix,
       if ( (i %% 5) == 0)
         cat("Iteration", i, "/", max.iter, "\n")
 
-      new <- round(snow::parMM(cluster, arranged$network, arranged$centered[predictors, ]), 2) # expression = network coefficients * predictor expr.
+      new <- round(snow::parMM(cluster, arranged$network,
+                               arranged$centered[predictors, ]), 2)
+      # expression = network coefficients * predictor expr.
 
       # Check convergence
       if (any(new[dropout.matrix[dropouts, ]] != arranged$centered[dropouts, ][
@@ -164,8 +166,9 @@ ImputeNetParallel <- function(dropout.matrix,
 
   } else{
 
-    imp <- snow::parSapply(cl = cluster, 1:ncol(arranged$centered),
-                           PseudoInverseSolution_percell, arranged, dropout.matrix)
+    imp <- snow::parSapply(cl = cluster, seq_len(ncol(arranged$centered)),
+                           PseudoInverseSolution_percell, arranged,
+                           dropout.matrix)
     colnames(imp) <- colnames(arranged$centered)
 
   }
@@ -195,21 +198,25 @@ ImputeNetParallel <- function(dropout.matrix,
 #'
 #' @return matrix; imputation results incorporating network information
 #'
-PseudoInverseSolution_percell <- function(cell, arranged, dropout_mat, thr = 0.01){
+PseudoInverseSolution_percell <- function(cell, arranged, dropout_mat,
+                                          thr = 0.01){
 
   cat("Starting cell pseudo-inversion\n")
   expr <- arranged$centered[,cell]
   drop_ind <- dropout_mat[,cell]
 
-  # restrict network rows and columns to the dropouts in the data (the only ones that need to be predicted)
-  net <- arranged$network[intersect(rownames(arranged$network), names(expr)[drop_ind]),
+  # restrict network rows and columns to the dropouts in the data
+  # (the only ones that need to be predicted)
+  net <- arranged$network[intersect(rownames(arranged$network),
+                                    names(expr)[drop_ind]),
                           intersect(colnames(arranged$network), names(expr))]
 
   # restrict to targets that are predictable and predictors that are predictive
   net <- net[,which(colSums(net != 0) != 0)]
 
   # Problem: matrix is not squared.
-  # Solution: take only the targets that are predictive / predictors that are targets (intersect of rows & cols)
+  # Solution: take only the targets that are predictive / predictors that are
+  # targets (intersect of rows & cols)
   squares <- intersect(rownames(net), colnames(net))
   squared_A <- net[squares,squares]
 
@@ -222,8 +229,8 @@ PseudoInverseSolution_percell <- function(cell, arranged, dropout_mat, thr = 0.0
   # find C (quantified predictors)
   findC <- function(inverse, net){
     targets <- rownames(inverse)
-    full <- net[targets, !(colnames(net) %in% targets), drop = F]
-    C_mat <- full[,colSums(full != 0) != 0, drop = F]
+    full <- net[targets, !(colnames(net) %in% targets), drop = FALSE]
+    C_mat <- full[,colSums(full != 0) != 0, drop = FALSE]
     C <- C_mat%*%expr[colnames(C_mat)]
     return(C)
   }
@@ -272,7 +279,7 @@ ReadNetwork <- function(network.path){
     cnames <- m[1]
     cnames <- strsplit(cnames, split = "\t")[[1]]
     mm <- sapply(m[-1], function(x) strsplit(x, split = "\t")[[1]],
-                 simplify = T, USE.NAMES = F)
+                 simplify = TRUE, USE.NAMES = FALSE)
     mm <- t(mm)
     rnames <- mm[,1]
     mm <- mm[,-1]

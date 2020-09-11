@@ -4,7 +4,7 @@
 \alias{NormalizeRPM}
 \title{RPM normalization}
 \usage{
-NormalizeRPM(data, log = F, scale = 1, pseudo.count = 1)
+NormalizeRPM(data, log = FALSE, scale = 1, pseudo.count = 1)
 }
 \arguments{
 \item{data}{matrix; raw data (genes as rows and samples as columns)}
@@ -13,8 +13,8 @@ NormalizeRPM(data, log = F, scale = 1, pseudo.count = 1)
 
 \item{scale}{integer; scale factor to divide RPMs by}
 
-\item{pseudo.count}{numeric; if \code{log = T}, value to add to RPMs in order
-to avoid taking \code{log(0)}}
+\item{pseudo.count}{numeric; if \code{log = TRUE}, value to add to RPMs in
+order to avoid taking \code{log(0)}}
 }
 \value{
 matrix; library size normalized data
@@ -22,4 +22,8 @@ matrix; library size normalized data
 \description{
 \code{NormalizeRPM} performs RPM normalization, with possibility
 to log the result
+}
+\examples{
+demo <- NormalizeRPM(demo_data_50cells)
+
 }
