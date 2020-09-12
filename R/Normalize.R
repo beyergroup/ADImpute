@@ -43,13 +43,19 @@ NormalizeRPM <- function(data,
                          scale = 1,
                          pseudo.count = 1){
 
+  # check input data
+  data <- DataCheck_Matrix(data)
+
   # divide by million RPK in sample - transcripts per million (TPM)
   data <- sweep(data, 2, STATS = colSums(data) / ( 10 ^ 6), FUN = "/")
 
   data <- data / scale
 
-  if (log)
+  if (log){
+    if(pseudo.count == 0){
+      warning("Using 0 pseudocount: Inf may be generated.\n")}
     data <- log2(data + pseudo.count)
+  }
 
   return(data)
 }

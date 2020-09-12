@@ -24,7 +24,8 @@ Imports:
     utils
 Suggests: 
     knitr,
-    rmarkdown
+    rmarkdown,
+    testthat
 biocViews:
     GeneExpression,
     Network,
