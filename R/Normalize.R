@@ -66,11 +66,11 @@ NormalizeRPM <- function(data,
 #' @description \code{NormalizeTPM} performs TPM normalization, with possibility
 #' to log the result
 #'
-#' @usage NormalizeTPM(data, transcript.length = NULL,
-#' log = FALSE, scale = 1, pseudo.count = 1)
+#' @usage NormalizeTPM(data, tr_length = NULL, log = FALSE, scale = 1,
+#' pseudo.count = 1)
 #'
 #' @param data matrix; raw data (genes as rows and samples as columns)
-#' @param transcript.length data.frame with at least 2 columns: "hgnc_symbol"
+#' @param tr_length data.frame with at least 2 columns: "hgnc_symbol"
 #' and "transcript_length"
 #' @param log logical; log TPMs?
 #' @param scale integer; scale factor to divide TPMs by
@@ -94,7 +94,7 @@ NormalizeTPM <- function(data,
                          scale = 1,
                          pseudo.count = 1){
 
-  if (is.null(transcript.length))
+  if (is.null(tr_length))
     tr_length <- ADImpute::transcript_length
 
   tr_length <- DataCheck_TranscriptLength(tr_length)
@@ -120,8 +120,11 @@ NormalizeTPM <- function(data,
 
   data <- data / scale
 
-  if (log)
+  if (log){
+    if(pseudo.count == 0){
+      warning("Using 0 pseudocount: Inf may be generated.\n")}
     data <- log2(data + pseudo.count)
+  }
 
   return(data)
 }

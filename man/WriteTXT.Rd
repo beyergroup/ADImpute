@@ -18,6 +18,6 @@ Returns NULL
 \code{WriteTXT} writes data to a tab-delimited output file
 }
 \examples{
-WriteTXT(demo_data_50cells, file = "demo.txt")
+WriteTXT(iris, file = "iris.txt")
 
 }

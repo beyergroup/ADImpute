@@ -1,5 +1,24 @@
 # Helper functions to ADImpute
 
+
+DataCheck_Arranged <- function(arranged){
+
+
+  return()
+}
+
+
+#' @title Data check (matrix)
+#'
+#' @usage DataCheck_Matrix(data)
+#'
+#' @description \code{DataCheck_Matrix} tests for potential format and storage
+#' issues with matrices. Helper function to ADImpute.
+#'
+#' @param data data object to check
+#'
+#' @return data object with needed adjustments
+#'
 DataCheck_Matrix <- function(data){
 
   # check format
@@ -25,21 +44,78 @@ DataCheck_Matrix <- function(data){
 }
 
 
+#' @title Data check (network)
+#'
+#' @usage DataCheck_Network(network)
+#'
+#' @description \code{DataCheck_Network} tests for potential format and storage
+#' issues with the network coefficient matrix. Helper function to ADImpute.
+#'
+#' @param network data object containing matrix coefficients
+#'
+#' @return network data object with needed adjustments
+#'
+DataCheck_Network <- function(network){
+
+  # 1st column is O
+  if(colnames(network)[1] != "O")
+    stop("First column of network matrix must be the intercept (O).\n")
+
+  # is a matrix
+  if(!is.matrix(network)){
+    cat("Converting network to matrix.\n")
+    network <- as.matrix(network)
+  }
+
+  # contents are numeric
+  storage.mode(network) <- "numeric"
+
+  # contents are not all 0
+  if(!(any(network != 0)))
+    stop("No non-zero coefficients in network matrix.\n")
+
+  return(network)
+}
+
+
+#' @title Data check (transcript length)
+#'
+#' @usage DataCheck_TranscriptLength(trlength)
+#'
+#' @description \code{DataCheck_TranscriptLength} tests for potential format and
+#' storage issues with the object encoding transcript length, for e.g. TPM
+#' normalization. Helper function to ADImpute.
+#'
+#' @param trlength data object containing transcript length information
+#'
+#' @return transcript length object with needed adjustments
+#'
 DataCheck_TranscriptLength <- function(trlength){
 
   # coerce to data.frame
-  trlength <- as.data.frame(trlength)
+  if(!is.data.frame(trlength)){
+    cat("Converting input to data.frame.\n")
+    trlength <- as.data.frame(trlength)
+  }
+
+  if(nrow(trlength) < 1)
+    stop("Not enough rows in transcript length data.\n")
 
   # check if required colnames are present
-  if(!(c("hgnc_symbol","transcript_length") %in% colnames(trlength)))
+  if(!all(c("hgnc_symbol","transcript_length") %in% colnames(trlength)))
     stop(cat("Transcript length data must contain the following colnames:",
              "hgnc_symbol, transcript_length\n"))
 
   # check if columns have the right format
-  if(!(is.factor(trlength$hgnc_symbol) | is.character(tr_length$hgnc_symbol)))
+  if(!(is.factor(trlength$hgnc_symbol) | is.character(trlength$hgnc_symbol)))
     stop("hgnc_symbol column must be character/factor.\n")
 
   storage.mode(trlength$transcript_length) <- "numeric"
 
-  return(NULL)
+  # remove lines with "" hgnc_symbol
+  trlength <- subset(trlength, hgnc_symbol != "")
+  if(nrow(trlength) < 1)
+    stop("Not enough non-empty gene symbols in transcript length data.\n")
+
+  return(trlength)
 }

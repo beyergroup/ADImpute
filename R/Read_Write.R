@@ -85,7 +85,7 @@ ReadData <- function(path, ...){
 #' @return Returns NULL
 #'
 #' @examples
-#' WriteTXT(demo_data_50cells, file = "demo.txt")
+#' WriteTXT(iris, file = "iris.txt")
 #'
 #' @export
 #'
@@ -110,13 +110,13 @@ WriteTXT <- function(object, file){
 #' @return Returns NULL
 #'
 #' @examples
-#' WriteCSV(demo_data_50cells, file = "demo.csv")
+#' WriteCSV(iris, file = "iris.csv")
 #'
 #' @export
 #'
 WriteCSV <- function(object, file){
 
-  utils::write.csv(object, file, sep = ",")
+  utils::write.csv(object, file)
 
   return(NULL)
 }

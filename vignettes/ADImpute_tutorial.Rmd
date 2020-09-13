@@ -19,7 +19,7 @@ library(ADImpute)
 
 Be sure to download the regulatory network file (.rds or .txt) from https://github.com/anacarolinaleote/ADImpute. Provide the full path to the downloaded file:
 ```{r}
-network_path <- paste0(getwd(),"/../network.coefficients.rds")
+network_path <- paste0(getwd(),"/../network.coefficients.zip")
 ```
 
 Load demo data and normalize:

@@ -7,7 +7,7 @@
 ReadNetwork(network.path)
 }
 \arguments{
-\item{network.path}{character; path to .txt or .rds file with network
+\item{network.path}{character; path to .txt, .rds or .zip file with network
 coefficients}
 }
 \value{

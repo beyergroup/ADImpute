@@ -18,6 +18,6 @@ Returns NULL
 \code{WriteCSV} writes data to a comma-delimited output file
 }
 \examples{
-WriteCSV(demo_data_50cells, file = "demo.csv")
+WriteCSV(iris, file = "iris.csv")
 
 }

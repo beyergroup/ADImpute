@@ -1,4 +1,4 @@
-testdata <- matrix(data = seq_len(25), nrow = 5, ncol = 5, byrow = T,
+testdata <- matrix(data = seq_len(25), nrow = 5, ncol = 5, byrow = TRUE,
                    dimnames = list(paste("Gene", seq_len(5)),
                                    paste("Cell", seq_len(5))))
 testdata[3,2] <- NA
@@ -24,24 +24,31 @@ test_that("NormalizeRPM works", {
                NormalizeRPM(testdata)/100)
 })
 
+rownames(testdata) <- sample(levels(ADImpute::transcript_length$hgnc_symbol),
+                             nrow(testdata))
+testtrlength <- data.frame("hgnc_symbol" = rownames(testdata),
+                           "transcript_length" = rep(2,nrow(testdata)))
+testoutput <- testdata[,1]/2
+testoutput <- testoutput*1000000/sum(testoutput)
 
 test_that("NormalizeTPM works",{
 
   # Class of output is a matrix
-  expect_is(NormalizeRPM(testdata), "matrix")
+  expect_is(NormalizeTPM(testdata), "matrix")
 
   # Log works
-  expect_equal(NormalizeRPM(testdata, log = TRUE),
-               log2(1+NormalizeRPM(testdata)))
+  expect_equal(NormalizeTPM(testdata, log = TRUE),
+               log2(1+NormalizeTPM(testdata)))
 
   # Log with no pseudocount throws warning
-  expect_warning(NormalizeRPM(testdata, log = TRUE, pseudo.count = 0),
+  expect_warning(NormalizeTPM(testdata, log = TRUE, pseudo.count = 0),
                  "Using 0 pseudocount: Inf may be generated.\n")
 
   # Scale works
-  expect_equal(NormalizeRPM(testdata, scale = 100),
-               NormalizeRPM(testdata)/100)
+  expect_equal(NormalizeTPM(testdata, scale = 100),
+               NormalizeTPM(testdata)/100)
 
   # Providing own gene length works
-
+  expect_equal(NormalizeTPM(testdata, tr_length = testtrlength)[,1],
+               testoutput)
 })

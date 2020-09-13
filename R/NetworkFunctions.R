@@ -27,16 +27,29 @@
 #'
 #' @param data matrix with entries equal to zero to be imputed (genes as rows
 #' and samples as columns)
-#' @param network.path character; path to .txt or .rds file with network
+#' @param network.path character; path to .txt, .rds or .zip file with network
 #' coefficients
+#' @param network.coefficients matrix; object containing network coefficients
 #'
 #' @return list; data matrix, network coefficients matrix and intercept for
 #' genes common between the data matrix and the network
 #'
 ArrangeData <- function(data,
-                        network.path = NULL){
+                        network.path = NULL,
+                        network.coefficients = NULL){
 
-  network.coefficients <- ReadNetwork(network.path)
+  if(is.null(network.coefficients)){
+    if((is.null(network.path)) | !file.exists(network.path))
+      stop("Please provide a valid path for network coefficients.\n")
+  }
+  if(is.null(data))
+    stop("Please provide an input data matrix.\n")
+
+  if(is.null(network.coefficients))
+    network.coefficients <- ReadNetwork(network.path)
+
+  data <- DataCheck_Matrix(data)
+  network.coefficients <- DataCheck_Network(network.coefficients)
 
   O <- network.coefficients[,1] # network intercept
   network_matrix <- network.coefficients[,-1] # network coefficients
@@ -264,7 +277,7 @@ PseudoInverseSolution_percell <- function(cell, arranged, dropout_mat,
 #'
 #' @description \code{ReadNetwork} loads the matrix of network coefficients
 #'
-#' @param network.path character; path to .txt or .rds file with network
+#' @param network.path character; path to .txt, .rds or .zip file with network
 #' coefficients
 #'
 #' @return matrix with network coefficients and intercept in the first column
@@ -297,8 +310,16 @@ ReadNetwork <- function(network.path){
 
     return(network.coefficients)
 
-  } else {
-    stop("Please input txt or rds file\n")
+  } else if (grepl(network.path, pattern = ".zip")){
+
+    cat("Reading .zip file with network coefficients\n")
+    network.coefficients <- utils::read.table(unz(network.path,
+                                                  "network.coefficients.txt"))
+
+    return(as.matrix(network.coefficients))
+
+  } else{
+    stop("Please input txt, rds or zip file\n")
   }
 
 }

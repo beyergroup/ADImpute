@@ -321,7 +321,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">library</span>(ADImpute)</span></code></pre></div>
 <p>Be sure to download the regulatory network file (.rds or .txt) from <a href="https://github.com/anacarolinaleote/ADImpute" class="uri">https://github.com/anacarolinaleote/ADImpute</a>. Provide the full path to the downloaded file:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>network_path &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="kw">getwd</span>(),<span class="st">&quot;/../network.coefficients.rds&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>network_path &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="kw">getwd</span>(),<span class="st">&quot;/../network.coefficients.zip&quot;</span>)</span></code></pre></div>
 <p>Load demo data and normalize:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="kw">data</span>(<span class="st">&quot;demo_data_50cells&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;ADImpute&quot;</span>)</span>
 <span id="cb3-2"><a href="#cb3-2"></a>RPM &lt;-<span class="st"> </span><span class="kw">NormalizeRPM</span>(demo_data_50cells)</span>
@@ -347,9 +347,9 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <span id="cb4-16"><a href="#cb4-16"></a><span class="co">#&gt; final sparcity 0.63 </span></span>
 <span id="cb4-17"><a href="#cb4-17"></a><span class="co">#&gt; Imputing training data using average expression</span></span>
 <span id="cb4-18"><a href="#cb4-18"></a><span class="co">#&gt; Imputing training data using network information</span></span>
-<span id="cb4-19"><a href="#cb4-19"></a><span class="co">#&gt; Reading .rds file with network coefficients</span></span>
-<span id="cb4-20"><a href="#cb4-20"></a><span class="co">#&gt; Dimensions of data matrix: 16903 x 35 </span></span>
-<span id="cb4-21"><a href="#cb4-21"></a><span class="co">#&gt; Dimensions of network matrix: 16723 x 14173 </span></span>
+<span id="cb4-19"><a href="#cb4-19"></a><span class="co">#&gt; Reading .zip file with network coefficients</span></span>
+<span id="cb4-20"><a href="#cb4-20"></a><span class="co">#&gt; Dimensions of data matrix: 16891 x 35 </span></span>
+<span id="cb4-21"><a href="#cb4-21"></a><span class="co">#&gt; Dimensions of network matrix: 16723 x 14054 </span></span>
 <span id="cb4-22"><a href="#cb4-22"></a><span class="co">#&gt; Centering expression of each gene at 0</span></span>
 <span id="cb4-23"><a href="#cb4-23"></a><span class="co">#&gt; Starting network-based imputation</span></span>
 <span id="cb4-24"><a href="#cb4-24"></a><span class="co">#&gt; Iteration 5 / 50 </span></span>
@@ -379,7 +379,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <span id="cb4-48"><a href="#cb4-48"></a><span class="co">#&gt; Before impute : 63 percent. </span></span>
 <span id="cb4-49"><a href="#cb4-49"></a><span class="co">#&gt; After impute : 44 percent. </span></span>
 <span id="cb4-50"><a href="#cb4-50"></a><span class="co">#&gt; 19 percent of zeros are imputed. </span></span>
-<span id="cb4-51"><a href="#cb4-51"></a><span class="co">#&gt; Imputation errors computed for 14619 genes</span></span>
+<span id="cb4-51"><a href="#cb4-51"></a><span class="co">#&gt; Imputation errors computed for 14612 genes</span></span>
 <span id="cb4-52"><a href="#cb4-52"></a><span class="kw">head</span>(methods_pergene)</span>
 <span id="cb4-53"><a href="#cb4-53"></a><span class="co">#&gt;       MKL2      CD109      ABTB1      MAST2       KAT5       WWC2 </span></span>
 <span id="cb4-54"><a href="#cb4-54"></a><span class="co">#&gt;  &quot;Network&quot; &quot;DrImpute&quot;  &quot;Network&quot; &quot;Baseline&quot;  &quot;Network&quot;  &quot;Network&quot;</span></span></code></pre></div>
@@ -396,9 +396,9 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <span id="cb5-10"><a href="#cb5-10"></a>                  <span class="dt">drop.exclude =</span> <span class="ot">TRUE</span>)</span>
 <span id="cb5-11"><a href="#cb5-11"></a><span class="co">#&gt; Imputing data using average expression</span></span>
 <span id="cb5-12"><a href="#cb5-12"></a><span class="co">#&gt; Imputing data using network information</span></span>
-<span id="cb5-13"><a href="#cb5-13"></a><span class="co">#&gt; Reading .rds file with network coefficients</span></span>
-<span id="cb5-14"><a href="#cb5-14"></a><span class="co">#&gt; Dimensions of data matrix: 16903 x 50 </span></span>
-<span id="cb5-15"><a href="#cb5-15"></a><span class="co">#&gt; Dimensions of network matrix: 16723 x 14173 </span></span>
+<span id="cb5-13"><a href="#cb5-13"></a><span class="co">#&gt; Reading .zip file with network coefficients</span></span>
+<span id="cb5-14"><a href="#cb5-14"></a><span class="co">#&gt; Dimensions of data matrix: 16891 x 50 </span></span>
+<span id="cb5-15"><a href="#cb5-15"></a><span class="co">#&gt; Dimensions of network matrix: 16723 x 14054 </span></span>
 <span id="cb5-16"><a href="#cb5-16"></a><span class="co">#&gt; Centering expression of each gene at 0</span></span>
 <span id="cb5-17"><a href="#cb5-17"></a><span class="co">#&gt; Starting network-based imputation</span></span>
 <span id="cb5-18"><a href="#cb5-18"></a><span class="co">#&gt; Iteration 5 / 50 </span></span>
