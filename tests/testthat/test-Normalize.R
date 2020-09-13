@@ -23,3 +23,25 @@ test_that("NormalizeRPM works", {
   expect_equal(NormalizeRPM(testdata, scale = 100),
                NormalizeRPM(testdata)/100)
 })
+
+
+test_that("NormalizeTPM works",{
+
+  # Class of output is a matrix
+  expect_is(NormalizeRPM(testdata), "matrix")
+
+  # Log works
+  expect_equal(NormalizeRPM(testdata, log = TRUE),
+               log2(1+NormalizeRPM(testdata)))
+
+  # Log with no pseudocount throws warning
+  expect_warning(NormalizeRPM(testdata, log = TRUE, pseudo.count = 0),
+                 "Using 0 pseudocount: Inf may be generated.\n")
+
+  # Scale works
+  expect_equal(NormalizeRPM(testdata, scale = 100),
+               NormalizeRPM(testdata)/100)
+
+  # Providing own gene length works
+
+})

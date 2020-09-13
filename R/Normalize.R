@@ -70,8 +70,8 @@ NormalizeRPM <- function(data,
 #' log = FALSE, scale = 1, pseudo.count = 1)
 #'
 #' @param data matrix; raw data (genes as rows and samples as columns)
-#' @param transcript.length matrix with at least 2 columns: "hgnc_symbol" and
-#' "transcript_length"
+#' @param transcript.length data.frame with at least 2 columns: "hgnc_symbol"
+#' and "transcript_length"
 #' @param log logical; log TPMs?
 #' @param scale integer; scale factor to divide TPMs by
 #' @param pseudo.count numeric; if \code{log = T}, value to add to TPMs in order
@@ -89,25 +89,27 @@ NormalizeRPM <- function(data,
 #' @export
 #'
 NormalizeTPM <- function(data,
-                         transcript.length = NULL,
+                         tr_length = NULL,
                          log = FALSE,
                          scale = 1,
                          pseudo.count = 1){
 
-  if (is.null(transcript.length)){
-
+  if (is.null(transcript.length))
     tr_length <- ADImpute::transcript_length
 
-  } else {
-    tr_length <- transcript.length
-  }
+  tr_length <- DataCheck_TranscriptLength(tr_length)
+
+  # check input data
+  data <- DataCheck_Matrix(data)
 
   # Median length of all transcripts for a given gene
   med_length <- stats::aggregate(x = tr_length$transcript_length,
-                                 by = list("hgnc_symbol" = tr_length$hgnc_symbol),
+                              by = list("hgnc_symbol" = tr_length$hgnc_symbol),
                                  FUN = stats::median)
   common <- intersect(rownames(data), med_length$hgnc_symbol)
-  data   <- data[common, ]
+  if(length(common) < 2)
+    stop("Not enough overlap between data rownames and transcript length.\n")
+  data <- data[common, ]
 
   med_length <- med_length[match(common, med_length$hgnc_symbol), ]
 

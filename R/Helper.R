@@ -23,3 +23,23 @@ DataCheck_Matrix <- function(data){
 
   return(data)
 }
+
+
+DataCheck_TranscriptLength <- function(trlength){
+
+  # coerce to data.frame
+  trlength <- as.data.frame(trlength)
+
+  # check if required colnames are present
+  if(!(c("hgnc_symbol","transcript_length") %in% colnames(trlength)))
+    stop(cat("Transcript length data must contain the following colnames:",
+             "hgnc_symbol, transcript_length\n"))
+
+  # check if columns have the right format
+  if(!(is.factor(trlength$hgnc_symbol) | is.character(tr_length$hgnc_symbol)))
+    stop("hgnc_symbol column must be character/factor.\n")
+
+  storage.mode(trlength$transcript_length) <- "numeric"
+
+  return(NULL)
+}
