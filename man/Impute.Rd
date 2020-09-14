@@ -5,17 +5,18 @@
 \title{Dropout imputation using gene-specific best-performing methods}
 \usage{
 Impute(data, do = "Ensemble", method.choice = NULL, scale = 1,
-pseudo.count = 1, count_path, labels = NULL, cell.clusters = 2,
+pseudo.count = 1, count_path = NULL, labels = NULL, cell.clusters = 2,
 drop_thre = NULL, type = "TPM", cores = 4, cluster.type = "SOCK",
-network.path = NULL, transcript.length = NULL, drop.exclude = TRUE,
-bulk = NULL, true.zero.thr = NULL, ...)
+network.coefficients = NULL, network.path = system.file("extdata",
+"network.coefficients.zip", package="ADImpute"), transcript.length = NULL,
+drop.exclude = TRUE, bulk = NULL, true.zero.thr = NULL, ...)
 }
 \arguments{
 \item{data}{matrix; raw counts (genes as rows and samples as columns)}
 
 \item{do}{character; choice of methods to be used for imputation. Currently
 supported methods are \code{"Baseline"}, \code{"DrImpute"},
-\code{"Network"}, and \code{"Ensemble"}.
+\code{"Network"}, and \code{"Ensemble"}. Defaults to \code{"Ensemble"}.
 Not case-sensitive. Can include one or more methods.}
 
 \item{method.choice}{character; best performing method in training data for
@@ -44,8 +45,11 @@ matrix. Can be "count" or "TPM"}
 
 \item{cluster.type}{character; either "SOCK" or "MPI"}
 
+\item{network.coefficients}{matrix; network coefficients. Please provide
+either \code{network.coefficients} or \code{network.path}.}
+
 \item{network.path}{character; path to .txt or .rds file with network
-coefficients}
+coefficients. Defaults to the zip file included in ADImpute installation}
 
 \item{transcript.length}{matrix with at least 2 columns: "hgnc_symbol" and
 "transcript_length"}
@@ -98,10 +102,10 @@ imputation results of all methods in \code{do}.
 }
 \examples{
 # Normalize demo data
-norm_data <- NormalizeRPM(demo_data_50cells[1:100,])
-# Impute with particular methods
-imputed_data <- Impute(do = c("Baseline","DrImpute"), data = norm_data,
-cores = 1)
+norm_data <- NormalizeRPM(demo_data)
+# Impute with particular method(s)
+imputed_data <- Impute(do = "Network", data = norm_data,
+network.coefficients = ADImpute::demo_net, cores = 1)
 
 }
 \seealso{

@@ -20,7 +20,7 @@
 
 #' @title Data trimming
 #'
-#' @usage ArrangeData(data, network.path = NULL)
+#' @usage ArrangeData(data, network.path = NULL, network.coefficients = NULL)
 #'
 #' @description \code{ArrangeData} finds common genes to the network and
 #' provided data and limits both datasets to these
@@ -38,15 +38,21 @@ ArrangeData <- function(data,
                         network.path = NULL,
                         network.coefficients = NULL){
 
-  if(is.null(network.coefficients)){
-    if((is.null(network.path)) | !file.exists(network.path))
-      stop("Please provide a valid path for network coefficients.\n")
-  }
   if(is.null(data))
     stop("Please provide an input data matrix.\n")
 
-  if(is.null(network.coefficients))
-    network.coefficients <- ReadNetwork(network.path)
+  if(is.null(network.coefficients)){
+    if(is.null(network.path)){
+      stop("Please provide a valid path for network coefficients.\n")
+    } else{
+      if(!file.exists(network.path))
+        stop("Please provide a valid path for network coefficients.\n")
+      network.coefficients <- ReadNetwork(network.path)
+    }
+  } else{
+    if(!is.null(network.path))
+      cat("Igoring path to network coefficients and using provided matrix.\n")
+  }
 
   data <- DataCheck_Matrix(data)
   network.coefficients <- DataCheck_Network(network.coefficients)

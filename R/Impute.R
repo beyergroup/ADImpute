@@ -153,11 +153,14 @@ ImputeDrImpute <- function(data, write.to.file = TRUE){
 
 #' @title Network-based imputation
 #'
-#' @usage ImputeNetwork(data, network.path = NULL, cores = 4,
-#' cluster.type = "SOCK", write.to.file = TRUE, drop.exclude = TRUE, ...)
+#' @usage ImputeNetwork(data, network.coefficients = NULL, network.path = NULL,
+#' cores = 4, cluster.type = "SOCK", write.to.file = TRUE, drop.exclude = TRUE,
+#' ...)
 #'
 #' @param data matrix with entries equal to zero to be imputed, normalized
 #' and log2-transformed (genes as rows and samples as columns)
+#' @param network.coefficients matrix; network coefficients. Please provide
+#' either \code{network.coefficients} or \code{network.path}.
 #' @param network.path character; path to .txt or .rds file with network
 #' coefficients
 #' @param cores integer; number of cores to use
@@ -178,6 +181,7 @@ ImputeDrImpute <- function(data, write.to.file = TRUE){
 #' @seealso \code{\link{ImputeNetParallel}}
 #'
 ImputeNetwork <- function(data,
+                          network.coefficients = NULL,
                           network.path = NULL,
                           cores = 4,
                           cluster.type = "SOCK",
@@ -186,7 +190,7 @@ ImputeNetwork <- function(data,
                           ...){
 
   # Limit data and network to genes common to both
-  arranged <- ArrangeData(data, network.path)
+  arranged <- ArrangeData(data, network.path, network.coefficients)
 
   cat("Dimensions of data matrix:",
       dim(arranged$data)[1], "x", dim(arranged$data)[2],

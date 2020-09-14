@@ -113,7 +113,7 @@ DataCheck_TranscriptLength <- function(trlength){
   storage.mode(trlength$transcript_length) <- "numeric"
 
   # remove lines with "" hgnc_symbol
-  trlength <- subset(trlength, hgnc_symbol != "")
+  trlength <- subset(trlength, subset = hgnc_symbol != "")
   if(nrow(trlength) < 1)
     stop("Not enough non-empty gene symbols in transcript length data.\n")
 

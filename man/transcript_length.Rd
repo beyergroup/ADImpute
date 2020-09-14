@@ -5,10 +5,9 @@
 \alias{transcript_length}
 \title{Table for transcript length calculations}
 \format{
-A data.frame with 3 columns:
+A data.frame with 2 columns:
 \describe{
 \item{hgnc_symbol}{Gene symbol identifier}
-\item{ensembl_transcript_id}{ENSEMBL transcript ID}
 \item{transcript length}{Length of transcript}
 }
 }

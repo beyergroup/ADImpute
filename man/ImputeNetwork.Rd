@@ -4,12 +4,16 @@
 \alias{ImputeNetwork}
 \title{Network-based imputation}
 \usage{
-ImputeNetwork(data, network.path = NULL, cores = 4,
-cluster.type = "SOCK", write.to.file = TRUE, drop.exclude = TRUE, ...)
+ImputeNetwork(data, network.coefficients = NULL, network.path = NULL,
+cores = 4, cluster.type = "SOCK", write.to.file = TRUE, drop.exclude = TRUE,
+...)
 }
 \arguments{
 \item{data}{matrix with entries equal to zero to be imputed, normalized
 and log2-transformed (genes as rows and samples as columns)}
+
+\item{network.coefficients}{matrix; network coefficients. Please provide
+either \code{network.coefficients} or \code{network.path}.}
 
 \item{network.path}{character; path to .txt or .rds file with network
 coefficients}

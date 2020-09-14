@@ -34,7 +34,7 @@ test_that("DataCheck_Matrix works", {
 
 
 testtrlength1 <- unname(ADImpute::transcript_length)
-testtrlength2 <- ADImpute::transcript_length[,2:3]
+testtrlength2 <- ADImpute::transcript_length[,2, drop = FALSE]
 testtrlength3 <- ADImpute::transcript_length
 testtrlength3$hgnc_symbol <- seq_len(nrow(testtrlength3))
 testtrlength4 <- ADImpute::transcript_length
@@ -71,5 +71,5 @@ test_that("DataCheck_TranscriptLength works", {
 
   # Removes empty gene symbols
   expect_false(any(as.character(DataCheck_TranscriptLength(
-    ADImpute::transcript_length)$hgnc_symbol)) == "")
+    ADImpute::transcript_length)$hgnc_symbol) == ""))
 })

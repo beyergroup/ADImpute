@@ -4,7 +4,7 @@
 \alias{SplitData}
 \title{Selection of samples for training}
 \usage{
-SplitData(data, ratio = .7, training.only = TRUE, seed = NULL)
+SplitData(data, ratio = .7, training.only = TRUE)
 }
 \arguments{
 \item{data}{matrix; raw counts (genes as rows and samples as columns)}
@@ -13,9 +13,6 @@ SplitData(data, ratio = .7, training.only = TRUE, seed = NULL)
 
 \item{training.only}{logical; if TRUE define only a training dataset, if
 FALSE writes both training and validation sets (defaults to TRUE)}
-
-\item{seed}{integer; optional seed (defaults to NULL, random selection of
-samples to use for training)}
 }
 \value{
 matrix containing raw counts (genes as rows and samples as columns)
@@ -27,5 +24,4 @@ matrix containing raw counts (genes as rows and samples as columns)
 \details{
 Selects a portion (\code{ratio}) of samples (columns in \code{data})
 to be used as training set and writes to file "training_raw.txt".
-For reproducible results, provide seed.
 }

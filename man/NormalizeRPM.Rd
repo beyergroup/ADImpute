@@ -24,6 +24,6 @@ matrix; library size normalized data
 to log the result
 }
 \examples{
-demo <- NormalizeRPM(demo_data_50cells)
+demo <- NormalizeRPM(ADImpute::demo_data)
 
 }

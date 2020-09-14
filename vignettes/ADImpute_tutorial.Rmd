@@ -17,48 +17,34 @@ knitr::opts_chunk$set(eval = !is_check, collapse = TRUE, comment = "#>")
 library(ADImpute)
 ```
 
-Be sure to download the regulatory network file (.rds or .txt) from https://github.com/anacarolinaleote/ADImpute. Provide the full path to the downloaded file:
+For time and memory management reasons, this demo uses a subset of the Grun pancreas dataset. When using the ADImpute package, please run on the full datasets (no subsetting for genes), as the gene regulatory model employed uses expression information from all genes in the data.
 ```{r}
-network_path <- paste0(getwd(),"/../network.coefficients.zip")
+RPM <- NormalizeRPM(ADImpute::demo_data) # normalize for library size
 ```
 
-Load demo data and normalize:
-```{r}
-data("demo_data_50cells", package = "ADImpute")
-RPM <- NormalizeRPM(demo_data_50cells)
-WriteTXT(RPM, "RPM.txt")
-rpm_path <- paste0(getwd(),"/RPM.txt")
-```
-
-Evaluate methods to determine the best performing imputation method for each gene:
+Evaluate methods to determine the best performing imputation method for each gene. This step sets a fraction of the quantified entries in the input data to zero, applies different normalization methods to the data and compares the imputation results to the original values. This allows ADImpute to determine which method imputes values with the lowest errors for each gene.
 ```{r, warning=FALSE}
+set.seed(1)
 methods_pergene <- EvaluateMethods(data = RPM,
+                                   do = c("Baseline", "DrImpute",
+                                          "Network"), # these are the default
+                                                      # methods to test. Exclude
+                                                      # any of them by removing
+                                                      # them from the vector
                                    training.ratio = .7,
                                    mask.ratio = .2,
-                                   training.only = TRUE,
-                                   split.seed = 12,
-                                   mask.seed = 34,
-                                   type = "count",
-                                   cell.clusters = 2,
                                    cores = 2,
-                                   cluster.type = "SOCK",
-                                   network.path = network_path,
-                                   drop.exclude = TRUE)
-head(methods_pergene)
+                                   network.coefficients = ADImpute::demo_net)
+head(methods_pergene) # show the best performing method for the first 6 genes
 ```
 
-For each gene, the best performing method is now computed. Next, impute according to best performing method:
+After determining which method performs best for each gene, ADImpute redoes the imputation on the original data and combines the results of different methods into an ensemble.
 ```{r, warning=FALSE}
 imputed <- Impute(do = "Ensemble",
                   method.choice = methods_pergene,
                   data = RPM,
-                  count_path = rpm_path,
-                  type = "count",
-                  cell.clusters = 2,
                   cores = 2,
-                  cluster.type = "SOCK",
-                  network.path = network_path,
-                  drop.exclude = TRUE)
+                  network.coefficients = ADImpute::demo_net)
 str(imputed)
 ```
 

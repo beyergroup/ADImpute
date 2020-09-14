@@ -34,7 +34,7 @@
 #' @return matrix; library size normalized data
 #'
 #' @examples
-#' demo <- NormalizeRPM(demo_data_50cells)
+#' demo <- NormalizeRPM(ADImpute::demo_data)
 #'
 #' @export
 #'
@@ -84,7 +84,7 @@ NormalizeRPM <- function(data,
 #' @return matrix; normalized data (for transcript length and library size)
 #'
 #' @examples
-#' demo <- NormalizeTPM(demo_data_50cells)
+#' demo <- NormalizeTPM(ADImpute::demo_data)
 #'
 #' @export
 #'

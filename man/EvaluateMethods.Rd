@@ -6,9 +6,10 @@
 \usage{
 EvaluateMethods(data, do = c("Baseline", "DrImpute", "Network"),
 training.ratio = .7, training.only = TRUE, mask.ratio = .1,
-split.seed = NULL, mask.seed = NULL, scale = 1, pseudo.count = 1,
-labels = NULL, cell.clusters = 2, drop_thre = NULL, type = "TPM", cores = 4,
-cluster.type = "SOCK", network.path = NULL, transcript.length = NULL,
+scale = 1, pseudo.count = 1, labels = NULL, cell.clusters = 2,
+drop_thre = NULL, type = "TPM", cores = 4, cluster.type = "SOCK",
+network.coefficients = NULL, network.path = system.file("extdata",
+"network.coefficients.zip", package="ADImpute"), transcript.length = NULL,
 drop.exclude = TRUE, bulk = NULL, ...)
 }
 \arguments{
@@ -25,12 +26,6 @@ supported methods are \code{"Baseline"}, \code{"DrImpute"} and
 FALSE writes and returns both training and validation sets (defaults to TRUE)}
 
 \item{mask.ratio}{numeric; ratio of samples to be masked per gene}
-
-\item{split.seed}{integer; optional seed (defaults to NULL, random selection
-of samples to use for training)}
-
-\item{mask.seed}{integer; optional seed (defaults to NULL, random selection
-of samples to mask)}
 
 \item{scale}{integer; scaling factor to divide all expression levels by
 (defaults to 1)}
@@ -53,8 +48,11 @@ matrix. Can be "count" or "TPM"}
 
 \item{cluster.type}{character; either "SOCK" or "MPI"}
 
+\item{network.coefficients}{matrix; network coefficients. Please provide
+either \code{network.coefficients} or \code{network.path}.}
+
 \item{network.path}{character; path to .txt or .rds file with network
-coefficients}
+coefficients. Defaults to the zip file included in ADImpute installation}
 
 \item{transcript.length}{matrix with at least 2 columns: "hgnc_symbol" and
 "transcript_length"}
@@ -83,9 +81,10 @@ values in the original dataset that was set to 0, for each method. The
 method resulting in a lowest imputation error for each gene is chosen.
 }
 \examples{
-# Compare selected methods:
-method_choice <- EvaluateMethods(demo_data_50cells[1:100,],
-                                 do = c("Baseline", "DrImpute"))
+# Normalize demo data
+norm_data <- NormalizeRPM(ADImpute::demo_data)
+method_choice <- EvaluateMethods(norm_data,
+network.coefficients = ADImpute::demo_net)
 
 }
 \seealso{

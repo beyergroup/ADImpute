@@ -22,9 +22,10 @@
 #'
 #' @usage EvaluateMethods(data, do = c("Baseline", "DrImpute", "Network"),
 #' training.ratio = .7, training.only = TRUE, mask.ratio = .1,
-#' split.seed = NULL, mask.seed = NULL, scale = 1, pseudo.count = 1,
-#' labels = NULL, cell.clusters = 2, drop_thre = NULL, type = "TPM", cores = 4,
-#' cluster.type = "SOCK", network.path = NULL, transcript.length = NULL,
+#' scale = 1, pseudo.count = 1, labels = NULL, cell.clusters = 2,
+#' drop_thre = NULL, type = "TPM", cores = 4, cluster.type = "SOCK",
+#' network.coefficients = NULL, network.path = system.file("extdata",
+#' "network.coefficients.zip", package="ADImpute"), transcript.length = NULL,
 #' drop.exclude = TRUE, bulk = NULL, ...)
 #'
 #' @description \code{EvaluateMethods} returns the best-performing imputation
@@ -39,10 +40,6 @@
 #' @param training.only logical; if TRUE define only a training dataset, if
 #' FALSE writes and returns both training and validation sets (defaults to TRUE)
 #' @param mask.ratio numeric; ratio of samples to be masked per gene
-#' @param split.seed integer; optional seed (defaults to NULL, random selection
-#' of samples to use for training)
-#' @param mask.seed integer; optional seed (defaults to NULL, random selection
-#' of samples to mask)
 #' @param scale integer; scaling factor to divide all expression levels by
 #' (defaults to 1)
 #' @param pseudo.count integer; pseudo-count to be added to expression levels
@@ -56,8 +53,10 @@
 #' matrix. Can be "count" or "TPM"
 #' @param cores integer; number of cores used for paralell computation
 #' @param cluster.type character; either "SOCK" or "MPI"
+#' @param network.coefficients matrix; network coefficients. Please provide
+#' either \code{network.coefficients} or \code{network.path}.
 #' @param network.path character; path to .txt or .rds file with network
-#' coefficients
+#' coefficients. Defaults to the zip file included in ADImpute installation
 #' @param transcript.length matrix with at least 2 columns: "hgnc_symbol" and
 #' "transcript_length"
 #' @param drop.exclude logical; should zeros be discarded for the calculation
@@ -76,9 +75,10 @@
 #' @return character; best performing method in the training set for each gene
 #'
 #' @examples
-#' # Compare selected methods:
-#' method_choice <- EvaluateMethods(demo_data_50cells[1:100,],
-#'                                  do = c("Baseline", "DrImpute"))
+#' # Normalize demo data
+#' norm_data <- NormalizeRPM(ADImpute::demo_data)
+#' method_choice <- EvaluateMethods(norm_data,
+#' network.coefficients = ADImpute::demo_net)
 #'
 #' @seealso \code{\link{ImputeBaseline}},
 #' \code{\link{ImputeDrImpute}},
@@ -91,8 +91,6 @@ EvaluateMethods <- function(data,
                             training.ratio = .7,
                             training.only = TRUE,
                             mask.ratio = .1,
-                            split.seed = NULL,
-                            mask.seed = NULL,
                             scale = 1,
                             pseudo.count = 1,
                             labels = NULL,
@@ -101,7 +99,10 @@ EvaluateMethods <- function(data,
                             type = "TPM",
                             cores = 4,
                             cluster.type = "SOCK",
-                            network.path = NULL,
+                            network.coefficients = NULL,
+                            network.path = system.file("extdata",
+                                                    "network.coefficients.zip",
+                                                       package="ADImpute"),
                             transcript.length = NULL,
                             drop.exclude = TRUE,
                             bulk = NULL,
@@ -112,6 +113,8 @@ EvaluateMethods <- function(data,
     transcript.length <- ADImpute::transcript_length
   }
 
+  data <- DataCheck_Matrix(data)
+
   dir.create("training")
   setwd("training")
   on.exit(setwd("../"))
@@ -120,16 +123,14 @@ EvaluateMethods <- function(data,
   cat("Selecting training data\n")
   training_norm <- SplitData(data,
                              ratio = training.ratio,
-                             training.only = training.only,
-                             seed = split.seed)
+                             training.only = training.only)
 
   # Mask selected training data
   cat("Masking training data\n")
   masked_training_norm <- MaskData(training_norm,
                                    write.to.file = TRUE,
                                    filename = "masked_training_norm.txt",
-                                   mask = mask.ratio,
-                                   seed = mask.seed)
+                                   mask = mask.ratio)
 
   train_imputed <- list()
 
@@ -184,6 +185,7 @@ EvaluateMethods <- function(data,
   if("network" %in% tolower(do)){
     cat("Imputing training data using network information\n")
     train_imputed$Network <- ImputeNetwork(log_masked_training_norm,
+                                           network.coefficients,
                                            network.path,
                                            cores,
                                            cluster.type,
@@ -212,10 +214,11 @@ EvaluateMethods <- function(data,
 #' @title Dropout imputation using gene-specific best-performing methods
 #'
 #' @usage Impute(data, do = "Ensemble", method.choice = NULL, scale = 1,
-#' pseudo.count = 1, count_path, labels = NULL, cell.clusters = 2,
+#' pseudo.count = 1, count_path = NULL, labels = NULL, cell.clusters = 2,
 #' drop_thre = NULL, type = "TPM", cores = 4, cluster.type = "SOCK",
-#' network.path = NULL, transcript.length = NULL, drop.exclude = TRUE,
-#' bulk = NULL, true.zero.thr = NULL, ...)
+#' network.coefficients = NULL, network.path = system.file("extdata",
+#' "network.coefficients.zip", package="ADImpute"), transcript.length = NULL,
+#' drop.exclude = TRUE, bulk = NULL, true.zero.thr = NULL, ...)
 #'
 #' @description \code{Impute} performs dropout imputation based on the
 #' performance results obtained in the training data, coupled to normalization
@@ -224,7 +227,7 @@ EvaluateMethods <- function(data,
 #' @param data matrix; raw counts (genes as rows and samples as columns)
 #' @param do character; choice of methods to be used for imputation. Currently
 #' supported methods are \code{"Baseline"}, \code{"DrImpute"},
-#' \code{"Network"}, and \code{"Ensemble"}.
+#' \code{"Network"}, and \code{"Ensemble"}. Defaults to \code{"Ensemble"}.
 #' Not case-sensitive. Can include one or more methods.
 #' @param method.choice character; best performing method in training data for
 #' each gene
@@ -242,8 +245,10 @@ EvaluateMethods <- function(data,
 #' matrix. Can be "count" or "TPM"
 #' @param cores integer; number of cores used for paralell computation
 #' @param cluster.type character; either "SOCK" or "MPI"
+#' @param network.coefficients matrix; network coefficients. Please provide
+#' either \code{network.coefficients} or \code{network.path}.
 #' @param network.path character; path to .txt or .rds file with network
-#' coefficients
+#' coefficients. Defaults to the zip file included in ADImpute installation
 #' @param transcript.length matrix with at least 2 columns: "hgnc_symbol" and
 #' "transcript_length"
 #' @param drop.exclude logical; should zeros be discarded for the calculation
@@ -284,10 +289,10 @@ EvaluateMethods <- function(data,
 #'
 #' @examples
 #' # Normalize demo data
-#' norm_data <- NormalizeRPM(demo_data_50cells[1:100,])
-#' # Impute with particular methods
-#' imputed_data <- Impute(do = c("Baseline","DrImpute"), data = norm_data,
-#' cores = 1)
+#' norm_data <- NormalizeRPM(demo_data)
+#' # Impute with particular method(s)
+#' imputed_data <- Impute(do = "Network", data = norm_data,
+#' network.coefficients = ADImpute::demo_net, cores = 1)
 #'
 #' @seealso \code{\link{EvaluateMethods}},
 #' \code{\link{ImputeBaseline}},
@@ -309,14 +314,15 @@ Impute <- function(data,
                    type = "TPM",
                    cores = 4,
                    cluster.type = "SOCK",
-                   network.path = NULL,
+                   network.coefficients = NULL,
+                   network.path = system.file("extdata",
+                                              "network.coefficients.zip",
+                                              package="ADImpute"),
                    transcript.length = NULL,
                    drop.exclude = TRUE,
                    bulk = NULL,
                    true.zero.thr = NULL,
                    ...){
-
-  imputed <- list()
 
   # Check arguments
   if (is.null(transcript.length)){
@@ -327,13 +333,18 @@ Impute <- function(data,
          Consider running EvaluateMethods()\n")
   }
 
+  data <- DataCheck_Matrix(data)
+
   dir.create("imputation")
   setwd("imputation")
   on.exit(setwd("../"))
 
   if("ensemble" %in% tolower(do)){
+    do <- c(do, "Network")
     do <- union(do, unique(method.choice))
   }
+
+  imputed <- list()
 
   # Run scImpute
   if("scimpute" %in% tolower(do)){
@@ -406,6 +417,7 @@ Impute <- function(data,
   if("network" %in% tolower(do)){
     cat("Imputing data using network information\n")
     imputed$Network <- ImputeNetwork(log_masked_norm,
+                                     network.coefficients,
                                      network.path,
                                      cores,
                                      cluster.type,

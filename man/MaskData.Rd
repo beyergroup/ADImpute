@@ -4,8 +4,7 @@
 \alias{MaskData}
 \title{Masking of entries for performance evaluation}
 \usage{
-MaskData(data, write.to.file = TRUE, filename, mask = .1,
-seed = NULL)
+MaskData(data, write.to.file = TRUE, filename, mask = .1)
 }
 \arguments{
 \item{data}{matrix; raw counts (genes as rows and samples as columns)}
@@ -16,9 +15,6 @@ seed = NULL)
 
 \item{mask}{numeric; ratio of total non-zero samples to be masked per gene
 (defaults to .1)}
-
-\item{seed}{integer; optional seed (defaults to NULL, random selection of
-samples to mask)}
 }
 \value{
 matrix containing masked raw counts (genes as rows and samples as
@@ -30,8 +26,5 @@ entries of each row of \code{data} to zero
 }
 \details{
 Sets a portion (\code{mask}) of the non-zero entries of each row of
-\code{data} to zero. For reproducible results, provide seed.
-\code{seed} is summed to row number so that every gene has a different seed
-(different samples are masked for each gene).
-Result is written to \code{filename}.
+\code{data} to zero. Result is written to \code{filename}.
 }

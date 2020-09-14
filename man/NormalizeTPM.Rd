@@ -4,11 +4,14 @@
 \alias{NormalizeTPM}
 \title{TPM normalization}
 \usage{
-NormalizeTPM(data, transcript.length = NULL,
-log = FALSE, scale = 1, pseudo.count = 1)
+NormalizeTPM(data, tr_length = NULL, log = FALSE, scale = 1,
+pseudo.count = 1)
 }
 \arguments{
 \item{data}{matrix; raw data (genes as rows and samples as columns)}
+
+\item{tr_length}{data.frame with at least 2 columns: "hgnc_symbol"
+and "transcript_length"}
 
 \item{log}{logical; log TPMs?}
 
@@ -16,9 +19,6 @@ log = FALSE, scale = 1, pseudo.count = 1)
 
 \item{pseudo.count}{numeric; if \code{log = T}, value to add to TPMs in order
 to avoid taking \code{log(0)}}
-
-\item{transcript.length}{data.frame with at least 2 columns: "hgnc_symbol"
-and "transcript_length"}
 }
 \value{
 matrix; normalized data (for transcript length and library size)
@@ -33,6 +33,6 @@ transcripts for each gene, as obtained from biomaRt.
 Genes for which length information cannot be found in biomaRt are dropped.
 }
 \examples{
-demo <- NormalizeTPM(demo_data_50cells)
+demo <- NormalizeTPM(ADImpute::demo_data)
 
 }

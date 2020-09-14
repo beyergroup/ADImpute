@@ -125,8 +125,7 @@ ChooseMethod <- function(real,
 
 #' @title Masking of entries for performance evaluation
 #'
-#' @usage MaskData(data, write.to.file = TRUE, filename, mask = .1,
-#' seed = NULL)
+#' @usage MaskData(data, write.to.file = TRUE, filename, mask = .1)
 #'
 #' @description \code{MaskData} sets a portion (\code{mask}) of the non-zero
 #' entries of each row of \code{data} to zero
@@ -136,14 +135,9 @@ ChooseMethod <- function(real,
 #' @param filename character; name of output file to write masked data to
 #' @param mask numeric; ratio of total non-zero samples to be masked per gene
 #' (defaults to .1)
-#' @param seed integer; optional seed (defaults to NULL, random selection of
-#' samples to mask)
 #'
 #' @details Sets a portion (\code{mask}) of the non-zero entries of each row of
-#' \code{data} to zero. For reproducible results, provide seed.
-#' \code{seed} is summed to row number so that every gene has a different seed
-#' (different samples are masked for each gene).
-#' Result is written to \code{filename}.
+#' \code{data} to zero. Result is written to \code{filename}.
 #'
 #' @return matrix containing masked raw counts (genes as rows and samples as
 #' columns)
@@ -151,8 +145,7 @@ ChooseMethod <- function(real,
 MaskData <- function(data,
                      write.to.file = TRUE,
                      filename,
-                     mask = .1,
-                     seed = NULL){
+                     mask = .1){
 
   # Convert zeros to NAs
   data[data == 0] <- NA
@@ -166,15 +159,11 @@ MaskData <- function(data,
   rowmask <- round(mask * ncol(data)) # samples to be masked per gene
   maskable <- !is.na(data) # maskable samples (originally not dropouts)
 
-  MaskerPerGene <- function(x, rowmask, seed){
+  MaskerPerGene <- function(x, rowmask){
 
     if (sum(x) > rowmask){
 
-      # For reproducibility
-      if (!is.null(seed))
-        set.seed(seed)
-
-      # Randomly (or not) pick samples to mask
+      # Randomly pick samples to mask
       tomask <- sample(which(x), rowmask)
       out <- rep(FALSE, length(x))
       out[tomask] <- TRUE
@@ -192,13 +181,7 @@ MaskData <- function(data,
 
   maskidx <- t(sapply(seq_len(nrow(maskable)),
                       function(x)
-                        if(!is.null(seed)){
-                          MaskerPerGene(maskable[x, ],
-                                        rowmask = rowmask,
-                                        seed = seed + x)}else{
-                                          MaskerPerGene(maskable[x,],
-                                                        rowmask = rowmask,
-                                                        seed = seed)}))
+                        MaskerPerGene(maskable[x, ], rowmask = rowmask)))
   data[maskidx] <- NA
   sparcity <- sprintf("%.2f", sum(is.na(data)) / length(data))
   cat("final sparcity", sparcity, "\n")
@@ -218,28 +201,22 @@ MaskData <- function(data,
 #' @description \code{SplitData} selects a portion (\code{ratio}) of samples
 #' (columns in \code{data}) to be used as training set
 #'
-#' @usage SplitData(data, ratio = .7, training.only = TRUE, seed = NULL)
+#' @usage SplitData(data, ratio = .7, training.only = TRUE)
 #'
 #' @param data matrix; raw counts (genes as rows and samples as columns)
 #' @param ratio numeric; ratio of the samples to be used for training
 #' @param training.only logical; if TRUE define only a training dataset, if
 #' FALSE writes both training and validation sets (defaults to TRUE)
-#' @param seed integer; optional seed (defaults to NULL, random selection of
-#' samples to use for training)
 #'
 #' @details Selects a portion (\code{ratio}) of samples (columns in \code{data})
 #' to be used as training set and writes to file "training_raw.txt".
-#' For reproducible results, provide seed.
 #'
 #' @return matrix containing raw counts (genes as rows and samples as columns)
 #'
 SplitData <- function(data,
                       ratio = .7,
-                      training.only = TRUE,
-                      seed = NULL){
-  # For reproducibility
-  if (!is.null(seed))
-    set.seed(seed)
+                      training.only = TRUE){
+
   # Randomly select samples according to given ratio
   training_samples <- sample(colnames(data))[seq_len(round(ncol(data) * ratio))]
   training_data    <- data[, training_samples]

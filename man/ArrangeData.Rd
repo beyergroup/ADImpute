@@ -4,14 +4,16 @@
 \alias{ArrangeData}
 \title{Data trimming}
 \usage{
-ArrangeData(data, network.path = NULL)
+ArrangeData(data, network.path = NULL, network.coefficients = NULL)
 }
 \arguments{
 \item{data}{matrix with entries equal to zero to be imputed (genes as rows
 and samples as columns)}
 
-\item{network.path}{character; path to .txt or .rds file with network
+\item{network.path}{character; path to .txt, .rds or .zip file with network
 coefficients}
+
+\item{network.coefficients}{matrix; object containing network coefficients}
 }
 \value{
 list; data matrix, network coefficients matrix and intercept for
