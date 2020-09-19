@@ -138,7 +138,6 @@ ImputeNetParallel <- function(dropout.matrix,
                               max.iter = 50){
 
   cluster <- snow::makeCluster(cores, type = cluster.type)
-  # snow::clusterEvalQ(cluster, options(matprod = "internal"))
 
   dropouts <- intersect(rownames(dropout.matrix)[rowSums(dropout.matrix) != 0],
                         rownames(arranged$network)) # dropouts in >= 1 cell
@@ -149,17 +148,12 @@ ImputeNetParallel <- function(dropout.matrix,
   arranged$network <- arranged$network[dropouts, predictors]
 
   if(type == "iteration"){
-
     i <- 1
     repeat{
-
-      # Limit number of iterations
       if (max.iter != -1){
         if (i > max.iter)
           break
       }
-
-      # Print progress
       if ( (i %% 5) == 0)
         cat("Iteration", i, "/", max.iter, "\n")
 
@@ -170,32 +164,24 @@ ImputeNetParallel <- function(dropout.matrix,
       # Check convergence
       if (any(new[dropout.matrix[dropouts, ]] != arranged$centered[dropouts, ][
         dropout.matrix[dropouts, ]])){
-
         arranged$centered[dropouts, ][dropout.matrix[dropouts, ]] <-
           new[dropout.matrix[dropouts, ]]
       }
       else{
         break
       }
-
       i <- i + 1
     }
-
     imp <- arranged$centered
-
   } else{
-
     imp <- snow::parSapply(cl = cluster, seq_len(ncol(arranged$centered)),
                            PseudoInverseSolution_percell, arranged,
                            dropout.matrix)
     colnames(imp) <- colnames(arranged$centered)
 
   }
-
   snow::stopCluster(cluster)
-
   cat("Network imputation complete\n")
-
   return(imp)
 }
 
@@ -225,7 +211,6 @@ PseudoInverseSolution_percell <- function(cell, arranged, dropout_mat,
   drop_ind <- dropout_mat[,cell]
 
   # restrict network rows and columns to the dropouts in the data
-  # (the only ones that need to be predicted)
   net <- arranged$network[intersect(rownames(arranged$network),
                                     names(expr)[drop_ind]),
                           intersect(colnames(arranged$network), names(expr))]
@@ -233,8 +218,7 @@ PseudoInverseSolution_percell <- function(cell, arranged, dropout_mat,
   # restrict to targets that are predictable and predictors that are predictive
   net <- net[,which(colSums(net != 0) != 0)]
 
-  # Problem: matrix is not squared.
-  # Solution: take only the targets that are predictive / predictors that are
+  # take only the targets that are predictive / predictors that are
   # targets (intersect of rows & cols)
   squares <- intersect(rownames(net), colnames(net))
   squared_A <- net[squares,squares]
@@ -242,8 +226,7 @@ PseudoInverseSolution_percell <- function(cell, arranged, dropout_mat,
   # determinant of I-squared_A is 0 for all cells: get pseudo-inverse
   cat("Computing pseudoinverse\n")
   pinv <- MASS::ginv(diag(nrow(squared_A))-squared_A, tol = thr)
-  rownames(pinv) <- rownames(squared_A)
-  colnames(pinv) <- colnames(squared_A)
+  dimnames(pinv) <- dimnames(squared_A)
 
   # find C (quantified predictors)
   findC <- function(inverse, net){

@@ -129,13 +129,13 @@ EvaluateMethods <- function(data,
   cat("Selecting training data\n")
   training_norm <- SplitData(data,
                              ratio = training.ratio,
+                             write.to.file = FALSE,
                              training.only = training.only)
 
   # Mask selected training data
   cat("Masking training data\n")
   masked_training_norm <- MaskData(training_norm,
-                                   write.to.file = TRUE,
-                                   filename = "masked_training_norm.txt",
+                                   write.to.file = FALSE,
                                    mask = mask.ratio)
 
   train_imputed <- list()
@@ -174,20 +174,14 @@ EvaluateMethods <- function(data,
   # Log masked data
   log_masked_training_norm <- log2( (masked_training_norm / scale) +
                                       pseudo.count)
-  WriteTXT(log_masked_training_norm, "log_masked_training_norm.txt")
 
-  # Run Baseline
   if("baseline" %in% tolower(do)){
     cat("Imputing training data using average expression\n")
     train_imputed$Baseline <- ImputeBaseline(log_masked_training_norm,
                                              drop.exclude = drop.exclude,
-                                             write.to.file = TRUE)
-    baseline_norm <- round(scale * ( (2 ^ train_imputed$Baseline) -
-                                       pseudo.count), 2)
-    WriteTXT(baseline_norm, "Baseline/baseline_imputed_norm.txt")
+                                             write.to.file = FALSE)
   }
 
-  # Run Net
   if("network" %in% tolower(do)){
     cat("Imputing training data using network information\n")
     train_imputed$Network <- ImputeNetwork(log_masked_training_norm,
@@ -196,22 +190,21 @@ EvaluateMethods <- function(data,
                                            cores,
                                            cluster.type,
                                            drop.exclude = drop.exclude,
-                                           write.to.file = TRUE,
+                                           write.to.file = FALSE,
                                            ...)
-    net_norm <- round(scale * ( (2 ^ train_imputed$Network) - pseudo.count), 2)
-    WriteTXT(net_norm, "Network/network_imputed_norm.txt")
   }
 
-  # Run DrImpute
   if("drimpute" %in% tolower(do)){
     cat("Imputing training data using DrImpute\n")
-    train_imputed$DrImpute <- ImputeDrImpute(log_masked_training_norm)
+    train_imputed$DrImpute <- ImputeDrImpute(log_masked_training_norm,
+                                             write.to.file = FALSE)
   }
 
   # Run optimum choice
   choice <- ChooseMethod(real = round(training_norm, 2),
                          masked = round(masked_training_norm, 2),
-                         imputed = train_imputed)
+                         imputed = train_imputed,
+                         write.to.file = FALSE)
 
   return(choice)
 }
@@ -354,7 +347,6 @@ Impute <- function(data,
 
   imputed <- list()
 
-  # Run scImpute
   if("scimpute" %in% tolower(do)){
     cat("scImpute is not supported by default. Please check XXXX for details.\n")
     # cat("Imputing data using scImpute\n")
@@ -389,16 +381,13 @@ Impute <- function(data,
     # imputed$scImpute <- log2( (imputed$scImpute / scale) + pseudo.count)
   }
 
-  # Run SAVER
   if("saver" %in% tolower(do)){
     cat("Imputing data using SAVER\n")
-    imputed$SAVER <- ImputeSAVER(data, cores, try.mean = FALSE)
+    imputed$SAVER <- ImputeSAVER(data, cores, try.mean = FALSE,
+                                 write.to.file = FALSE)
     imputed$SAVER <- log2( (imputed$SAVER / scale) + pseudo.count)
-    saver_norm <- round(scale * ( (2 ^ imputed$SAVER) - pseudo.count), 2)
-    WriteTXT(saver_norm, "SAVER/SAVER_imputed_norm.txt")
   }
 
-  # Run SCRABBLE
   if("scrabble" %in% tolower(do)){
     cat("scImpute is not supported by default. Please check XXXX for details.\n")
     # cat("Imputing data using SCRABBLE\n")
@@ -406,22 +395,15 @@ Impute <- function(data,
     # imputed$SCRABBLE <- log2( (imputed$SCRABBLE / scale) + pseudo.count)
   }
 
-  # Log masked data
   log_masked_norm <- log2( (data / scale) + pseudo.count)
-  WriteTXT(log_masked_norm, "log_masked_norm.txt")
 
-  # Run Baseline
   if("baseline" %in% tolower(do)){
     cat("Imputing data using average expression\n")
     imputed$Baseline <- ImputeBaseline(log_masked_norm,
                                        drop.exclude = drop.exclude,
-                                       write.to.file = TRUE)
-    baseline_norm <- round(scale * ( (2 ^ imputed$Baseline) - pseudo.count), 2)
-    WriteTXT(baseline_norm, "Baseline/baseline_imputed_norm.txt")
+                                       write.to.file = FALSE)
   }
 
-
-  # Run Net
   if("network" %in% tolower(do)){
     cat("Imputing data using network information\n")
     imputed$Network <- ImputeNetwork(log_masked_norm,
@@ -430,75 +412,66 @@ Impute <- function(data,
                                      cores,
                                      cluster.type,
                                      drop.exclude = drop.exclude,
-                                     write.to.file = TRUE,
+                                     write.to.file = FALSE,
                                      ...)
-    net_norm <- round(scale * ( (2 ^ imputed$Network) - pseudo.count), 2)
-    WriteTXT(net_norm, "Network/network_imputed_norm.txt")
   }
 
-
-  # Run DrImpute
   if("drimpute" %in% tolower(do)){
     cat("Imputing data using DrImpute\n")
     imputed$DrImpute <- ImputeDrImpute(log_masked_norm)
   }
 
-  # Combine results
   if("ensemble" %in% tolower(do)){
     cat("Combining imputation results into ensemble\n")
     imputed$Ensemble <- Combine(log_masked_norm, imputed, method.choice)
   }
 
   # Estimate true zeros
-
-  if(any(grep(".txt", count_path))){
-    infile <- "txt"
-  } else if(any(grep(".rds", count_path))){
-    infile <- "rds"
-  } else if (any(grep(".csv", count_path))){
-    infile <- "csv"
-  }
-
   if(!is.null(true.zero.thr)){
 
-    # error to run scImpute first
-
-    # Get genelen if needed
-    if (type == "TPM"){
-      count_path <- paste0(strsplit(count_path,
-                                    split = paste0("\\.", infile))[[1]][1],
-                           "_red",
-                           paste0(".", infile))
-      infile <- "csv"
-      # compute dropout probabilities according to scImpute
-      droprob <- GetDropoutProbabilities(infile = infile,
-                                         count_path = count_path,
-                                         out_dir = "scImpute/", type = type,
-                                         genelen = readRDS(paste0("outdir",
-                                                                  "genelength.rds")),
-                                         drop_thre = true.zero.thr,
-                                         data = utils::read.csv(count_path))
-      WriteTXT(droprob, "dropout_probability.txt")
-
-      # apply thresholds
-      zerofiltered <- lapply(imputed, SetBiologicalZeros, drop_probs = droprob,
-                             thre = true.zero.thr, was_zero = data == 0)
-
-    } else {
-      # compute dropout probabilities according to scImpute
-      droprob <- GetDropoutProbabilities(infile = infile,
-                                         count_path = count_path,
-                                         out_dir = "scImpute/", type = type,
-                                         genelen = NULL,
-                                         drop_thre = true.zero.thr, data = data)
-      WriteTXT(droprob, "dropout_probability.txt")
-
-      # apply thresholds
-      zerofiltered <- lapply(imputed, SetBiologicalZeros, drop_probs = droprob,
-                             thre = true.zero.thr, was_zero = data == 0)
-    }
-
-    return(list("imputations" = imputed, "zerofiltered" = zerofiltered))
+    # if(any(grep(".txt", count_path))){
+    #   infile <- "txt"
+    # } else if(any(grep(".rds", count_path))){
+    #   infile <- "rds"
+    # } else if (any(grep(".csv", count_path))){
+    #   infile <- "csv"
+    # }
+    # # Get genelen if needed
+    # if (type == "TPM"){
+    #   count_path <- paste0(strsplit(count_path,
+    #                                 split = paste0("\\.", infile))[[1]][1],
+    #                        "_red",
+    #                        paste0(".", infile))
+    #   infile <- "csv"
+    #   # compute dropout probabilities according to scImpute
+    #   droprob <- GetDropoutProbabilities(infile = infile,
+    #                                      count_path = count_path,
+    #                                      out_dir = "scImpute/", type = type,
+    #                                      genelen = readRDS(paste0("outdir",
+    #                                                               "genelength.rds")),
+    #                                      drop_thre = true.zero.thr,
+    #                                      data = utils::read.csv(count_path))
+    #   WriteTXT(droprob, "dropout_probability.txt")
+    #
+    #   # apply thresholds
+    #   zerofiltered <- lapply(imputed, SetBiologicalZeros, drop_probs = droprob,
+    #                          thre = true.zero.thr, was_zero = data == 0)
+    #
+    # } else {
+    #   # compute dropout probabilities according to scImpute
+    #   droprob <- GetDropoutProbabilities(infile = infile,
+    #                                      count_path = count_path,
+    #                                      out_dir = "scImpute/", type = type,
+    #                                      genelen = NULL,
+    #                                      drop_thre = true.zero.thr, data = data)
+    #   WriteTXT(droprob, "dropout_probability.txt")
+    #
+    #   # apply thresholds
+    #   zerofiltered <- lapply(imputed, SetBiologicalZeros, drop_probs = droprob,
+    #                          thre = true.zero.thr, was_zero = data == 0)
+    # }
+    #
+    # return(list("imputations" = imputed, "zerofiltered" = zerofiltered))
 
   } else{
 

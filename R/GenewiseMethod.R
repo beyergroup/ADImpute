@@ -127,7 +127,7 @@ ChooseMethod <- function(real,
 
 #' @title Masking of entries for performance evaluation
 #'
-#' @usage MaskData(data, write.to.file = TRUE, filename, mask = .1)
+#' @usage MaskData(data, write.to.file = FALSE, filename, mask = .1)
 #'
 #' @description \code{MaskData} sets a portion (\code{mask}) of the non-zero
 #' entries of each row of \code{data} to zero
@@ -145,7 +145,7 @@ ChooseMethod <- function(real,
 #' columns)
 #'
 MaskData <- function(data,
-                     write.to.file = TRUE,
+                     write.to.file = FALSE,
                      filename,
                      mask = .1){
 
@@ -204,10 +204,12 @@ MaskData <- function(data,
 #' @description \code{SplitData} selects a portion (\code{ratio}) of samples
 #' (columns in \code{data}) to be used as training set
 #'
-#' @usage SplitData(data, ratio = .7, training.only = TRUE)
+#' @usage SplitData(data, ratio = .7, write.to.file = FALSE,
+#' training.only = TRUE)
 #'
 #' @param data matrix; raw counts (genes as rows and samples as columns)
 #' @param ratio numeric; ratio of the samples to be used for training
+#' @param write.to.file logical; should the output be written to a file?
 #' @param training.only logical; if TRUE define only a training dataset, if
 #' FALSE writes both training and validation sets (defaults to TRUE)
 #'
@@ -218,6 +220,7 @@ MaskData <- function(data,
 #'
 SplitData <- function(data,
                       ratio = .7,
+                      write.to.file = FALSE,
                       training.only = TRUE){
 
   # Randomly select samples according to given ratio
@@ -225,12 +228,14 @@ SplitData <- function(data,
   training_data    <- data[, training_samples]
 
   # Write to file
-  WriteTXT(training_data, "training.txt")
+  if(write.to.file)
+    WriteTXT(training_data, "training.txt")
 
   # Optionally create and write validation dataset
   if (!training.only){
     validation_data <- data[, !(colnames(data) %in% training_samples)]
-    WriteTXT(validation_data, "validation.txt")
+    if(write.to.file)
+      WriteTXT(validation_data, "validation.txt")
   }
 
   return(training_data)

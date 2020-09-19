@@ -29,8 +29,6 @@
 #'
 #' @return matrix; raw counts (genes as rows and samples as columns)
 #'
-#' @export
-#'
 ReadData <- function(path, ...){
 
   # Read data
