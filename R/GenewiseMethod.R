@@ -98,14 +98,15 @@ ChooseMethod <- function(real,
                                               # dropouts in the original data
 
   MSE <- lapply(imputed,
-                function(x) sapply(rownames(real),
-                                   function(gene_name) {if(gene_name %in% rownames(x)){
-                                     ComputeMSEGenewise(real = real[gene_name,],
-                                                        masked = which_masked[gene_name,],
-                                                        imputed = x[gene_name,],
-                                                        baseline = identical(x, imputed$Baseline))
-                                            } else{ NA }}))
-
+                function(x) vapply(rownames(real),
+                                   function(g) {
+                                     if(g %in% rownames(x)){
+                                       ComputeMSEGenewise(real = real[g,],
+                                                    masked = which_masked[g,],
+                                                    imputed = x[g,],
+                                      baseline = identical(x,imputed$Baseline))
+                                      } else{ NA }},
+                                   FUN.VALUE = 1))
   MSE <- do.call(cbind, MSE)
 
   # keep cases where at least 2 methods are available for comparison
@@ -113,8 +114,9 @@ ChooseMethod <- function(real,
 
   cat("Imputation errors computed for", nrow(MSE), "genes\n")
 
-  best_method <- sapply(apply(MSE, 1, which.min),
-                        function(x) colnames(MSE)[x])
+  best_method <- vapply(apply(MSE, 1, which.min),
+                        function(x) colnames(MSE)[x],
+                        FUN.VALUE = "Method_name")
 
   if (write.to.file)
     WriteTXT(cbind(MSE, best_method), "method_choices.txt")
@@ -179,9 +181,10 @@ MaskData <- function(data,
 
   }
 
-  maskidx <- t(sapply(seq_len(nrow(maskable)),
+  maskidx <- t(vapply(seq_len(nrow(maskable)),
                       function(x)
-                        MaskerPerGene(maskable[x, ], rowmask = rowmask)))
+                        MaskerPerGene(maskable[x, ], rowmask = rowmask),
+                      FUN.VALUE = rep(FALSE, ncol(data))))
   data[maskidx] <- NA
   sparcity <- sprintf("%.2f", sum(is.na(data)) / length(data))
   cat("final sparcity", sparcity, "\n")

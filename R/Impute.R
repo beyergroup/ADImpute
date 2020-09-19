@@ -46,16 +46,18 @@ Combine <- function(data,
   # all zeros are imputed
   dropouts <- data == 0
 
-  best <- sapply(unique(method.choice),
+  best <- lapply(as.list(unique(method.choice)),
                  function(m) names(method.choice)[method.choice == m])
   # some genes could not have a method assigned to them, because they were too
   # lowly expressed for any masking to be done. These are assigned to Network:
   best$Network <- c(best$Network, setdiff(rownames(data), unlist(best)))
 
   # combine imputations for best performing methods
-  combined <- sapply(names(best), function(m) imputed[[m]][best[[m]],])
-  combined <- do.call(rbind, combined)
-  combined <- combined[rownames(data),colnames(data)]
+  combined <- matrix(nrow = nrow(data), ncol = ncol(data),
+                     dimnames = dimnames(data))
+  for(method in names(best))
+    combined[best[[method]],] <- imputed[[method]][best[[method]],]
+  combined <- DataCheck_Matrix(combined)
 
   # replace dropouts in the data with combined imputations
   imputed_combined <- data

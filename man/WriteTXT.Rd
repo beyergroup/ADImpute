@@ -18,6 +18,7 @@ Returns NULL
 \code{WriteTXT} writes data to a tab-delimited output file
 }
 \examples{
-WriteTXT(iris, file = "iris.txt")
+file <- tempfile()
+WriteTXT(iris, file = file)
 
 }

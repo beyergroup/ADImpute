@@ -4,9 +4,9 @@
 \alias{Impute}
 \title{Dropout imputation using gene-specific best-performing methods}
 \usage{
-Impute(data, do = "Ensemble", method.choice = NULL, scale = 1,
-pseudo.count = 1, count_path = NULL, labels = NULL, cell.clusters = 2,
-drop_thre = NULL, type = "TPM", cores = 4, cluster.type = "SOCK",
+Impute(data, do = "Ensemble", method.choice = NULL, outdir = getwd(),
+scale = 1, pseudo.count = 1, count_path = NULL, labels = NULL, cell.clusters
+= 2, drop_thre = NULL, type = "TPM", cores = 4, cluster.type = "SOCK",
 network.coefficients = NULL, network.path = system.file("extdata",
 "network.coefficients.zip", package="ADImpute"), transcript.length = NULL,
 drop.exclude = TRUE, bulk = NULL, true.zero.thr = NULL, ...)
@@ -21,6 +21,9 @@ Not case-sensitive. Can include one or more methods.}
 
 \item{method.choice}{character; best performing method in training data for
 each gene}
+
+\item{outdir}{character; path to directory where output files are written.
+Defaults to working directory}
 
 \item{scale}{integer; scaling factor to divide all expression levels by
 (defaults to 1)}
@@ -105,7 +108,8 @@ imputation results of all methods in \code{do}.
 norm_data <- NormalizeRPM(demo_data)
 # Impute with particular method(s)
 imputed_data <- Impute(do = "Network", data = norm_data,
-network.coefficients = ADImpute::demo_net, cores = 1)
+network.coefficients = ADImpute::demo_net, cores = 1, outdir = tempdir())
+unlink(file.path(tempdir(),"ADImpute"), recursive = TRUE, force = TRUE)
 
 }
 \seealso{

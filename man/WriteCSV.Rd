@@ -18,6 +18,7 @@ Returns NULL
 \code{WriteCSV} writes data to a comma-delimited output file
 }
 \examples{
-WriteCSV(iris, file = "iris.csv")
+file <- tempfile()
+WriteCSV(iris, file = file)
 
 }

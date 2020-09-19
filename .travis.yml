@@ -8,8 +8,6 @@ os:
   - osx
 
 r:
-  - 3.5
-  - 3.6
   - release
   - devel
 

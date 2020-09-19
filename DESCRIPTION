@@ -3,12 +3,13 @@ Type: Package
 Title: Adaptive Dropout Imputer (ADImpute)
 Version: 2.1.0
 Description: This package predicts unmeasured gene expression values from single
-             cell RNA-sequencing data (dropout imputation). ADImpute combines
-             multiple dropout imputation methods, including a novel gene
-             regulatory network-based method. Currently supported external
-             imputation methods are: DrImpute, SAVER.
+    cell RNA-sequencing data (dropout imputation). ADImpute can combine existing
+    imputation mehods and 2 novel ones: an average-based model and a gene
+    regulatory network-based model. Currently supported external imputation
+    methods are: DrImpute, SAVER. ADImpute can learn the best performing method
+    per gene and combine the results from different methods into an ensemble.
 Authors@R: person("Ana Carolina", "Leote", email = "anacarolinaleote@gmail.com",
-           role = c("cre","aut"), comment = c(ORCID = "0000-0003-0879-328X"))
+           role = c("cre","aut"), comment = c(ORCID = "0000-0003-0879-32810"))
 License: GPL-3 + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -35,3 +36,4 @@ biocViews:
     Transcriptomics
 RoxygenNote: 7.1.1
 VignetteBuilder: knitr
+BugReports: https://github.com/anacarolinaleote/ADImpute/issues

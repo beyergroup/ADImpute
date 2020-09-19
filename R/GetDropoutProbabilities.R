@@ -115,7 +115,7 @@ GetDropoutProbabilities <- function(infile, count_path, out_dir, type, genelen,
     subcount = count[valid_genes, cells, drop = FALSE]
     parslist = parslist[valid_genes, , drop = FALSE]
 
-    droprate = t(sapply(seq_along(valid_genes), function(i) {
+    droprate = t(vapply(seq_along(valid_genes), function(i) {
       wt = calculate_weight(subcount[i, ], parslist[i, ])
       return(wt[, 1])
     }))

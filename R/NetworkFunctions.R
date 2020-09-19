@@ -297,9 +297,11 @@ ReadNetwork <- function(network.path){
     m <- readLines(network.path)
     cnames <- m[1]
     cnames <- strsplit(cnames, split = "\t")[[1]]
-    mm <- sapply(m[-1], function(x) strsplit(x, split = "\t")[[1]],
-                 simplify = TRUE, USE.NAMES = FALSE)
-    mm <- t(mm)
+    # mm <- sapply(m[-1], function(x) strsplit(x, split = "\t")[[1]],
+    #              simplify = TRUE, USE.NAMES = FALSE)
+    mm <- lapply(list(m[-1]), function(x) strsplit(x, split = "\t")[[1]])
+    mm <- do.call(rbind, mm)
+    # mm <- t(mm)
     rnames <- mm[,1]
     mm <- mm[,-1]
     storage.mode(mm) <- "numeric"

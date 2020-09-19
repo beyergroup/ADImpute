@@ -6,11 +6,12 @@
 \usage{
 EvaluateMethods(data, do = c("Baseline", "DrImpute", "Network"),
 training.ratio = .7, training.only = TRUE, mask.ratio = .1,
-scale = 1, pseudo.count = 1, labels = NULL, cell.clusters = 2,
-drop_thre = NULL, type = "TPM", cores = 4, cluster.type = "SOCK",
-network.coefficients = NULL, network.path = system.file("extdata",
-"network.coefficients.zip", package="ADImpute"), transcript.length = NULL,
-drop.exclude = TRUE, bulk = NULL, ...)
+outdir = getwd(), scale = 1, pseudo.count = 1, labels = NULL,
+cell.clusters = 2, drop_thre = NULL, type = "TPM", cores = 4,
+cluster.type = "SOCK", network.coefficients = NULL,
+network.path = system.file("extdata", "network.coefficients.zip",
+package="ADImpute"), transcript.length = NULL, drop.exclude = TRUE,
+bulk = NULL, ...)
 }
 \arguments{
 \item{data}{matrix; normalized counts, not logged (genes as rows and samples
@@ -26,6 +27,9 @@ supported methods are \code{"Baseline"}, \code{"DrImpute"} and
 FALSE writes and returns both training and validation sets (defaults to TRUE)}
 
 \item{mask.ratio}{numeric; ratio of samples to be masked per gene}
+
+\item{outdir}{character; path to directory where output files are written.
+Defaults to working directory}
 
 \item{scale}{integer; scaling factor to divide all expression levels by
 (defaults to 1)}
@@ -84,7 +88,8 @@ method resulting in a lowest imputation error for each gene is chosen.
 # Normalize demo data
 norm_data <- NormalizeRPM(ADImpute::demo_data)
 method_choice <- EvaluateMethods(norm_data,
-network.coefficients = ADImpute::demo_net)
+network.coefficients = ADImpute::demo_net, outdir = tempdir())
+unlink(file.path(tempdir(),"ADImpute"), recursive = TRUE, force = TRUE)
 
 }
 \seealso{

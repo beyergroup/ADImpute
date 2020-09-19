@@ -7,13 +7,13 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
+```{r setup, include = FALSE}
 is_check <- ("CheckExEnv" %in% search()) || any(c("_R_CHECK_TIMINGS_",
              "_R_CHECK_LICENSE_") %in% names(Sys.getenv()))
 knitr::opts_chunk$set(eval = !is_check, collapse = TRUE, comment = "#>")
 ```
 
-```{r setup}
+```{r}
 library(ADImpute)
 ```
 
@@ -31,6 +31,7 @@ methods_pergene <- EvaluateMethods(data = RPM,
                                                       # methods to test. Exclude
                                                       # any of them by removing
                                                       # them from the vector
+                                   outdir = tempdir(),
                                    training.ratio = .7,
                                    mask.ratio = .2,
                                    cores = 2,
@@ -41,10 +42,15 @@ head(methods_pergene) # show the best performing method for the first 6 genes
 After determining which method performs best for each gene, ADImpute redoes the imputation on the original data and combines the results of different methods into an ensemble.
 ```{r, warning=FALSE}
 imputed <- Impute(do = "Ensemble",
+                  outdir = tempdir(),
                   method.choice = methods_pergene,
                   data = RPM,
                   cores = 2,
                   network.coefficients = ADImpute::demo_net)
 str(imputed)
+```
+
+```{r, include=FALSE}
+unlink(file.path(tempdir(),"ADImpute"), recursive = TRUE, force = TRUE)
 ```
 

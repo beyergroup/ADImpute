@@ -22,11 +22,12 @@
 #'
 #' @usage EvaluateMethods(data, do = c("Baseline", "DrImpute", "Network"),
 #' training.ratio = .7, training.only = TRUE, mask.ratio = .1,
-#' scale = 1, pseudo.count = 1, labels = NULL, cell.clusters = 2,
-#' drop_thre = NULL, type = "TPM", cores = 4, cluster.type = "SOCK",
-#' network.coefficients = NULL, network.path = system.file("extdata",
-#' "network.coefficients.zip", package="ADImpute"), transcript.length = NULL,
-#' drop.exclude = TRUE, bulk = NULL, ...)
+#' outdir = getwd(), scale = 1, pseudo.count = 1, labels = NULL,
+#' cell.clusters = 2, drop_thre = NULL, type = "TPM", cores = 4,
+#' cluster.type = "SOCK", network.coefficients = NULL,
+#' network.path = system.file("extdata", "network.coefficients.zip",
+#' package="ADImpute"), transcript.length = NULL, drop.exclude = TRUE,
+#' bulk = NULL, ...)
 #'
 #' @description \code{EvaluateMethods} returns the best-performing imputation
 #' method for each gene in the dataset
@@ -40,6 +41,8 @@
 #' @param training.only logical; if TRUE define only a training dataset, if
 #' FALSE writes and returns both training and validation sets (defaults to TRUE)
 #' @param mask.ratio numeric; ratio of samples to be masked per gene
+#' @param outdir character; path to directory where output files are written.
+#' Defaults to working directory
 #' @param scale integer; scaling factor to divide all expression levels by
 #' (defaults to 1)
 #' @param pseudo.count integer; pseudo-count to be added to expression levels
@@ -78,7 +81,8 @@
 #' # Normalize demo data
 #' norm_data <- NormalizeRPM(ADImpute::demo_data)
 #' method_choice <- EvaluateMethods(norm_data,
-#' network.coefficients = ADImpute::demo_net)
+#' network.coefficients = ADImpute::demo_net, outdir = tempdir())
+#' unlink(file.path(tempdir(),"ADImpute"), recursive = TRUE, force = TRUE)
 #'
 #' @seealso \code{\link{ImputeBaseline}},
 #' \code{\link{ImputeDrImpute}},
@@ -91,6 +95,7 @@ EvaluateMethods <- function(data,
                             training.ratio = .7,
                             training.only = TRUE,
                             mask.ratio = .1,
+                            outdir = getwd(),
                             scale = 1,
                             pseudo.count = 1,
                             labels = NULL,
@@ -115,9 +120,10 @@ EvaluateMethods <- function(data,
 
   data <- DataCheck_Matrix(data)
 
-  dir.create("training")
-  setwd("training")
-  on.exit(setwd("../"))
+  savedir <- getwd()
+  dir.create(paste0(outdir,"/training"))
+  setwd(paste0(outdir,"/training"))
+  on.exit(setwd(savedir))
 
   # Select training data
   cat("Selecting training data\n")
@@ -213,9 +219,9 @@ EvaluateMethods <- function(data,
 
 #' @title Dropout imputation using gene-specific best-performing methods
 #'
-#' @usage Impute(data, do = "Ensemble", method.choice = NULL, scale = 1,
-#' pseudo.count = 1, count_path = NULL, labels = NULL, cell.clusters = 2,
-#' drop_thre = NULL, type = "TPM", cores = 4, cluster.type = "SOCK",
+#' @usage Impute(data, do = "Ensemble", method.choice = NULL, outdir = getwd(),
+#' scale = 1, pseudo.count = 1, count_path = NULL, labels = NULL, cell.clusters
+#' = 2, drop_thre = NULL, type = "TPM", cores = 4, cluster.type = "SOCK",
 #' network.coefficients = NULL, network.path = system.file("extdata",
 #' "network.coefficients.zip", package="ADImpute"), transcript.length = NULL,
 #' drop.exclude = TRUE, bulk = NULL, true.zero.thr = NULL, ...)
@@ -229,6 +235,8 @@ EvaluateMethods <- function(data,
 #' supported methods are \code{"Baseline"}, \code{"DrImpute"},
 #' \code{"Network"}, and \code{"Ensemble"}. Defaults to \code{"Ensemble"}.
 #' Not case-sensitive. Can include one or more methods.
+#' @param outdir character; path to directory where output files are written.
+#' Defaults to working directory
 #' @param method.choice character; best performing method in training data for
 #' each gene
 #' @param scale integer; scaling factor to divide all expression levels by
@@ -292,7 +300,8 @@ EvaluateMethods <- function(data,
 #' norm_data <- NormalizeRPM(demo_data)
 #' # Impute with particular method(s)
 #' imputed_data <- Impute(do = "Network", data = norm_data,
-#' network.coefficients = ADImpute::demo_net, cores = 1)
+#' network.coefficients = ADImpute::demo_net, cores = 1, outdir = tempdir())
+#' unlink(file.path(tempdir(),"ADImpute"), recursive = TRUE, force = TRUE)
 #'
 #' @seealso \code{\link{EvaluateMethods}},
 #' \code{\link{ImputeBaseline}},
@@ -305,6 +314,7 @@ EvaluateMethods <- function(data,
 Impute <- function(data,
                    do = "Ensemble",
                    method.choice = NULL,
+                   outdir = getwd(),
                    scale = 1,
                    pseudo.count = 1,
                    count_path = NULL,
@@ -325,9 +335,8 @@ Impute <- function(data,
                    ...){
 
   # Check arguments
-  if (is.null(transcript.length)){
+  if (is.null(transcript.length))
     transcript.length <- ADImpute::transcript_length
-  }
   if(is.null(method.choice) & ("ensemble" %in% tolower(do))){
     stop("Please provide method.choice for Ensemble imputation.
          Consider running EvaluateMethods()\n")
@@ -335,14 +344,13 @@ Impute <- function(data,
 
   data <- DataCheck_Matrix(data)
 
-  dir.create("imputation")
-  setwd("imputation")
-  on.exit(setwd("../"))
+  savedir <- getwd()
+  dir.create(paste0(outdir,"/imputation"))
+  setwd(paste0(outdir,"/imputation"))
+  on.exit(setwd(savedir))
 
-  if("ensemble" %in% tolower(do)){
-    do <- c(do, "Network")
-    do <- union(do, unique(method.choice))
-  }
+  if("ensemble" %in% tolower(do))
+    do <- union(c(do, "Network"), unique(method.choice))
 
   imputed <- list()
 
