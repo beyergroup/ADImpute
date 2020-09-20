@@ -161,26 +161,6 @@ MaskData <- function(data,
   rowmask <- round(mask * ncol(data)) # samples to be masked per gene
   maskable <- !is.na(data) # maskable samples (originally not dropouts)
 
-  MaskerPerGene <- function(x, rowmask){
-
-    if (sum(x) > rowmask){
-
-      # Randomly pick samples to mask
-      tomask <- sample(which(x), rowmask)
-      out <- rep(FALSE, length(x))
-      out[tomask] <- TRUE
-      names(out) <- names(x)
-
-      return(out)
-
-    } else{
-
-      # Not enough non-dropout samples to mask up to defined ratio, mask all
-      return(x)
-    }
-
-  }
-
   maskidx <- t(vapply(seq_len(nrow(maskable)),
                       function(x)
                         MaskerPerGene(maskable[x, ], rowmask = rowmask),
@@ -196,6 +176,35 @@ MaskData <- function(data,
     WriteTXT(data, filename)
 
   return(data)
+}
+
+
+#' @title Helper mask function
+#'
+#' @usage MaskerPerGene(x, rowmask)
+#'
+#' @description Helper mask function, per feature.
+#'
+#' @param x numeric; data to mask
+#' @param rowmask numeric; number of samples to be masked per gene
+#'
+#' @return numeric containing masked raw counts
+#'
+MaskerPerGene <- function(x, rowmask){
+
+  if (sum(x) > rowmask){
+    # Randomly pick samples to mask
+    tomask <- sample(which(x), rowmask)
+    out <- rep(FALSE, length(x))
+    out[tomask] <- TRUE
+    names(out) <- names(x)
+
+    return(out)
+
+  } else{
+    # Not enough non-dropout samples to mask up to defined ratio, mask all
+    return(x)
+  }
 }
 
 
