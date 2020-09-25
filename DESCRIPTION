@@ -9,13 +9,14 @@ Description: This package predicts unmeasured gene expression values from single
     methods are: DrImpute, SAVER. ADImpute can learn the best performing method
     per gene and combine the results from different methods into an ensemble.
 Authors@R: person("Ana Carolina", "Leote", email = "anacarolinaleote@gmail.com",
-           role = c("cre","aut"), comment = c(ORCID = "0000-0003-0879-32810"))
+           role = c("cre","aut"), comment = c(ORCID = "0000-0003-0879-328X"))
 License: GPL-3 + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Depends:
     R (>= 4.0)
 Imports:
+    ArgumentCheck,
     data.table,
     DrImpute,
     MASS,

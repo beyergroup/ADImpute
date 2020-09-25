@@ -5,13 +5,13 @@
 \title{Imputation method evaluation on training set}
 \usage{
 EvaluateMethods(data, do = c("Baseline", "DrImpute", "Network"),
-training.ratio = .7, training.only = TRUE, mask.ratio = .1,
+write = FALSE, training.ratio = .7, training.only = TRUE, mask.ratio = .1,
 outdir = getwd(), scale = 1, pseudo.count = 1, labels = NULL,
 cell.clusters = 2, drop_thre = NULL, type = "TPM", cores = 4,
 cluster.type = "SOCK", network.coefficients = NULL,
 network.path = system.file("extdata", "network.coefficients.zip",
-package="ADImpute"), transcript.length = NULL, drop.exclude = TRUE,
-bulk = NULL, ...)
+package="ADImpute"), network.imputation = "iteration", transcript.length =
+NULL, drop.exclude = TRUE, bulk = NULL, ...)
 }
 \arguments{
 \item{data}{matrix; normalized counts, not logged (genes as rows and samples
@@ -19,7 +19,10 @@ as columns)}
 
 \item{do}{character; choice of methods to be used for imputation. Currently
 supported methods are \code{"Baseline"}, \code{"DrImpute"} and
-\code{"Network"}. Not case-sensitive. Can include one or more methods.}
+\code{"Network"}. Not case-sensitive. Can include one or more methods. Non-
+supported methods will be ignored.}
+
+\item{write}{logical; write intermediary and imputed objects to files?}
 
 \item{training.ratio}{numeric; ratio of samples to be used for training}
 
@@ -58,6 +61,10 @@ either \code{network.coefficients} or \code{network.path}.}
 \item{network.path}{character; path to .txt or .rds file with network
 coefficients. Defaults to the zip file included in ADImpute installation}
 
+\item{network.imputation}{character; either "iteration", for an iterative
+solution, or "pseudoinv", to use Moore-Penrose pseudo-inversion as a
+solution.}
+
 \item{transcript.length}{matrix with at least 2 columns: "hgnc_symbol" and
 "transcript_length"}
 
@@ -87,8 +94,8 @@ method resulting in a lowest imputation error for each gene is chosen.
 \examples{
 # Normalize demo data
 norm_data <- NormalizeRPM(ADImpute::demo_data)
-method_choice <- EvaluateMethods(norm_data,
-network.coefficients = ADImpute::demo_net, outdir = tempdir())
+method_choice <- EvaluateMethods(norm_data, do = c("Baseline","DrImpute"),
+outdir = tempdir())
 unlink(file.path(tempdir(),"ADImpute"), recursive = TRUE, force = TRUE)
 
 }

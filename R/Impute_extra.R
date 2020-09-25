@@ -58,11 +58,8 @@ ImputeScImpute <- function(count_path,
 
   # Get genlen if needed
   if (type == "TPM"){
-
     if (is.null(transcript.length)){
-
       tr_length <- ADImpute::transcript_length
-
     } else{
       tr_length <- transcript.length
     }

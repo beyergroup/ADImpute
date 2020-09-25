@@ -1,10 +1,48 @@
 # Helper functions to ADImpute
 
+#' @title Argument check
+#'
+#' @usage CreateArgCheck(missing = NULL, match = NULL, acceptable = NULL)
+#'
+#' @description \code{CreateArgCheck} creates tests for argument correctness.
+#'
+#' @param missing named list; logical. Name corresponds to variable name, and
+#' corresponding entry to whether it was missing from the function call.
+#' @param match named list. Name corresponds to variable name, and corresponding
+#' entry to its value.
+#' @param acceptable named list. Name corresponds to variable name, and
+#' corresponding entry to its acceptable values.
+#'
+#' @return argument check object.
+#'
+CreateArgCheck <- function(missing = NULL, match = NULL, acceptable = NULL){
 
-DataCheck_Arranged <- function(arranged){
+  Check <- ArgumentCheck::newArgCheck()
 
+  # errors for missing arguments
+  if(!is.null(missing)){
+    for(varname in names(missing)){
+      if(missing[[varname]]){
+        ArgumentCheck::addError(paste("A value for ", varname,
+                                      " was not provided", sep = "'"),
+                                Check)
+      }
+    }
+  }
 
-  return()
+  # errors for arguments outside of predefined options
+  if(!(is.null(match)) & !(is.null(acceptable))){
+    for(varname in names(match)){
+     if(!(match[[varname]] %in% acceptable[[varname]]))
+        ArgumentCheck::addError(paste(NULL, varname, " must be one of ",
+                                      paste(acceptable[[varname]],
+                                            collapse = "', '"),
+                                      NULL, sep = "'"),
+                                Check)
+    }
+  }
+
+  return(Check)
 }
 
 

@@ -93,6 +93,8 @@ ImputeBaseline <- function(data,
                            drop.exclude = TRUE,
                            ...){
 
+  cat("Imputing data using average expression\n")
+
   dropouts <- data == 0
 
   # Compute mean expression levels across cells
@@ -141,6 +143,8 @@ ImputeBaseline <- function(data,
 #'
 ImputeDrImpute <- function(data, write.to.file = TRUE){
 
+  cat("Imputing data using DrImpute\n")
+
   res <- DrImpute::DrImpute(as.matrix(data))
   colnames(res) <- colnames(data)
 
@@ -156,8 +160,8 @@ ImputeDrImpute <- function(data, write.to.file = TRUE){
 #' @title Network-based imputation
 #'
 #' @usage ImputeNetwork(data, network.coefficients = NULL, network.path = NULL,
-#' cores = 4, cluster.type = "SOCK", write.to.file = TRUE, drop.exclude = TRUE,
-#' ...)
+#' cores = 4, type = "iteration", cluster.type = "SOCK", write.to.file = TRUE,
+#' drop.exclude = TRUE, ...)
 #'
 #' @param data matrix with entries equal to zero to be imputed, normalized
 #' and log2-transformed (genes as rows and samples as columns)
@@ -166,6 +170,8 @@ ImputeDrImpute <- function(data, write.to.file = TRUE){
 #' @param network.path character; path to .txt or .rds file with network
 #' coefficients
 #' @param cores integer; number of cores to use
+#' @param type character; either "iteration", for an iterative solution, or
+#' "pseudoinv", to use Moore-Penrose pseudo-inversion as a solution.
 #' @param cluster.type character; either "SOCK" or "MPI"
 #' @param write.to.file logical; should a file with the imputation results be
 #' written?
@@ -186,20 +192,26 @@ ImputeNetwork <- function(data,
                           network.coefficients = NULL,
                           network.path = NULL,
                           cores = 4,
+                          type = "iteration",
                           cluster.type = "SOCK",
                           write.to.file = TRUE,
                           drop.exclude = TRUE,
                           ...){
 
+  cat("Imputing data using network information\n")
+
+  # Check arguments
+  Check <- CreateArgCheck(match = list("cluster.type" = cluster.type,
+                                       "type" = type),
+                          acceptable = list("cluster.type" = c("MPI","SOCK"),
+                                            "type"=c("iteration","pseudoinv")))
+  ArgumentCheck::finishArgCheck(Check)
+
   # Limit data and network to genes common to both
   arranged <- ArrangeData(data, network.path, network.coefficients)
 
-  cat("Dimensions of data matrix:",
-      dim(arranged$data)[1], "x", dim(arranged$data)[2],
-      "\n")
-  cat("Dimensions of network matrix:",
-      dim(arranged$network)[1], "x", dim(arranged$network)[2],
-      "\n")
+  cat("Data dim:", paste(dim(arranged$data), collapse = " x "), "\n")
+  cat("Network dim:", paste(dim(arranged$network), collapse = " x "), "\n")
 
   # Center expression of each gene
   centered <- CenterData(arranged$data, drop.exclude)
@@ -208,12 +220,8 @@ ImputeNetwork <- function(data,
   dropout_mat <- arranged$data == 0 # dropout indexes in the data matrix
 
   cat("Starting network-based imputation\n")
-
-  new_imp <- ImputeNetParallel(dropout_mat,
-                               arranged,
-                               cores,
-                               cluster.type,
-                               ...)
+  new_imp <- ImputeNetParallel(dropout_mat, arranged,
+                               cores, cluster.type, type, ...)
 
   res <- data
   # add back gene means
@@ -254,12 +262,16 @@ ImputeNetwork <- function(data,
 #'
 ImputeSAVER <- function(data, cores, try.mean = FALSE, write.to.file = TRUE){
 
-  dir.create("SAVER")
+  cat("Imputing data using SAVER\n")
+
+  if(write.to.file)
+    dir.create("SAVER")
 
   if(try.mean){
     imp_mean <- SAVER::saver(data, size.factor = 1, ncores = cores,
                              null.model = TRUE)
-    saveRDS(object = imp_mean, file = "SAVER/SAVER_nullmodel.rds")
+    if(write.to.file)
+      saveRDS(object = imp_mean, file = "SAVER/SAVER_nullmodel.rds")
   }
 
   res <- SAVER::saver(data, ncores = cores, size.factor = 1)

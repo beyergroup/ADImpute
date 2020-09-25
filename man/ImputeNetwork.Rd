@@ -5,8 +5,8 @@
 \title{Network-based imputation}
 \usage{
 ImputeNetwork(data, network.coefficients = NULL, network.path = NULL,
-cores = 4, cluster.type = "SOCK", write.to.file = TRUE, drop.exclude = TRUE,
-...)
+cores = 4, type = "iteration", cluster.type = "SOCK", write.to.file = TRUE,
+drop.exclude = TRUE, ...)
 }
 \arguments{
 \item{data}{matrix with entries equal to zero to be imputed, normalized
@@ -19,6 +19,9 @@ either \code{network.coefficients} or \code{network.path}.}
 coefficients}
 
 \item{cores}{integer; number of cores to use}
+
+\item{type}{character; either "iteration", for an iterative solution, or
+"pseudoinv", to use Moore-Penrose pseudo-inversion as a solution.}
 
 \item{cluster.type}{character; either "SOCK" or "MPI"}
 

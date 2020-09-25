@@ -7,12 +7,12 @@
 MaskerPerGene(x, rowmask)
 }
 \arguments{
-\item{x}{numeric; data to mask}
+\item{x}{logical; data to mask}
 
 \item{rowmask}{numeric; number of samples to be masked per gene}
 }
 \value{
-numeric containing masked raw counts
+logical containing positions to mask
 }
 \description{
 Helper mask function, per feature.

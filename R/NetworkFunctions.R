@@ -51,7 +51,7 @@ ArrangeData <- function(data,
     }
   } else{
     if(!is.null(network.path))
-      cat("Igoring path to network coefficients and using provided matrix.\n")
+      cat("Ignoring path to network coefficients and using provided matrix.\n")
   }
 
   data <- DataCheck_Matrix(data)
@@ -137,25 +137,20 @@ ImputeNetParallel <- function(dropout.matrix,
                               type = "iteration",
                               max.iter = 50){
 
-  cluster <- snow::makeCluster(cores, type = cluster.type)
-
   dropouts <- intersect(rownames(dropout.matrix)[rowSums(dropout.matrix) != 0],
                         rownames(arranged$network)) # dropouts in >= 1 cell
-
   predictors <- colnames(arranged$network)[
     colSums(arranged$network[dropouts, ]) != 0] # all available predictors
 
   arranged$network <- arranged$network[dropouts, predictors]
 
+  cluster <- snow::makeCluster(cores, type = cluster.type)
   if(type == "iteration"){
+    cat("Starting network iterative imputation\n")
     i <- 1
     repeat{
-      if (max.iter != -1){
-        if (i > max.iter)
-          break
-      }
-      if ( (i %% 5) == 0)
-        cat("Iteration", i, "/", max.iter, "\n")
+      if((max.iter != -1) & (i > max.iter)){break}
+      if((i %% 5) == 0){cat("Iteration", i, "/", max.iter, "\n")}
 
       new <- round(snow::parMM(cluster, arranged$network,
                                arranged$centered[predictors, ]), 2)
@@ -167,9 +162,7 @@ ImputeNetParallel <- function(dropout.matrix,
         arranged$centered[dropouts, ][dropout.matrix[dropouts, ]] <-
           new[dropout.matrix[dropouts, ]]
       }
-      else{
-        break
-      }
+      else{break}
       i <- i + 1
     }
     imp <- arranged$centered
@@ -207,8 +200,7 @@ PseudoInverseSolution_percell <- function(cell, arranged, dropout_mat,
                                           thr = 0.01){
 
   cat("Starting cell pseudo-inversion\n")
-  expr <- arranged$centered[,cell]
-  drop_ind <- dropout_mat[,cell]
+  expr <- arranged$centered[,cell]; drop_ind <- dropout_mat[,cell]
 
   # restrict network rows and columns to the dropouts in the data
   net <- arranged$network[intersect(rownames(arranged$network),
@@ -229,6 +221,7 @@ PseudoInverseSolution_percell <- function(cell, arranged, dropout_mat,
   dimnames(pinv) <- dimnames(squared_A)
 
   # find C (quantified predictors)
+  cat("Computing fixed contribution\n")
   findC <- function(inverse, net){
     targets <- rownames(inverse)
     full <- net[targets, !(colnames(net) %in% targets), drop = FALSE]
@@ -236,7 +229,6 @@ PseudoInverseSolution_percell <- function(cell, arranged, dropout_mat,
     C <- C_mat%*%expr[colnames(C_mat)]
     return(C)
   }
-  cat("Computing fixed contribution\n")
   C <- findC(pinv, net)
 
   # Y = pinv.C

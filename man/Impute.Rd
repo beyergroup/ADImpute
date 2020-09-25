@@ -4,12 +4,13 @@
 \alias{Impute}
 \title{Dropout imputation using gene-specific best-performing methods}
 \usage{
-Impute(data, do = "Ensemble", method.choice = NULL, outdir = getwd(),
-scale = 1, pseudo.count = 1, count_path = NULL, labels = NULL, cell.clusters
-= 2, drop_thre = NULL, type = "TPM", cores = 4, cluster.type = "SOCK",
-network.coefficients = NULL, network.path = system.file("extdata",
-"network.coefficients.zip", package="ADImpute"), transcript.length = NULL,
-drop.exclude = TRUE, bulk = NULL, true.zero.thr = NULL, ...)
+Impute(data, do = "Ensemble", write = FALSE, method.choice = NULL,
+outdir = getwd(), scale = 1, pseudo.count = 1, count_path = NULL,
+labels = NULL, cell.clusters = 2, drop_thre = NULL, type = "TPM", cores = 4,
+cluster.type = "SOCK", network.coefficients = NULL,
+network.path = system.file("extdata", "network.coefficients.zip",
+package="ADImpute"), network.imputation = "iteration", transcript.length =
+NULL, drop.exclude = TRUE, bulk = NULL, true.zero.thr = NULL, ...)
 }
 \arguments{
 \item{data}{matrix; raw counts (genes as rows and samples as columns)}
@@ -17,7 +18,10 @@ drop.exclude = TRUE, bulk = NULL, true.zero.thr = NULL, ...)
 \item{do}{character; choice of methods to be used for imputation. Currently
 supported methods are \code{"Baseline"}, \code{"DrImpute"},
 \code{"Network"}, and \code{"Ensemble"}. Defaults to \code{"Ensemble"}.
-Not case-sensitive. Can include one or more methods.}
+Not case-sensitive. Can include one or more methods. Non-supported methods
+will be ignored.}
+
+\item{write}{logical; write intermediary and imputed objects to files?}
 
 \item{method.choice}{character; best performing method in training data for
 each gene}
@@ -53,6 +57,10 @@ either \code{network.coefficients} or \code{network.path}.}
 
 \item{network.path}{character; path to .txt or .rds file with network
 coefficients. Defaults to the zip file included in ADImpute installation}
+
+\item{network.imputation}{character; either "iteration", for an iterative
+solution, or "pseudoinv", to use Moore-Penrose pseudo-inversion as a
+solution.}
 
 \item{transcript.length}{matrix with at least 2 columns: "hgnc_symbol" and
 "transcript_length"}
@@ -93,8 +101,8 @@ supported methods are:
  to predicted expression of genes that are not quantified based on
  quantified interacting genes, in the same cell. See
  \code{\link{ImputeNetwork}}.
- \item \code{Ensemble}: is based on results on a training subset of the data at
- hand, indicating which method best predicts the expression of each gene.
+ \item \code{Ensemble}: is based on results on a training subset of the data
+ at hand, indicating which method best predicts the expression of each gene.
  These results are supplied via \code{method.choice}. Applies the imputation
  results of the best performing method to the zero entries of each gene.
 }

@@ -149,30 +149,29 @@ MaskData <- function(data,
                      filename,
                      mask = .1){
 
-  # Convert zeros to NAs
-  data[data == 0] <- NA
+  cat("Masking training data\n")
 
-  data <- as.matrix(data)
+  data <- DataCheck_Matrix(data)
 
   # Original matrix sparcity
-  sparcity <- sprintf("%.2f", sum(is.na(data)) / length(data))
+  sparcity <- sprintf("%.2f", sum(data == 0) / length(data))
   cat("original sparcity", sparcity, "\n")
 
   rowmask <- round(mask * ncol(data)) # samples to be masked per gene
-  maskable <- !is.na(data) # maskable samples (originally not dropouts)
+  maskable <- data != 0 # maskable samples (originally not dropouts)
 
+  print(maskable)
   maskidx <- t(vapply(seq_len(nrow(maskable)),
                       function(x)
-                        MaskerPerGene(maskable[x, ], rowmask = rowmask),
+                        MaskerPerGene(maskable[x,], rowmask = rowmask),
                       FUN.VALUE = rep(FALSE, ncol(data))))
-  data[maskidx] <- NA
-  sparcity <- sprintf("%.2f", sum(is.na(data)) / length(data))
+
+  data[maskidx] <- 0
+  sparcity <- sprintf("%.2f", sum(data == 0) / length(data))
   cat("final sparcity", sparcity, "\n")
 
-  data[is.na(data)] <- 0
-
   # Write to file
-  if (write.to.file)
+  if(write.to.file)
     WriteTXT(data, filename)
 
   return(data)
@@ -185,10 +184,10 @@ MaskData <- function(data,
 #'
 #' @description Helper mask function, per feature.
 #'
-#' @param x numeric; data to mask
+#' @param x logical; data to mask
 #' @param rowmask numeric; number of samples to be masked per gene
 #'
-#' @return numeric containing masked raw counts
+#' @return logical containing positions to mask
 #'
 MaskerPerGene <- function(x, rowmask){
 
@@ -231,6 +230,8 @@ SplitData <- function(data,
                       ratio = .7,
                       write.to.file = FALSE,
                       training.only = TRUE){
+
+  cat("Selecting training data\n")
 
   # Randomly select samples according to given ratio
   training_samples <- sample(colnames(data))[seq_len(round(ncol(data) * ratio))]
