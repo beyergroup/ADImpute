@@ -97,33 +97,21 @@
 #'
 EvaluateMethods <- function(data,
                             do = c("Baseline", "DrImpute", "Network"),
-                            write = FALSE,
-                            training.ratio = .7,
-                            training.only = TRUE,
-                            mask.ratio = .1,
-                            outdir = getwd(),
-                            scale = 1,
-                            pseudo.count = 1,
-                            labels = NULL,
-                            cell.clusters = 2,
-                            drop_thre = NULL,
-                            type = "TPM",
-                            cores = 4,
-                            cluster.type = "SOCK",
+                            write = FALSE, train.ratio = .7,
+                            train.only = TRUE, mask.ratio = .1,
+                            outdir = getwd(), scale = 1, pseudo.count = 1,
+                            labels = NULL, cell.clusters = 2, drop_thre = NULL,
+                            type = "TPM", cores = 4, cluster.type = "SOCK",
                             network.coefficients = NULL,
                             network.path = system.file("extdata",
-                                                    "network.coefficients.zip",
-                                                       package="ADImpute"),
+                              "network.coefficients.zip", package="ADImpute"),
                             network.imputation = "iteration",
-                            transcript.length = NULL,
-                            drop.exclude = TRUE,
-                            bulk = NULL,
-                            ...){
+                            transcript.length = NULL, drop.exclude = TRUE,
+                            bulk = NULL, ...){
 
   # Check arguments
-  if (is.null(transcript.length)){
+  if (is.null(transcript.length))
     transcript.length <- ADImpute::transcript_length
-  }
   Check <- CreateArgCheck(missing = list("data" = missing(data)),
                           match = list("type" = type),
                           acceptable = list("type" = c("TPM","count")))
@@ -136,19 +124,12 @@ EvaluateMethods <- function(data,
     setwd(paste0(outdir,"/training")); on.exit(setwd(savedir))
   }
 
-  # Select training data
-  training_norm <- SplitData(data, ratio = training.ratio,
-                             write.to.file = write,
-                             training.only = training.only)
+  train_data <- CreateTrainData(data, training.ratio = train.ratio,
+                                training.only = train.only,
+                                mask = mask.ratio, write = write)
 
-  # Mask selected training data
-  masked_training_norm <- MaskData(training_norm,
-                                   write.to.file = write,
-                                   mask = mask.ratio)
-
-  train_imputed <- Impute(data = masked_training_norm,
-                          do = do[do != "Ensemble"], write = write,
-                          outdir = getwd(),
+  train_imputed <- Impute(data = train_data$mask, do = do[do != "Ensemble"],
+                          write = write, outdir = getwd(),
                           scale = scale, pseudo.count = pseudo.count,
                           # scImpute arguments below
                           count_path = NULL, labels = labels,
@@ -156,16 +137,15 @@ EvaluateMethods <- function(data,
                           type = type, transcript.length = transcript.length,
                           # add count_path argument for scImpute runs
                           bulk = bulk, # SCRABBLE argument
-                          cores = cores, cluster.type = cluster.type,
+                          cores = cores, cluster.type{} = cluster.type,
                           network.coefficients = network.coefficients,
                           network.path = network.path,
                           drop.exclude = drop.exclude, ...)
 
   # Run optimum choice
-  choice <- ChooseMethod(real = round(training_norm, 2),
-                         masked = round(masked_training_norm, 2),
-                         imputed = train_imputed,
-                         write.to.file = write)
+  choice <- ChooseMethod(real = round(train_data$train, 2),
+                         masked = round(train_data$mask, 2),
+                         imputed = train_imputed, write.to.file = write)
 
   return(choice)
 }

@@ -144,7 +144,6 @@ ImputeNetParallel <- function(dropout.matrix,
 
   arranged$network <- arranged$network[dropouts, predictors]
 
-  cluster <- snow::makeCluster(cores, type = cluster.type)
   if(type == "iteration"){
     cat("Starting network iterative imputation\n")
     i <- 1
@@ -152,8 +151,7 @@ ImputeNetParallel <- function(dropout.matrix,
       if((max.iter != -1) & (i > max.iter)){break}
       if((i %% 5) == 0){cat("Iteration", i, "/", max.iter, "\n")}
 
-      new <- round(snow::parMM(cluster, arranged$network,
-                               arranged$centered[predictors, ]), 2)
+      new <- round(arranged$network %*% arranged$centered[predictors, ], 2)
       # expression = network coefficients * predictor expr.
 
       # Check convergence
@@ -167,89 +165,147 @@ ImputeNetParallel <- function(dropout.matrix,
     }
     imp <- arranged$centered
   } else{
-    imp <- snow::parSapply(cl = cluster, seq_len(ncol(arranged$centered)),
-                           PseudoInverseSolution_percell, arranged,
-                           dropout.matrix)
+    cl <- parallel::makeCluster(parallel::detectCores())
+    parallel::clusterExport(cl, c("arranged","dropout.matrix"),
+                            envir = environment())
+    imp <- parallel::parSapply(cl, seq_len(ncol(arranged$centered)),
+                               function(i) {
+                          PseudoInverseSolution_percell(arranged$centered[,i],
+                                                        arranged$network,
+                                                        dropout.matrix[,i])})
+    parallel::stopCluster(cl)
     colnames(imp) <- colnames(arranged$centered)
-
   }
-  snow::stopCluster(cluster)
   cat("Network imputation complete\n")
   return(imp)
 }
 
 
+#' @title Helper function to PseudoInverseSolution_percell
+#'
+#' @usage ImputeNonPredictiveDropouts(net, expr)
+#'
+#' @description \code{ImputePredictiveDropouts} computes the non-dropout-
+#' dependent solution of network imputation for each cell
+#'
+#' @param net matrix, logical; network coefficients for all dropout (to be
+#' imputed) genes that are predictive of the expression of other dropout genes
+#' @param expr numeric; vector of gene expression for all genes in the cell at
+#' hand
+#'
+#' @return vector; imputation results for the non-dropout-dependent genes
+#'
+ImputeNonPredictiveDropouts <- function(net, expr){
+
+  if(!all(colnames(net) %in% names(expr)))
+    stop("Not all predictors are included in the expression vector.\n")
+
+  net <- net[ ,which(colSums(net != 0) != 0)]
+  solution <- net%*%expr[colnames(net)]
+
+  return(solution)
+}
+
+
+#' @title Helper function to PseudoInverseSolution_percell
+#'
+#' @usage ImputePredictiveDropouts(net, thr = 0.01, expr)
+#'
+#' @description \code{ImputePredictiveDropouts} applies Moore-Penrose
+#' pseudo-inversion to compute the dropout-dependent solution of network
+#' imputation for each cell
+#'
+#' @param net matrix, logical; network coefficients for all dropout (to be
+#' imputed) genes that are predictive of the expression of other dropout genes
+#' @param thr numeric; tolerance threshold to detect zero singular values
+#' @param expr numeric; vector of gene expression for all genes in the cell at
+#' hand
+#'
+#' @return vector; imputation results for the dropout-dependent genes
+#'
+ImputePredictiveDropouts <- function(net, thr = 0.01, expr){
+
+  if(!all(colnames(net) %in% names(expr)))
+    stop("Not all predictors are quantified in the expression vector.\n")
+
+  # Y = inv(I - squared_A).C
+
+  # dropouts that are predictors and targets
+  squared_A <- net[rownames(net),rownames(net)]
+
+  # I - squared_A can be inverted
+  cat("Computing pseudoinverse\n")
+  pinv <- MASS::ginv(diag(nrow(squared_A))-squared_A, tol = thr)
+  dimnames(pinv) <- dimnames(squared_A)
+  rm(squared_A); gc()
+
+  # find C (quantified predictors)
+  cat("Computing constant contribution C\n")
+  net <- net[ ,!(colnames(net) %in% rownames(net)), drop = FALSE]
+  net <- net[ ,colSums(net != 0) != 0, drop = FALSE]
+  C <- net%*%expr[colnames(net)]
+  rm(net); gc()
+
+  # Y = pinv.C
+  solution <- pinv%*%C
+
+  return(solution)
+}
+
+
 #' @title Network-based parallel imputation - Moore-Penrose pseudoinversion
 #'
-#' @usage PseudoInverseSolution_percell(cell, arranged, dropout_mat,
-#' thr = 0.01)
+#' @usage PseudoInverseSolution_percell(expr, net, drop_ind, thr = 0.01)
 #'
 #' @description \code{PseudoInverseSolution_percell} applies Moore-Penrose
 #' pseudo-inversion to compute the solution of network imputation for each
 #' cell
 #'
-#' @param cell numeric; index of the column corresponding to current cell
-#' @param arranged list; output of \code{\link{ArrangeData}}
-#' @param dropout_mat matrix, logical; dropout entries in the data matrix
-#' (genes as rows and samples as columns)
+#' @param expr numeric; expression vector for cell at hand
+#' @param net matrix; network coefficients
+#' @param drop_ind logical; dropout entries in the cell at hand
 #' @param thr numeric; tolerance threshold to detect zero singular values
 #'
 #' @return matrix; imputation results incorporating network information
 #'
-PseudoInverseSolution_percell <- function(cell, arranged, dropout_mat,
-                                          thr = 0.01){
+PseudoInverseSolution_percell <- function(expr, net, drop_ind, thr = 0.01){
 
   cat("Starting cell pseudo-inversion\n")
-  expr <- arranged$centered[,cell]; drop_ind <- dropout_mat[,cell]
 
-  # restrict network rows and columns to the dropouts in the data
-  net <- arranged$network[intersect(rownames(arranged$network),
-                                    names(expr)[drop_ind]),
-                          intersect(colnames(arranged$network), names(expr))]
+  # restrict network rows to the dropouts in the data
+  net <- net[intersect(rownames(net), names(expr)[drop_ind]),
+             intersect(colnames(net), names(expr))]
 
-  # restrict to targets that are predictable and predictors that are predictive
+  # restrict to predictors that are predictive of the dropouts
   net <- net[,which(colSums(net != 0) != 0)]
 
-  # take only the targets that are predictive / predictors that are
-  # targets (intersect of rows & cols)
-  squares <- intersect(rownames(net), colnames(net))
-  squared_A <- net[squares,squares]
+  # dropouts can themselves be predictors of other genes:
+  # Y_drop = A_drop*Y_drop + A_quant*Y_quant
+  # the first term depends only on quantified gene expression and known network
+  # coefficients, thus is constant; the second term depends on itself as the
+  # dropout genes can themselves be predictive of other genes
 
-  # determinant of I-squared_A is 0 for all cells: get pseudo-inverse
-  cat("Computing pseudoinverse\n")
-  pinv <- MASS::ginv(diag(nrow(squared_A))-squared_A, tol = thr)
-  dimnames(pinv) <- dimnames(squared_A)
+  # Dropout-based contribution (variable)
+  pd <- intersect(rownames(net), colnames(net))
+  pd_imputed <- ImputePredictiveDropouts(net[pd,], thr, expr)
 
-  # find C (quantified predictors)
-  cat("Computing fixed contribution\n")
-  findC <- function(inverse, net){
-    targets <- rownames(inverse)
-    full <- net[targets, !(colnames(net) %in% targets), drop = FALSE]
-    C_mat <- full[,colSums(full != 0) != 0, drop = FALSE]
-    C <- C_mat%*%expr[colnames(C_mat)]
-    return(C)
-  }
-  C <- findC(pinv, net)
-
-  # Y = pinv.C
-  solution <- pinv%*%C
-
-  # uninvertible cases or dropouts with all predictors quantified
+  # Non-dropout-based contribution
   cat("Adding remaining genes\n")
-  remaining <- names(expr)[drop_ind]
-  remaining <- remaining[!(remaining %in% rownames(solution))]
-  net <- arranged$network[intersect(remaining, rownames(arranged$network)),
-                          intersect(names(expr), colnames(arranged$network))]
-  net <- net[,which(colSums(net != 0) != 0)]
-  remaining_solution <- net%*%expr[colnames(net)]
+  npd <- names(expr)[drop_ind][!(names(expr)[drop_ind] %in%
+                                   rownames(pd_imputed))]
+  if(length(npd) > 0){
+    npd_imputed <- ImputeNonPredictiveDropouts(net[intersect(npd,rownames(net)),
+                                                   ], expr)
+    full_solution <- rbind(pd_imputed, npd_imputed) # join solutions
+  } else{
+    full_solution <- pd_imputed
+  }
 
-  full_solution <- rbind(solution, remaining_solution)
-  final <- arranged$centered[,cell]
+  final <- expr
   final[rownames(full_solution)] <- full_solution
 
   return(final)
 }
-
 
 
 #' @title Network loading

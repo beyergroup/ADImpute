@@ -20,8 +20,8 @@ Imports:
     data.table,
     DrImpute,
     MASS,
+    parallel,
     SAVER,
-    snow,
     stats,
     utils
 Suggests: 

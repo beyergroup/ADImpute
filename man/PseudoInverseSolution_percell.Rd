@@ -4,16 +4,14 @@
 \alias{PseudoInverseSolution_percell}
 \title{Network-based parallel imputation - Moore-Penrose pseudoinversion}
 \usage{
-PseudoInverseSolution_percell(cell, arranged, dropout_mat,
-thr = 0.01)
+PseudoInverseSolution_percell(expr, net, drop_ind, thr = 0.01)
 }
 \arguments{
-\item{cell}{numeric; index of the column corresponding to current cell}
+\item{expr}{numeric; expression vector for cell at hand}
 
-\item{arranged}{list; output of \code{\link{ArrangeData}}}
+\item{net}{matrix; network coefficients}
 
-\item{dropout_mat}{matrix, logical; dropout entries in the data matrix
-(genes as rows and samples as columns)}
+\item{drop_ind}{logical; dropout entries in the cell at hand}
 
 \item{thr}{numeric; tolerance threshold to detect zero singular values}
 }

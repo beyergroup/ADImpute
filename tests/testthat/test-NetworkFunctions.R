@@ -48,3 +48,49 @@ test_that("ArrangeData works", {
                     rownames(arranged$network)))
 
 })
+
+testdata1 <- testdata
+testdata1[3,2] <- 0
+
+test_that("CenterData works", {
+
+  # returns a list of centered data and centers
+  expect_is(CenterData(testdata), "list")
+  expect_is(CenterData(testdata)$data, "matrix")
+  expect_is(CenterData(testdata)$center, "numeric")
+
+  # returns correct centered data and centers
+  expect_equivalent(CenterData(testdata)$data, testdata - rowMeans(testdata))
+  expect_equivalent(CenterData(testdata)$center, rowMeans(testdata))
+
+  # handles zeros as instructed
+  expect_equivalent(CenterData(testdata1, drop.exclude = TRUE)$center[3],
+                    mean(testdata1[3,testdata1[3,] != 0]))
+  expect_equivalent(CenterData(testdata1, drop.exclude = TRUE)$data[3,],
+                    testdata1[3,] - mean(testdata1[3,testdata1[3,] != 0]))
+  expect_equivalent(CenterData(testdata1, drop.exclude = TRUE)$center[-3],
+                    rowMeans(testdata)[-3])
+  expect_equivalent(CenterData(testdata1, drop.exclude = TRUE)$data[-3,],
+                    CenterData(testdata)$data[-3,])
+  expect_equivalent(CenterData(testdata1, drop.exclude = FALSE)$center,
+                    rowMeans(testdata1))
+  expect_equivalent(CenterData(testdata1, drop.exclude = FALSE)$data,
+                    testdata1 - rowMeans(testdata1))
+})
+
+
+# cell_expression <- ADImpute::demo_data[,1]
+# net <- ADImpute::demo_net
+# net <- net[intersect(rownames(net),names(cell_expression)),
+#            intersect(colnames(net),names(cell_expression))]
+# cell_expression <- cell_expression[intersect(unique(unlist(dimnames(net))),
+#                                              names(cell_expression))]
+#
+#
+# test_that("ImputeNonPredictiveDropouts works", {
+#
+#   expect_true(length(ImputeNonPredictiveDropouts(net, cell_expression)) ==
+#                 nrow(net))
+# })
+
+
