@@ -4,8 +4,7 @@
 \alias{SplitData}
 \title{Selection of samples for training}
 \usage{
-SplitData(data, ratio = .7, write.to.file = FALSE,
-training.only = TRUE)
+SplitData(data, ratio = .7, write.to.file = FALSE, train.only = TRUE)
 }
 \arguments{
 \item{data}{matrix; raw counts (genes as rows and samples as columns)}
@@ -14,7 +13,7 @@ training.only = TRUE)
 
 \item{write.to.file}{logical; should the output be written to a file?}
 
-\item{training.only}{logical; if TRUE define only a training dataset, if
+\item{train.only}{logical; if TRUE define only a training dataset, if
 FALSE writes both training and validation sets (defaults to TRUE)}
 }
 \value{

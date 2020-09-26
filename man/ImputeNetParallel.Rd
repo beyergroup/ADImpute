@@ -5,7 +5,8 @@
 \title{Network-based parallel imputation}
 \usage{
 ImputeNetParallel(dropout.matrix, arranged, cores = 4,
-cluster.type = "SOCK", type = "iteration", max.iter = 50)
+type = "iteration", max.iter = 50)
+#'
 }
 \arguments{
 \item{dropout.matrix}{matrix, logical; dropout entries in the data matrix
@@ -14,8 +15,6 @@ cluster.type = "SOCK", type = "iteration", max.iter = 50)
 \item{arranged}{list; output of \code{\link{ArrangeData}}}
 
 \item{cores}{integer; number of cores used for paralell computation}
-
-\item{cluster.type}{character; either "SOCK" or "MPI"}
 
 \item{type}{character; either "iteration", for an iterative solution, or
 "pseudoinv", to use Moore-Penrose pseudo-inversion as a solution.}

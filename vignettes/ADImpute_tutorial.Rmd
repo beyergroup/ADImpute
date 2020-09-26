@@ -31,10 +31,8 @@ methods_pergene <- EvaluateMethods(data = RPM,
                                                       # methods to test. Exclude
                                                       # any of them by removing
                                                       # them from the vector
-                                   outdir = tempdir(),
-                                   training.ratio = .7,
-                                   mask.ratio = .2,
-                                   cores = 2,
+                                   outdir = tempdir(), cores = 2,
+                                   train.ratio = .7, mask.ratio = .2,
                                    network.coefficients = ADImpute::demo_net)
 head(methods_pergene) # show the best performing method for the first 6 genes
 ```

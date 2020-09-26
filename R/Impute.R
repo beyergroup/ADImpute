@@ -160,7 +160,7 @@ ImputeDrImpute <- function(data, write.to.file = TRUE){
 #' @title Network-based imputation
 #'
 #' @usage ImputeNetwork(data, network.coefficients = NULL, network.path = NULL,
-#' cores = 4, type = "iteration", cluster.type = "SOCK", write.to.file = TRUE,
+#' cores = 4, type = "iteration", write.to.file = TRUE,
 #' drop.exclude = TRUE, ...)
 #'
 #' @param data matrix with entries equal to zero to be imputed, normalized
@@ -172,7 +172,6 @@ ImputeDrImpute <- function(data, write.to.file = TRUE){
 #' @param cores integer; number of cores to use
 #' @param type character; either "iteration", for an iterative solution, or
 #' "pseudoinv", to use Moore-Penrose pseudo-inversion as a solution.
-#' @param cluster.type character; either "SOCK" or "MPI"
 #' @param write.to.file logical; should a file with the imputation results be
 #' written?
 #' @param drop.exclude logical; should zeros be discarded for the calculation
@@ -193,7 +192,6 @@ ImputeNetwork <- function(data,
                           network.path = NULL,
                           cores = 4,
                           type = "iteration",
-                          cluster.type = "SOCK",
                           write.to.file = TRUE,
                           drop.exclude = TRUE,
                           ...){
@@ -201,10 +199,8 @@ ImputeNetwork <- function(data,
   cat("Imputing data using network information\n")
 
   # Check arguments
-  Check <- CreateArgCheck(match = list("cluster.type" = cluster.type,
-                                       "type" = type),
-                          acceptable = list("cluster.type" = c("MPI","SOCK"),
-                                            "type"=c("iteration","pseudoinv")))
+  Check <- CreateArgCheck(match = list("type" = type),
+                          acceptable = list("type"=c("iteration","pseudoinv")))
   ArgumentCheck::finishArgCheck(Check)
 
   # Limit data and network to genes common to both
@@ -220,8 +216,7 @@ ImputeNetwork <- function(data,
   dropout_mat <- arranged$data == 0 # dropout indexes in the data matrix
 
   cat("Starting network-based imputation\n")
-  new_imp <- ImputeNetParallel(dropout_mat, arranged,
-                               cores, cluster.type, type, ...)
+  new_imp <- ImputeNetParallel(dropout_mat, arranged, cores, type, ...)
 
   res <- data
   # add back gene means

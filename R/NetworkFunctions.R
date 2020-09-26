@@ -113,8 +113,8 @@ CenterData <- function(data, drop.exclude = TRUE){
 #' @title Network-based parallel imputation
 #'
 #' @usage ImputeNetParallel(dropout.matrix, arranged, cores = 4,
-#' cluster.type = "SOCK", type = "iteration", max.iter = 50)
-#'
+#' type = "iteration", max.iter = 50)
+#' #'
 #' @description \code{ImputeNetParallel} implements network-based imputation
 #' in parallel
 #'
@@ -122,7 +122,6 @@ CenterData <- function(data, drop.exclude = TRUE){
 #' (genes as rows and samples as columns)
 #' @param arranged list; output of \code{\link{ArrangeData}}
 #' @param cores integer; number of cores used for paralell computation
-#' @param cluster.type character; either "SOCK" or "MPI"
 #' @param type character; either "iteration", for an iterative solution, or
 #' "pseudoinv", to use Moore-Penrose pseudo-inversion as a solution.
 #' @param max.iter numeric; maximum number of iterations for network
@@ -133,7 +132,6 @@ CenterData <- function(data, drop.exclude = TRUE){
 ImputeNetParallel <- function(dropout.matrix,
                               arranged,
                               cores = 4,
-                              cluster.type = "SOCK",
                               type = "iteration",
                               max.iter = 50){
 
@@ -165,9 +163,7 @@ ImputeNetParallel <- function(dropout.matrix,
     }
     imp <- arranged$centered
   } else{
-    cl <- parallel::makeCluster(parallel::detectCores())
-    parallel::clusterExport(cl, c("arranged","dropout.matrix"),
-                            envir = environment())
+    cl <- parallel::makeCluster(cores)
     imp <- parallel::parSapply(cl, seq_len(ncol(arranged$centered)),
                                function(i) {
                           PseudoInverseSolution_percell(arranged$centered[,i],
@@ -231,7 +227,7 @@ ImputePredictiveDropouts <- function(net, thr = 0.01, expr){
   # Y = inv(I - squared_A).C
 
   # dropouts that are predictors and targets
-  squared_A <- net[rownames(net),rownames(net)]
+  squared_A <- net[rownames(net), rownames(net), drop = FALSE]
 
   # I - squared_A can be inverted
   cat("Computing pseudoinverse\n")
@@ -287,7 +283,7 @@ PseudoInverseSolution_percell <- function(expr, net, drop_ind, thr = 0.01){
 
   # Dropout-based contribution (variable)
   pd <- intersect(rownames(net), colnames(net))
-  pd_imputed <- ImputePredictiveDropouts(net[pd,], thr, expr)
+  pd_imputed <- ImputePredictiveDropouts(net[pd, , drop = FALSE], thr, expr)
 
   # Non-dropout-based contribution
   cat("Adding remaining genes\n")
@@ -295,7 +291,7 @@ PseudoInverseSolution_percell <- function(expr, net, drop_ind, thr = 0.01){
                                    rownames(pd_imputed))]
   if(length(npd) > 0){
     npd_imputed <- ImputeNonPredictiveDropouts(net[intersect(npd,rownames(net)),
-                                                   ], expr)
+                                                   , drop = FALSE], expr)
     full_solution <- rbind(pd_imputed, npd_imputed) # join solutions
   } else{
     full_solution <- pd_imputed

@@ -139,7 +139,31 @@ GetDropoutProbabilities <- function(infile, count_path, out_dir, type, genelen,
 }
 
 
-SetBiologicalZeros <- function(imputation, drop_probs, thre, was_zero){
+
+#' @title Set biological zeros
+#'
+#' @description \code{SetBiologicalZeros} sets some of the entries back to zero
+#' after dropout imputation, as they likely correspond to true biological zeros
+#' (genes not expressed in given cell)
+#'
+#' @usage SetBiologicalZeros(imputation, drop_probs, thre = .2, was_zero)
+#'
+#' @param imputation matrix; imputed values
+#' @param drop_probs matrix; dropout probabilities for each entry in
+#' \code{imputation}. 0 means certain biological zero, while 1 means certain
+#' dropout to be imputed
+#' @param thre numeric; probability threshold to classify entries as biological
+#' zeros
+#' @param was_zero matrix; logical matrix: was the corresponding entry of
+#' \code{imputation} originally a zero?
+#'
+#' @details Entries which were originally zero and have dropout probability
+#' below \code{thre} are considered biological zeros and, if they were imputed,
+#' are set back to 0.
+#'
+#' @return matrix containing likely biological zeros set back to 0.
+#'
+SetBiologicalZeros <- function(imputation, drop_probs, thre = .2, was_zero){
 
   if(!all.equal(dim(imputation), dim(drop_probs))){
     # limit both to the set of common genes / cells

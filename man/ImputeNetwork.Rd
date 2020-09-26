@@ -5,7 +5,7 @@
 \title{Network-based imputation}
 \usage{
 ImputeNetwork(data, network.coefficients = NULL, network.path = NULL,
-cores = 4, type = "iteration", cluster.type = "SOCK", write.to.file = TRUE,
+cores = 4, type = "iteration", write.to.file = TRUE,
 drop.exclude = TRUE, ...)
 }
 \arguments{
@@ -22,8 +22,6 @@ coefficients}
 
 \item{type}{character; either "iteration", for an iterative solution, or
 "pseudoinv", to use Moore-Penrose pseudo-inversion as a solution.}
-
-\item{cluster.type}{character; either "SOCK" or "MPI"}
 
 \item{write.to.file}{logical; should a file with the imputation results be
 written?}

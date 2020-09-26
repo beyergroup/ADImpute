@@ -5,13 +5,12 @@
 \title{Imputation method evaluation on training set}
 \usage{
 EvaluateMethods(data, do = c("Baseline", "DrImpute", "Network"),
-write = FALSE, training.ratio = .7, training.only = TRUE, mask.ratio = .1,
+write = FALSE, train.ratio = .7, train.only = TRUE, mask.ratio = .1,
 outdir = getwd(), scale = 1, pseudo.count = 1, labels = NULL,
 cell.clusters = 2, drop_thre = NULL, type = "TPM", cores = 4,
-cluster.type = "SOCK", network.coefficients = NULL,
-network.path = system.file("extdata", "network.coefficients.zip",
-package="ADImpute"), network.imputation = "iteration", transcript.length =
-NULL, drop.exclude = TRUE, bulk = NULL, ...)
+network.coefficients = NULL, network.path = system.file("extdata",
+"network.coefficients.zip", package="ADImpute"), network.imputation =
+"iteration", transcript.length = NULL, drop.exclude = TRUE, bulk = NULL, ...)
 }
 \arguments{
 \item{data}{matrix; normalized counts, not logged (genes as rows and samples
@@ -24,9 +23,9 @@ supported methods will be ignored.}
 
 \item{write}{logical; write intermediary and imputed objects to files?}
 
-\item{training.ratio}{numeric; ratio of samples to be used for training}
+\item{train.ratio}{numeric; ratio of samples to be used for training}
 
-\item{training.only}{logical; if TRUE define only a training dataset, if
+\item{train.only}{logical; if TRUE define only a training dataset, if
 FALSE writes and returns both training and validation sets (defaults to TRUE)}
 
 \item{mask.ratio}{numeric; ratio of samples to be masked per gene}
@@ -52,8 +51,6 @@ determine dropout values}
 matrix. Can be "count" or "TPM"}
 
 \item{cores}{integer; number of cores used for paralell computation}
-
-\item{cluster.type}{character; either "SOCK" or "MPI"}
 
 \item{network.coefficients}{matrix; network coefficients. Please provide
 either \code{network.coefficients} or \code{network.path}.}

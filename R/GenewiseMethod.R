@@ -45,34 +45,41 @@
 ChooseMethod <- function(real,
                          masked,
                          imputed,
-                         write.to.file = TRUE){
-
+                         write.to.file = TRUE) {
   if (!all(colnames(real) == colnames(masked)) &&
       all(rownames(real) == rownames(masked)))
     stop("Error! Colnames / rownames before and after masking don't match.\n")
 
-  which_masked <- (real != 0) & (masked == 0) # distinguishes masked values from
+  which_masked <-
+    (real != 0) & (masked == 0) # distinguishes masked values from
   # dropouts in the original data
 
   MSE <- lapply(imputed,
-                function(x) vapply(rownames(real),
-                                   function(g) {
-                                     if(g %in% rownames(x)){
-                                       ComputeMSEGenewise(real = real[g,],
-                                                          masked = which_masked[g,],
-                                                          imputed = x[g,],
-                                                          baseline = identical(x,imputed$Baseline))
-                                     } else{ NA }},
-                                   FUN.VALUE = 1))
+                function(x)
+                  vapply(rownames(real),
+                         function(g) {
+                           if (g %in% rownames(x)) {
+                             ComputeMSEGenewise(
+                               real = real[g, ],
+                               masked = which_masked[g, ],
+                               imputed = x[g, ],
+                               baseline = identical(x, imputed$Baseline)
+                             )
+                           } else{
+                             NA
+                           }
+                         },
+                         FUN.VALUE = 1))
   MSE <- do.call(cbind, MSE)
 
   # keep cases where at least 2 methods are available for comparison
-  MSE <- MSE[which(rowSums(!is.na(MSE)) >= 2), ]
+  MSE <- MSE[which(rowSums(!is.na(MSE)) >= 2),]
 
   cat("Imputation errors computed for", nrow(MSE), "genes\n")
 
   best_method <- vapply(apply(MSE, 1, which.min),
-                        function(x) colnames(MSE)[x],
+                        function(x)
+                          colnames(MSE)[x],
                         FUN.VALUE = "Method_name")
 
   if (write.to.file)
@@ -101,23 +108,23 @@ ChooseMethod <- function(real,
 ComputeMSEGenewise <- function(real,
                                masked,
                                imputed,
-                               baseline){
-
-  if(baseline){
+                               baseline) {
+  if (baseline) {
     index <- masked # Baseline always imputes
-    if(sum(index) == 0){
+    if (sum(index) == 0) {
       mse <- NA
     } else{
-      mse <- sum((imputed[index]-real[index])^2,
-                 na.rm = TRUE)/sum(index, na.rm = TRUE)
+      mse <- sum((imputed[index] - real[index]) ^ 2,
+                 na.rm = TRUE) / sum(index, na.rm = TRUE)
     }
   } else{
-    index <- masked & (imputed != 0) # do not assess if value is not imputed
-    if(sum(index) == 0){
+    index <-
+      masked & (imputed != 0) # do not assess if value is not imputed
+    if (sum(index) == 0) {
       mse <- NA
     } else{
-      mse <- sum((imputed[index]-real[index])^2,
-                 na.rm = TRUE)/sum(index, na.rm = TRUE)
+      mse <- sum((imputed[index] - real[index]) ^ 2,
+                 na.rm = TRUE) / sum(index, na.rm = TRUE)
     }
   }
 
@@ -144,21 +151,27 @@ ComputeMSEGenewise <- function(real,
 #'
 #' @return list with resulting matrix after subsetting and after masking
 #'
-CreateTrainData <- function(data, train.ratio = .7, train.only = TRUE,
-                            mask = .1, write = FALSE){
+CreateTrainData <-
+  function(data,
+           train.ratio = .7,
+           train.only = TRUE,
+           mask = .1,
+           write = FALSE) {
+    # Split data for training
+    train_norm <- SplitData(
+      data,
+      ratio = train.ratio,
+      write.to.file = write,
+      train.only = train.only
+    )
 
-  # Split data for training
-  train_norm <- SplitData(data, ratio = train.ratio,
-                             write.to.file = write,
-                             train.only = train.only)
+    # Mask selected training data
+    masked_train_norm <- MaskData(train_norm,
+                                  write.to.file = write,
+                                  mask = mask)
 
-  # Mask selected training data
-  masked_train_norm <- MaskData(train_norm,
-                                   write.to.file = write,
-                                   mask = mask.ratio)
-
-  return(list("train" = train_norm, "mask" = masked_train_norm))
-}
+    return(list("train" = train_norm, "mask" = masked_train_norm))
+  }
 
 
 #' @title Masking of entries for performance evaluation
@@ -181,8 +194,7 @@ CreateTrainData <- function(data, train.ratio = .7, train.only = TRUE,
 #'
 MaskData <- function(data,
                      write.to.file = FALSE,
-                     mask = .1){
-
+                     mask = .1) {
   cat("Masking training data\n")
 
   data <- DataCheck_Matrix(data)
@@ -191,13 +203,14 @@ MaskData <- function(data,
   sparcity <- sprintf("%.2f", sum(data == 0) / length(data))
   cat("original sparcity", sparcity, "\n")
 
-  rowmask <- round(mask * ncol(data)) # samples to be masked per gene
+  rowmask <-
+    round(mask * ncol(data)) # samples to be masked per gene
   maskable <- data != 0 # maskable samples (originally not dropouts)
 
   print(maskable)
   maskidx <- t(vapply(seq_len(nrow(maskable)),
                       function(x)
-                        MaskerPerGene(maskable[x,], rowmask = rowmask),
+                        MaskerPerGene(maskable[x, ], rowmask = rowmask),
                       FUN.VALUE = rep(FALSE, ncol(data))))
 
   data[maskidx] <- 0
@@ -205,7 +218,7 @@ MaskData <- function(data,
   cat("final sparcity", sparcity, "\n")
 
   # Write to file
-  if(write.to.file)
+  if (write.to.file)
     WriteTXT(data, "masked_data.txt")
 
   return(data)
@@ -223,9 +236,8 @@ MaskData <- function(data,
 #'
 #' @return logical containing positions to mask
 #'
-MaskerPerGene <- function(x, rowmask){
-
-  if (sum(x) > rowmask){
+MaskerPerGene <- function(x, rowmask) {
+  if (sum(x) > rowmask) {
     # Randomly pick samples to mask
     tomask <- sample(which(x), rowmask)
     out <- rep(FALSE, length(x))
@@ -262,22 +274,22 @@ MaskerPerGene <- function(x, rowmask){
 SplitData <- function(data,
                       ratio = .7,
                       write.to.file = FALSE,
-                      train.only = TRUE){
-
+                      train.only = TRUE) {
   cat("Selecting training data\n")
 
   # Randomly select samples according to given ratio
-  train_samples <- sample(colnames(data))[seq_len(round(ncol(data) * ratio))]
+  train_samples <-
+    sample(colnames(data))[seq_len(round(ncol(data) * ratio))]
   train_data    <- data[, train_samples]
 
   # Write to file
-  if(write.to.file)
+  if (write.to.file)
     WriteTXT(train_data, "training.txt")
 
   # Optionally create and write validation dataset
-  if (!train.only){
-    validation_data <- data[, !(colnames(data) %in% train_samples)]
-    if(write.to.file)
+  if (!train.only) {
+    validation_data <- data[,!(colnames(data) %in% train_samples)]
+    if (write.to.file)
       WriteTXT(validation_data, "validation.txt")
   }
 
