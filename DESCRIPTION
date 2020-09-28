@@ -39,5 +39,5 @@ biocViews:
     SingleCell,
     Transcriptomics
 RoxygenNote: 7.1.1
-VignetteBuilder: devtools
+VignetteBuilder: knitr
 BugReports: https://github.com/anacarolinaleote/ADImpute/issues
