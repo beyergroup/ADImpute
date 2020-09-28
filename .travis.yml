@@ -2,6 +2,7 @@
 
 language: R
 cache: packages
+codecov: true
 
 os:
   - linux
@@ -10,7 +11,6 @@ os:
 r: bioc-devel
 
 script:
-    - R CMD BiocCheckGitClone .
     - R CMD build .
     - R CMD check *tar.gz --as-cran
 
