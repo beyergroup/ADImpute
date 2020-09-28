@@ -9,10 +9,9 @@ os:
 
 r: bioc-devel
 
-bioc_check: true
-
 script:
     - R CMD BiocCheckGitClone .
     - R CMD build .
     - R CMD check *tar.gz --as-cran
-    - R CMD BiocCheck ADImpute_2.1.0.tar.gz
+
+bioc_check: true
