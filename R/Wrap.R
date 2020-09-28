@@ -294,9 +294,6 @@ Impute <- function(data,
 
   if("scimpute" %in% tolower(do)){
     cat("scImpute is not supported by default. Please check XXXX for details.\n")
-    # cat("Imputing data using scImpute\n")
-    # dir.create("scImpute")
-    #
     # # Get type of input masked file
     # if(grepl(".txt", count_path)){infile <- "txt"
     # } else if(grepl(".rds", count_path)){infile <- "rds"
@@ -326,7 +323,6 @@ Impute <- function(data,
 
   if("scrabble" %in% tolower(do)){
     cat("scImpute is not supported by default. Please check XXXX for details.\n")
-    # cat("Imputing data using SCRABBLE\n")
     # imputed$SCRABBLE <- ImputeSCRABBLE(data, bulk)
     # imputed$SCRABBLE <- log2( (imputed$SCRABBLE / scale) + pseudo.count)
   }
@@ -356,7 +352,7 @@ Impute <- function(data,
 
   if("ensemble" %in% tolower(do)){
     cat("Combining imputation results into ensemble\n")
-    imputed$Ensemble <- Combine(log_masked_norm, imputed, method.choice)
+    imputed$Ensemble <- Combine(log_masked_norm, imputed, method.choice, write)
   }
 
   # Estimate true zeros

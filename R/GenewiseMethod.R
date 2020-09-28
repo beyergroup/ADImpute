@@ -151,19 +151,12 @@ ComputeMSEGenewise <- function(real,
 #'
 #' @return list with resulting matrix after subsetting and after masking
 #'
-CreateTrainData <-
-  function(data,
-           train.ratio = .7,
-           train.only = TRUE,
-           mask = .1,
-           write = FALSE) {
+CreateTrainData <- function(data, train.ratio = .7, train.only = TRUE,
+                            mask = .1, write = FALSE) {
+
     # Split data for training
-    train_norm <- SplitData(
-      data,
-      ratio = train.ratio,
-      write.to.file = write,
-      train.only = train.only
-    )
+    train_norm <- SplitData(data, ratio = train.ratio, write.to.file = write,
+                            train.only = train.only)
 
     # Mask selected training data
     masked_train_norm <- MaskData(train_norm,
@@ -171,7 +164,7 @@ CreateTrainData <-
                                   mask = mask)
 
     return(list("train" = train_norm, "mask" = masked_train_norm))
-  }
+}
 
 
 #' @title Masking of entries for performance evaluation
@@ -207,7 +200,6 @@ MaskData <- function(data,
     round(mask * ncol(data)) # samples to be masked per gene
   maskable <- data != 0 # maskable samples (originally not dropouts)
 
-  print(maskable)
   maskidx <- t(vapply(seq_len(nrow(maskable)),
                       function(x)
                         MaskerPerGene(maskable[x, ], rowmask = rowmask),

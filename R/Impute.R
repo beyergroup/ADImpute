@@ -20,7 +20,7 @@
 
 #' @title Combine imputation methods
 #'
-#' @usage Combine(data, imputed, method.choice, write.to.file = TRUE)
+#' @usage Combine(data, imputed, method.choice, write.to.file = FALSE)
 #'
 #' @param data matrix with entries equal to zero to be imputed, already
 #' normalized (genes as rows and samples as columns)
@@ -41,7 +41,7 @@
 Combine <- function(data,
                     imputed,
                     method.choice,
-                    write.to.file = TRUE){
+                    write.to.file = FALSE){
 
   # all zeros are imputed
   dropouts <- data == 0

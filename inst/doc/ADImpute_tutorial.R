@@ -17,22 +17,16 @@ methods_pergene <- EvaluateMethods(data = RPM,
                                                       # methods to test. Exclude
                                                       # any of them by removing
                                                       # them from the vector
-                                   outdir = tempdir(),
-                                   train.ratio = .7,
-                                   mask.ratio = .2,
                                    cores = 2,
+                                   train.ratio = .7, mask.ratio = .2,
                                    network.coefficients = ADImpute::demo_net)
 head(methods_pergene) # show the best performing method for the first 6 genes
 
 ## ---- warning=FALSE-----------------------------------------------------------
 imputed <- Impute(do = "Ensemble",
-                  outdir = tempdir(),
                   method.choice = methods_pergene,
                   data = RPM,
                   cores = 2,
                   network.coefficients = ADImpute::demo_net)
 str(imputed)
-
-## ---- include=FALSE-----------------------------------------------------------
-unlink(file.path(tempdir(),"ADImpute"), recursive = TRUE, force = TRUE)
 

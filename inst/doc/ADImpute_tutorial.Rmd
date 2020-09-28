@@ -47,7 +47,4 @@ imputed <- Impute(do = "Ensemble",
 str(imputed)
 ```
 
-```{r}
-sessionInfo()
-```
 

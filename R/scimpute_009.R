@@ -1,4 +1,5 @@
 # functions adapted from https://github.com/Vivianstats/scImpute version 0.0.9
+# see publication: https://www.nature.com/articles/s41467-018-03405-7
 
 calculate_weight <- function (x, paramt){
   pz1 = paramt[1] * stats::dgamma(x, shape = paramt[2], rate = paramt[3])

@@ -3,3 +3,5 @@
 ^R/Impute_extra\.R$
 ^\.travis\.yml$
 ^\.git$
+^doc$
+^Meta$
