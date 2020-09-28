@@ -6,7 +6,7 @@
 \usage{
 Impute(data, do = "Ensemble", write = FALSE,outdir = getwd(),
 method.choice = NULL, scale = 1, pseudo.count = 1, count_path = NULL,
-labels = NULL, cell.clusters = 2, drop_thre = NULL, type = "TPM",
+labels = NULL, cell.clusters = 2, drop_thre = NULL, type = "count",
 transcript.length = NULL, cores = 4, network.coefficients = NULL,
 network.path = system.file("extdata", "network.coefficients.zip", package =
 "ADImpute"), network.imputation = "iteration", drop.exclude = TRUE, bulk =
@@ -111,6 +111,11 @@ If \code{"Ensemble"} is included in \code{do}, \code{method.choice} has to
 be provided (use output from \code{EvaluateMethods()}).
 \code{Impute} creates a directory \code{imputation} containing the
 imputation results of all methods in \code{do}.
+If \code{true.zero.thr} is set, dropout probabilities are computed using
+scImpute's framework. Expression values with dropout probabilities below
+\code{true.zero.thr} will be set back to 0 if imputed, as they likely
+correspond to true biological zeros (genes not expressed in cell) rather than
+technical dropouts (genes expressed but not captured).
 }
 \examples{
 # Normalize demo data
@@ -121,6 +126,9 @@ network.coefficients = ADImpute::demo_net, cores = 2)
 imputed_data <- Impute(do = "Network", data = norm_data[,1:10],
 network.imputation = "pseudoinv", network.coefficients = ADImpute::demo_net,
 cores = 2)
+# Don't impute biological zeros
+imputed_data <- Impute(do = "Baseline", data = norm_data, cores = 2,
+true.zero.thr = .2)
 
 }
 \seealso{

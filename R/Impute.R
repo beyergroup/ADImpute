@@ -43,6 +43,8 @@ Combine <- function(data,
                     method.choice,
                     write.to.file = FALSE){
 
+  cat("Combining imputation results into ensemble\n")
+
   # all zeros are imputed
   dropouts <- data == 0
 

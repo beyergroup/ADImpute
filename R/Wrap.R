@@ -233,6 +233,11 @@ EvaluateMethods <- function(data,
 #' be provided (use output from \code{EvaluateMethods()}).
 #' \code{Impute} creates a directory \code{imputation} containing the
 #' imputation results of all methods in \code{do}.
+#' If \code{true.zero.thr} is set, dropout probabilities are computed using
+#' scImpute's framework. Expression values with dropout probabilities below
+#' \code{true.zero.thr} will be set back to 0 if imputed, as they likely
+#' correspond to true biological zeros (genes not expressed in cell) rather than
+#' technical dropouts (genes expressed but not captured).
 #'
 #' @examples
 #' # Normalize demo data
@@ -243,6 +248,9 @@ EvaluateMethods <- function(data,
 #' imputed_data <- Impute(do = "Network", data = norm_data[,1:10],
 #' network.imputation = "pseudoinv", network.coefficients = ADImpute::demo_net,
 #' cores = 2)
+#' # Don't impute biological zeros
+#' imputed_data <- Impute(do = "Baseline", data = norm_data, cores = 2,
+#' true.zero.thr = .2)
 #'
 #' @seealso \code{\link{EvaluateMethods}},
 #' \code{\link{ImputeBaseline}},
@@ -255,17 +263,17 @@ EvaluateMethods <- function(data,
 Impute <- function(data,
                    do = "Ensemble",
                    write = FALSE, outdir = getwd(),
-                   method.choice = NULL,
-                   scale = 1, pseudo.count = 1,
+                   method.choice = NULL, scale = 1, pseudo.count = 1,
+                   # scImpute arguments:
                    count_path = NULL, labels = NULL, cell.clusters = 2,
-                   drop_thre = NULL, type = "count", transcript.length = NULL,
+                   drop_thre = NULL, type = "count", transcript.length = NULL, #
                    cores = 4, network.coefficients = NULL,
                    network.path = system.file("extdata",
                                               "network.coefficients.zip",
                                               package="ADImpute"),
                    network.imputation = "iteration",
                    drop.exclude = TRUE,
-                   bulk = NULL,
+                   bulk = NULL, # SCRABBLE argument
                    true.zero.thr = NULL, prob.mat = NULL, ...){
 
   # Check arguments
@@ -329,13 +337,12 @@ Impute <- function(data,
 
   log_masked_norm <- log2( (data / scale) + pseudo.count)
 
-  if("baseline" %in% tolower(do)){
+  if("baseline" %in% tolower(do))
     imputed$Baseline <- ImputeBaseline(log_masked_norm,
                                        drop.exclude = drop.exclude,
                                        write.to.file = write)
-  }
 
-  if("network" %in% tolower(do)){
+  if("network" %in% tolower(do))
     imputed$Network <- ImputeNetwork(log_masked_norm,
                                      network.coefficients,
                                      network.path,
@@ -344,16 +351,12 @@ Impute <- function(data,
                                      drop.exclude = drop.exclude,
                                      write.to.file = write,
                                      ...)
-  }
 
-  if("drimpute" %in% tolower(do)){
+  if("drimpute" %in% tolower(do))
     imputed$DrImpute <- ImputeDrImpute(log_masked_norm, write.to.file = write)
-  }
 
-  if("ensemble" %in% tolower(do)){
-    cat("Combining imputation results into ensemble\n")
+  if("ensemble" %in% tolower(do))
     imputed$Ensemble <- Combine(log_masked_norm, imputed, method.choice, write)
-  }
 
   # Estimate true zeros
   if(!is.null(true.zero.thr)){
@@ -362,8 +365,9 @@ Impute <- function(data,
     if(is.null(prob.mat))
       prob.mat <- GetDropoutProbabilities(data = data, thre = true.zero.thr,
                                           cell.clusters = cell.clusters,
-                                          labels = labels, ncores = cores)
-
+                                          labels = labels, type = type,
+                                          ncores = cores,
+                                          genelen = transcript.length)
     # use probability matrix
     cl <- parallel::makeCluster(cores)
     zerofiltered <- parallel::parLapply(cl, imputed, SetBiologicalZeros,

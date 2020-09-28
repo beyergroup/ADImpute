@@ -7,7 +7,7 @@
 EvaluateMethods(data, do = c("Baseline", "DrImpute", "Network"),
 write = FALSE, train.ratio = .7, train.only = TRUE, mask.ratio = .1,
 outdir = getwd(), scale = 1, pseudo.count = 1, labels = NULL,
-cell.clusters = 2, drop_thre = NULL, type = "TPM", cores = 4,
+cell.clusters = 2, drop_thre = NULL, type = "count", cores = 4,
 network.coefficients = NULL, network.path = system.file("extdata",
 "network.coefficients.zip", package="ADImpute"), network.imputation =
 "iteration", transcript.length = NULL, drop.exclude = TRUE, bulk = NULL, ...)

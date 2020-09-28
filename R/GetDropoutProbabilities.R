@@ -23,18 +23,20 @@
 #' (probability of being a dropout that should be imputed rather than a true
 #' biological zero) using an adaptation of scImpute's approach
 #'
-#' @usage GetDropoutProbabilities(data, thre, cell.clusters, type = "count",
-#' labels = NULL, ncores)
+#' @usage GetDropoutProbabilities(data, thre, cell.clusters, labels = NULL,
+#' type = "count", ncores, genelen = ADImpute::transcript_length)
 #'
 #' @param data matrix; original data before imputation
 #' @param thre numeric; probability threshold to classify entries as biological
 #' zeros
 #' @param cell.clusters integer; number of cell subpopulations
-#' @param type A character specifying the type of values in the expression
-#' matrix. Can be "count" or "TPM"
 #' @param labels character; vector specifying the cell type of each column of
 #' \code{data}
+#' @param type A character specifying the type of values in the expression
+#' matrix. Can be "count" or "TPM"
 #' @param ncores integer; number of cores used for paralell computation
+#' @param genelen matrix with at least 2 columns: "hgnc_symbol" and
+#' "transcript_length"
 #'
 #' @details This function follows scImpute's model to distinguish between
 #' true biological zeros and dropouts, and is based on adapted code from the
@@ -44,9 +46,16 @@
 #' probabilities for the corresponding entries
 #'
 GetDropoutProbabilities <- function(data, thre, cell.clusters = 2,
-                                    type = "count", labels = NULL, ncores){
+                                    labels = NULL, type = "count", ncores,
+                                    genelen = ADImpute::transcript_length){
 
   labeled <- !is.null(labels)
+
+  if(type == "TPM"){
+    common <- intersect(rownames(data), genelen$hgnc_symbol)
+    data <- data[common, ]
+    genelen <- genelen[match(common,genelen$hgnc_symbol), ]
+  }
   count_lnorm = read_count(raw_count = data, type = type, genelen = genelen)
 
   if(!labeled){
@@ -55,11 +64,10 @@ GetDropoutProbabilities <- function(data, thre, cell.clusters = 2,
                                 Kcluster = cell.clusters, ncores = ncores)
   }else{
     dropmat = imputation_wlabel_model8(count = count_lnorm, labeled = labeled,
-                                       cell_labels = labels, point = log10(1.01),
-                                       drop_thre = thre, ncores = ncores,
-                                       Kcluster = NULL)
+                                       cell_labels = labels,
+                                       point = log10(1.01), drop_thre = thre,
+                                       ncores = ncores, Kcluster = NULL)
   }
-
   return(dropmat)
 }
 
