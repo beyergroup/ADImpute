@@ -5,3 +5,4 @@
 ^\.git$
 ^doc$
 ^Meta$
+^appveyor\.yml$

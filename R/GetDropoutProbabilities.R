@@ -23,13 +23,15 @@
 #' (probability of being a dropout that should be imputed rather than a true
 #' biological zero) using an adaptation of scImpute's approach
 #'
-#' @usage GetDropoutProbabilities(data, thre, cell.clusters, labels = NULL,
-#' ncores)
+#' @usage GetDropoutProbabilities(data, thre, cell.clusters, type = "count",
+#' labels = NULL, ncores)
 #'
 #' @param data matrix; original data before imputation
 #' @param thre numeric; probability threshold to classify entries as biological
 #' zeros
 #' @param cell.clusters integer; number of cell subpopulations
+#' @param type A character specifying the type of values in the expression
+#' matrix. Can be "count" or "TPM"
 #' @param labels character; vector specifying the cell type of each column of
 #' \code{data}
 #' @param ncores integer; number of cores used for paralell computation
@@ -42,16 +44,17 @@
 #' probabilities for the corresponding entries
 #'
 GetDropoutProbabilities <- function(data, thre, cell.clusters = 2,
-                                    labels = NULL, ncores){
+                                    type = "count", labels = NULL, ncores){
 
   labeled <- !is.null(labels)
+  count_lnorm = read_count(raw_count = data, type = type, genelen = genelen)
 
   if(!labeled){
-    dropmat = imputation_model8(count = data, labeled = labeled,
+    dropmat = imputation_model8(count = count_lnorm, labeled = labeled,
                                 point = log10(1.01), drop_thre = thre,
                                 Kcluster = cell.clusters, ncores = ncores)
   }else{
-    dropmat = imputation_wlabel_model8(count = data, labeled = labeled,
+    dropmat = imputation_wlabel_model8(count = count_lnorm, labeled = labeled,
                                        cell_labels = labels, point = log10(1.01),
                                        drop_thre = thre, ncores = ncores,
                                        Kcluster = NULL)

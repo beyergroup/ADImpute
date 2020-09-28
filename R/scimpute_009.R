@@ -370,6 +370,30 @@ MixtureModel <- function(count, clust, ncores, drop_thre){
 }
 
 
+read_count <-
+  function(raw_count, type, genelen)
+  {
+    raw_count = as.matrix(raw_count)
+    print(paste("number of genes in raw count matrix", nrow(raw_count)))
+    print(paste("number of cells in raw count matrix", ncol(raw_count)))
+
+    if(type == "TPM"){
+      if(length(genelen) != nrow(raw_count))
+      stop("number of genes in 'genelen' and count matrix do not match! ")
+      raw_count = sweep(raw_count, 1, genelen, FUN = "*")
+    }
+
+    totalCounts_by_cell = colSums(raw_count)
+    totalCounts_by_cell[totalCounts_by_cell == 0] = 1
+    raw_count = sweep(raw_count, MARGIN = 2, 10^6/totalCounts_by_cell, FUN = "*")
+    if (min(raw_count) < 0) {
+      stop("smallest read count cannot be negative!")
+    }
+    count_lnorm = log10(raw_count + 1.01)
+    return(count_lnorm)
+  }
+
+
 ### update parameters in gamma distribution
 update_gmm_pars = function(x, wt){
   tp_s = sum(wt)
