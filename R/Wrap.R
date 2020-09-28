@@ -363,9 +363,10 @@ Impute <- function(data,
   if(!is.null(true.zero.thr)){
 
     # the probability is not given - compute it
-    if(is.null(prob.mat)){
-      ##
-    }
+    if(is.null(prob.mat))
+      prob.mat <- GetDropoutProbabilities(data = data, thre = true.zero.thr,
+                                          cell.clusters = cell.clusters,
+                                          labels = labels, ncores = cores)
 
     # use probability matrix
     cl <- parallel::makeCluster(cores)
@@ -375,53 +376,10 @@ Impute <- function(data,
                                         was_zero = data == 0)
     parallel::stopCluster(cl)
 
-    # if(any(grep(".txt", count_path))){
-    #   infile <- "txt"
-    # } else if(any(grep(".rds", count_path))){
-    #   infile <- "rds"
-    # } else if (any(grep(".csv", count_path))){
-    #   infile <- "csv"
-    # }
-    # # Get genelen if needed
-    # if (type == "TPM"){
-    #   count_path <- paste0(strsplit(count_path,
-    #                                 split = paste0("\\.", infile))[[1]][1],
-    #                        "_red",
-    #                        paste0(".", infile))
-    #   infile <- "csv"
-    #   # compute dropout probabilities according to scImpute
-    #   droprob <- GetDropoutProbabilities(infile = infile,
-    #                                      count_path = count_path,
-    #                                      out_dir = "scImpute/", type = type,
-    #                                      genelen = readRDS(paste0("outdir",
-    #                                                               "genelength.rds")),
-    #                                      drop_thre = true.zero.thr,
-    #                                      data = utils::read.csv(count_path))
-    #   WriteTXT(droprob, "dropout_probability.txt")
-    #
-    #   # apply thresholds
-    #   zerofiltered <- lapply(imputed, SetBiologicalZeros, drop_probs = droprob,
-    #                          thre = true.zero.thr, was_zero = data == 0)
-    #
-    # } else {
-    #   # compute dropout probabilities according to scImpute
-    #   droprob <- GetDropoutProbabilities(infile = infile,
-    #                                      count_path = count_path,
-    #                                      out_dir = "scImpute/", type = type,
-    #                                      genelen = NULL,
-    #                                      drop_thre = true.zero.thr, data = data)
-    #   WriteTXT(droprob, "dropout_probability.txt")
-    #
-    #   # apply thresholds
-    #   zerofiltered <- lapply(imputed, SetBiological Zeros, drop_probs = droprob,
-    #                          thre = true.zero.thr, was_zero = data == 0)
-    # }
-    #
     return(list("imputations" = imputed, "zerofiltered" = zerofiltered))
 
   } else{
 
     return(imputed)
   }
-
 }

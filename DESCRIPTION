@@ -18,9 +18,12 @@ Depends:
 Imports:
     ArgumentCheck,
     data.table,
+    doParallel,
     DrImpute,
+    kernlab,
     MASS,
     parallel,
+    rsvd,
     SAVER,
     stats,
     utils
