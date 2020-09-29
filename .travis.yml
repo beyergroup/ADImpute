@@ -15,3 +15,9 @@ script:
     - R CMD check *tar.gz --as-cran
 
 bioc_check: true
+
+r_packages:
+  - covr
+
+after_success:
+  - Rscript -e 'library(covr); codecov()'

@@ -4,16 +4,13 @@
 \alias{ImputeBaseline}
 \title{Impute using average expression across all cells}
 \usage{
-ImputeBaseline(data, write = FALSE, drop.exclude = TRUE, ...)
+ImputeBaseline(data, write = FALSE, ...)
 }
 \arguments{
 \item{data}{matrix with entries equal to zero to be imputed, normalized
 and log2-transformed (genes as rows and samples as columns)}
 
 \item{write}{logical; should a file with the imputation results be written?}
-
-\item{drop.exclude}{logical; should zeros be discarded for the calculation
-of genewise average expression levels? (defaults to TRUE)}
 
 \item{...}{additional arguments to \code{saveRDS}}
 }
@@ -23,5 +20,5 @@ values of genes
 }
 \description{
 \code{ImputeBaseline} imputes dropouts using gene averages
-across cells
+across cells. Zero values are excluded from the mean computation.
 }

@@ -26,8 +26,7 @@
 #' cell.clusters = 2, drop_thre = NULL, type = "count", cores = 4,
 #' net.coef = NULL, network.path = system.file("extdata",
 #' "network.coefficients.zip", package="ADImpute"), net.implementation =
-#' "iteration", tr.length = ADImpute::transcript_length, drop.exclude = TRUE,
-#' bulk = NULL, ...)
+#' "iteration", tr.length = ADImpute::transcript_length, bulk = NULL, ...)
 #'
 #' @description \code{EvaluateMethods} returns the best-performing imputation
 #' method for each gene in the dataset
@@ -66,8 +65,6 @@
 #' solution.
 #' @param tr.length matrix with at least 2 columns: "hgnc_symbol" and
 #' "transcript_length"
-#' @param drop.exclude logical; should zeros be discarded for the calculation
-#' of genewise average expression levels? (defaults to TRUE)
 #' @param bulk vector of reference bulk RNA-seq, if available (average across
 #' samples)
 #' @param ... additional parameters to pass to network-based imputation
@@ -101,9 +98,8 @@ EvaluateMethods <- function(data, do = c("Baseline", "DrImpute", "Network"),
                         drop_thre = NULL, type = "count", cores = 4,
                         net.coef = NULL, network.path = system.file("extdata",
                             "network.coefficients.zip", package="ADImpute"),
-                        net.implementation = "iteration",
-                        tr.length = ADImpute::transcript_length,
-                        drop.exclude = TRUE, bulk = NULL, ...){
+                        net.implementation = "iteration", tr.length =
+                            ADImpute::transcript_length, bulk = NULL, ...){
 
     # Check arguments
     Check <- CreateArgCheck(missing = list("data" = missing(data)),
@@ -133,8 +129,7 @@ EvaluateMethods <- function(data, do = c("Baseline", "DrImpute", "Network"),
                           cores = cores,
                           net.coef = net.coef,
                           network.path = network.path,
-                          net.implementation = net.implementation,
-                          drop.exclude = drop.exclude, ...)
+                          net.implementation = net.implementation, ...)
 
   # Run optimum choice
   choice <- ChooseMethod(real = round(train_data$train, 2),
@@ -152,8 +147,8 @@ EvaluateMethods <- function(data, do = c("Baseline", "DrImpute", "Network"),
 #' cell.clusters = 2, drop_thre = NULL, type = "count",
 #' tr.length = ADImpute::transcript_length, cores = 4, net.coef = NULL,
 #' network.path = system.file("extdata", "network.coefficients.zip",
-#' package = "ADImpute"), net.implementation = "iteration", drop.exclude = TRUE,
-#' bulk = NULL, true.zero.thr = NULL, prob.mat = NULL, ...)
+#' package = "ADImpute"), net.implementation = "iteration", bulk = NULL,
+#' true.zero.thr = NULL, prob.mat = NULL, ...)
 #'
 #' @description \code{Impute} performs dropout imputation based on the
 #' performance results obtained in the training data, coupled to normalization
@@ -191,8 +186,6 @@ EvaluateMethods <- function(data, do = c("Baseline", "DrImpute", "Network"),
 #' @param net.implementation character; either "iteration", for an iterative
 #' solution, or "pseudoinv", to use Moore-Penrose pseudo-inversion as a
 #' solution.
-#' @param drop.exclude logical; should zeros be discarded for the calculation
-#' of genewise average expression levels? (defaults to TRUE)
 #' @param bulk vector of reference bulk RNA-seq, if available (average across
 #' samples)
 #' @param true.zero.thr if set to NULL (default), no true zero estimation is
@@ -258,11 +251,10 @@ EvaluateMethods <- function(data, do = c("Baseline", "DrImpute", "Network"),
 Impute <- function(data, do = "Ensemble", write = FALSE, outdir = getwd(),
             method.choice = NULL, scale = 1, pseudo.count = 1,
             labels = NULL, cell.clusters = 2, drop_thre = NULL, type = "count",
-            tr.length = ADImpute::transcript_length, cores = 4,
-            net.coef = NULL, network.path = system.file("extdata",
-                "network.coefficients.zip", package="ADImpute"),
-            net.implementation = "iteration", drop.exclude = TRUE, bulk = NULL,
-            true.zero.thr = NULL, prob.mat = NULL, ...){
+            tr.length = ADImpute::transcript_length, cores = 4, net.coef = NULL,
+            network.path = system.file("extdata", "network.coefficients.zip",
+                package="ADImpute"), net.implementation = "iteration",
+            bulk = NULL, true.zero.thr = NULL, prob.mat = NULL, ...){
 
     # Check arguments
     Check <- CreateArgCheck(missing = list("data" = missing(data)),
@@ -285,20 +277,16 @@ Impute <- function(data, do = "Ensemble", write = FALSE, outdir = getwd(),
 
     if("saver" %in% tolower(do)){
         imputed$SAVER <- ImputeSAVER(data, cores, write = write)
-        imputed$SAVER <- log2( (imputed$SAVER / scale) + pseudo.count)
-    }
-    # Insert call to scImpute and SCRABBLE
+        imputed$SAVER <- log2( (imputed$SAVER / scale) + pseudo.count)}
+    # Insert call to scImpute and SCRABBLE <-----
 
     log_masked_norm <- log2( (data / scale) + pseudo.count)
 
     if("baseline" %in% tolower(do))
-      imputed$Baseline <- ImputeBaseline(log_masked_norm,
-                                         drop.exclude = drop.exclude,
-                                         write = write)
+      imputed$Baseline <- ImputeBaseline(log_masked_norm, write = write)
     if("network" %in% tolower(do))
       imputed$Network <- ImputeNetwork(log_masked_norm, net.coef,
-          network.path, type = net.implementation, cores,
-          drop.exclude = drop.exclude, write  = write, ...)
+          network.path, type = net.implementation, cores, write  = write, ...)
     if("drimpute" %in% tolower(do))
         imputed$DrImpute <- ImputeDrImpute(log_masked_norm, write = write)
     if("ensemble" %in% tolower(do))
@@ -306,17 +294,14 @@ Impute <- function(data, do = "Ensemble", write = FALSE, outdir = getwd(),
 
     # Estimate true zeros
     if(!is.null(true.zero.thr)){
-        # the probability is not given - compute it
-        if(is.null(prob.mat))
-            prob.mat <- GetDropoutProbabilities(data = data,
-                thre = true.zero.thr, cell.clusters = cell.clusters,
-                labels = labels, type = type, ncores = cores,
-                genelen = tr.length)
-        # use probability matrix
-        cl <- parallel::makeCluster(cores)
-        zerofiltered <- parallel::parLapply(cl, imputed, SetBiologicalZeros,
-                            drop_probs = prob.mat, thre = true.zero.thr,
-                            was_zero = data == 0)
-        parallel::stopCluster(cl)
-        return(list("imputations" = imputed, "zerofiltered" = zerofiltered))
+
+        results <- list("imputations" = imputed)
+        results <- c(results,
+                     HandleBiologicalZeros(data = data, imputed = imputed,
+                            thre = true.zero.thr, cell.clusters = cell.clusters,
+                            labels = labels, type = type, ncores = cores,
+                            genelen = tr.length, prob.mat))
+
+        return(results)
+
   } else{ return(imputed) } }

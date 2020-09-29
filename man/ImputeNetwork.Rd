@@ -5,7 +5,7 @@
 \title{Network-based imputation}
 \usage{
 ImputeNetwork(data, net.coef = NULL, network.path = NULL,
-cores = 4, type = "iteration", write = FALSE, drop.exclude = TRUE, ...)
+cores = 4, type = "iteration", write = FALSE, ...)
 }
 \arguments{
 \item{data}{matrix with entries equal to zero to be imputed, normalized
@@ -23,9 +23,6 @@ coefficients}
 "pseudoinv", to use Moore-Penrose pseudo-inversion as a solution.}
 
 \item{write}{logical; should a file with the imputation results be written?}
-
-\item{drop.exclude}{logical; should zeros be discarded for the calculation
-of genewise average expression levels? (defaults to TRUE)}
 
 \item{...}{additional arguments to \code{ImputeNetParallel}}
 }

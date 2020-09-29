@@ -4,14 +4,11 @@
 \alias{CenterData}
 \title{Data centering}
 \usage{
-CenterData(data, drop.exclude = TRUE)
+CenterData(data)
 }
 \arguments{
 \item{data}{matrix of gene expression to be centered row-wise (genes as rows
 and samples as columns)}
-
-\item{drop.exclude}{logical; should zeros be discarded for the calculation
-of genewise average expression levels? (defaults to TRUE)}
 }
 \value{
 list; row-wise centers and centered data

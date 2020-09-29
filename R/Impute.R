@@ -73,54 +73,44 @@ Combine <- function(data,
 
 #' @title Impute using average expression across all cells
 #'
-#' @usage ImputeBaseline(data, write = FALSE, drop.exclude = TRUE, ...)
+#' @usage ImputeBaseline(data, write = FALSE, ...)
 #'
 #' @description \code{ImputeBaseline} imputes dropouts using gene averages
-#' across cells
+#' across cells. Zero values are excluded from the mean computation.
 #'
 #' @param data matrix with entries equal to zero to be imputed, normalized
 #' and log2-transformed (genes as rows and samples as columns)
 #' @param write logical; should a file with the imputation results be written?
-#' @param drop.exclude logical; should zeros be discarded for the calculation
-#' of genewise average expression levels? (defaults to TRUE)
 #' @param ... additional arguments to \code{saveRDS}
 #'
 #' @return matrix; imputation results considering the average expression
 #' values of genes
 #'
-ImputeBaseline <- function(data,
-                           write = FALSE,
-                           drop.exclude = TRUE,
-                           ...){
+ImputeBaseline <- function(data, write = FALSE, ...){
 
-  cat("Imputing data using average expression\n")
+    cat("Imputing data using average expression\n")
 
-  dropouts <- data == 0
+    dropouts <- data == 0
 
-  # Compute mean expression levels across cells
-  if (drop.exclude){
+    # Compute mean expression levels across cells
     gene_avg <- apply(data, 1, function(x) mean(x[x != 0], na.rm = TRUE))
     gene_avg[is.na(gene_avg)] <- 0
 
-  } else{
-    gene_avg <- apply(data, 1, function(x) mean(x, na.rm = TRUE))
-  }
+    # Impute when dropout
+    gene_avg_mat <- matrix(data = gene_avg,
+                           nrow = nrow(data),
+                           ncol = ncol(data),
+                           byrow = FALSE,
+                           dimnames = dimnames(data))
+    res <- data
+    res[dropouts] <- gene_avg_mat[dropouts]
 
-  # Impute when dropout
-  gene_avg_mat <- matrix(data = gene_avg,
-                         nrow = nrow(data),
-                         ncol = ncol(data),
-                         byrow = FALSE,
-                         dimnames = dimnames(data))
-  res <- data
-  res[dropouts] <- gene_avg_mat[dropouts]
+    if (write){
+      dir.create("Baseline")
+      saveRDS(res, "Baseline/baseline_imputed.rds", ...)
+    }
 
-  if (write){
-    dir.create("Baseline")
-    saveRDS(res, "Baseline/baseline_imputed.rds", ...)
-  }
-
-  return(res)
+    return(res)
 }
 
 
@@ -159,7 +149,7 @@ ImputeDrImpute <- function(data, write = FALSE){
 #' @title Network-based imputation
 #'
 #' @usage ImputeNetwork(data, net.coef = NULL, network.path = NULL,
-#' cores = 4, type = "iteration", write = FALSE, drop.exclude = TRUE, ...)
+#' cores = 4, type = "iteration", write = FALSE, ...)
 #'
 #' @param data matrix with entries equal to zero to be imputed, normalized
 #' and log2-transformed (genes as rows and samples as columns)
@@ -171,8 +161,6 @@ ImputeDrImpute <- function(data, write = FALSE){
 #' @param type character; either "iteration", for an iterative solution, or
 #' "pseudoinv", to use Moore-Penrose pseudo-inversion as a solution.
 #' @param write logical; should a file with the imputation results be written?
-#' @param drop.exclude logical; should zeros be discarded for the calculation
-#' of genewise average expression levels? (defaults to TRUE)
 #' @param ... additional arguments to \code{ImputeNetParallel}
 #'
 #' @details Imputes dropouts using a gene regulatory network trained on external
@@ -190,45 +178,43 @@ ImputeNetwork <- function(data,
                           cores = 4,
                           type = "iteration",
                           write = FALSE,
-                          drop.exclude = TRUE,
                           ...){
 
-  cat("Imputing data using network information\n")
+    cat("Imputing data using network information\n")
 
-  # Check arguments
-  Check <- CreateArgCheck(match = list("type" = type),
-                          acceptable = list("type"=c("iteration","pseudoinv")))
-  ArgumentCheck::finishArgCheck(Check)
+    # Check arguments
+    Check <- CreateArgCheck(match = list("type" = type),
+                            acceptable = list("type"=c("iteration","pseudoinv")))
+    ArgumentCheck::finishArgCheck(Check)
 
-  # Limit data and network to genes common to both
-  arranged <- ArrangeData(data, network.path, net.coef)
+    # Limit data and network to genes common to both
+    arranged <- ArrangeData(data, network.path, net.coef)
 
-  cat("Data dim:", paste(dim(arranged$data), collapse = " x "), "\n")
-  cat("Network dim:", paste(dim(arranged$network), collapse = " x "), "\n")
+    cat("Data dim:", paste(dim(arranged$data), collapse = " x "), "\n")
+    cat("Network dim:", paste(dim(arranged$network), collapse = " x "), "\n")
 
-  # Center expression of each gene
-  centered <- CenterData(arranged$data, drop.exclude)
-  arranged$centered <- as.matrix(centered$data)
+    # Center expression of each gene
+    centered <- CenterData(arranged$data)
+    arranged$centered <- as.matrix(centered$data)
 
-  dropout_mat <- arranged$data == 0 # dropout indexes in the data matrix
+    dropout_mat <- arranged$data == 0 # dropout indexes in the data matrix
 
-  cat("Starting network-based imputation\n")
-  new_imp <- ImputeNetParallel(dropout_mat, arranged, cores, type, ...)
+    cat("Starting network-based imputation\n")
+    new_imp <- ImputeNetParallel(dropout_mat, arranged, cores, type, ...)
 
-  res <- data
-  # add back gene means
-  res[rownames(new_imp), ][dropout_mat[rownames(new_imp), ]] <-
-    (centered$center[rownames(new_imp)] + new_imp)[
-      dropout_mat[rownames(new_imp), ]]
+    res <- data
+    # add back gene means
+    res[rownames(new_imp), ][dropout_mat[rownames(new_imp), ]] <-
+        (centered$center[rownames(new_imp)] + new_imp)[
+            dropout_mat[rownames(new_imp), ]]
 
-  res[res < 0] <- 0
+    res[res < 0] <- 0
 
-  if (write){
-    dir.create("Network")
-    saveRDS(res, "Network/network_imputed.rds")
-  }
+    if (write){
+        dir.create("Network")
+        saveRDS(res, "Network/network_imputed.rds")}
 
-  return(res)
+    return(res)
 }
 
 

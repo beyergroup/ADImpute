@@ -21,6 +21,6 @@ library(ADImpute)
 
 For an example of the usage of the ADImpute package, follow the < 10min [tutorial](https://github.com/anacarolinaleote/ADImpute/blob/master/vignettes/ADImpute_tutorial.Rmd).
 
-ADImpute was developed in R 4.0.2, under Linux Mint 20, and tested in Linux, osX and Windows.
+ADImpute was developed in R 4.0.2, under Linux Mint 20, and tested in Linux, OS X and Windows.
 
 For further questions, please contact: ana.carolina.leote@uni-koeln.de

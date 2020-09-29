@@ -64,18 +64,14 @@ test_that("CenterData works", {
   expect_equivalent(CenterData(testdata)$center, rowMeans(testdata))
 
   # handles zeros as instructed
-  expect_equivalent(CenterData(testdata1, drop.exclude = TRUE)$center[3],
+  expect_equivalent(CenterData(testdata1)$center[3],
                     mean(testdata1[3,testdata1[3,] != 0]))
-  expect_equivalent(CenterData(testdata1, drop.exclude = TRUE)$data[3,],
+  expect_equivalent(CenterData(testdata1)$data[3,],
                     testdata1[3,] - mean(testdata1[3,testdata1[3,] != 0]))
-  expect_equivalent(CenterData(testdata1, drop.exclude = TRUE)$center[-3],
+  expect_equivalent(CenterData(testdata1)$center[-3],
                     rowMeans(testdata)[-3])
-  expect_equivalent(CenterData(testdata1, drop.exclude = TRUE)$data[-3,],
+  expect_equivalent(CenterData(testdata1)$data[-3,],
                     CenterData(testdata)$data[-3,])
-  expect_equivalent(CenterData(testdata1, drop.exclude = FALSE)$center,
-                    rowMeans(testdata1))
-  expect_equivalent(CenterData(testdata1, drop.exclude = FALSE)$data,
-                    testdata1 - rowMeans(testdata1))
 })
 
 

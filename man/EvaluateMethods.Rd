@@ -10,8 +10,7 @@ outdir = getwd(), scale = 1, pseudo.count = 1, labels = NULL,
 cell.clusters = 2, drop_thre = NULL, type = "count", cores = 4,
 net.coef = NULL, network.path = system.file("extdata",
 "network.coefficients.zip", package="ADImpute"), net.implementation =
-"iteration", tr.length = ADImpute::transcript_length, drop.exclude = TRUE,
-bulk = NULL, ...)
+"iteration", tr.length = ADImpute::transcript_length, bulk = NULL, ...)
 }
 \arguments{
 \item{data}{matrix; normalized counts, not logged (genes as rows and samples
@@ -65,9 +64,6 @@ solution.}
 
 \item{tr.length}{matrix with at least 2 columns: "hgnc_symbol" and
 "transcript_length"}
-
-\item{drop.exclude}{logical; should zeros be discarded for the calculation
-of genewise average expression levels? (defaults to TRUE)}
 
 \item{bulk}{vector of reference bulk RNA-seq, if available (average across
 samples)}

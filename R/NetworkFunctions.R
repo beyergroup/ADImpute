@@ -77,36 +77,30 @@ ArrangeData <- function(data,
 
 #' @title Data centering
 #'
-#' @usage CenterData(data, drop.exclude = TRUE)
+#' @usage CenterData(data)
 #'
 #' @description \code{CenterData} centers expression of each gene at 0
 #'
 #' @param data matrix of gene expression to be centered row-wise (genes as rows
 #' and samples as columns)
-#' @param drop.exclude logical; should zeros be discarded for the calculation
-#' of genewise average expression levels? (defaults to TRUE)
 #'
 #' @return list; row-wise centers and centered data
 #'
-CenterData <- function(data, drop.exclude = TRUE){
+CenterData <- function(data){
 
-  cat("Centering expression of each gene at 0\n")
+    cat("Centering expression of each gene at 0\n")
 
-  if (drop.exclude){
+
     center <- apply(data, 1, function(x) mean(x[x != 0], na.rm = TRUE))
     center[is.na(center)] <- 0
     center <- round(center, 2)
 
-  } else{
-    center <- round(apply(data, 1, function(x) mean(x, na.rm = TRUE)), 2)
-  }
+    names(center) <- rownames(data)
 
-  names(center) <- rownames(data)
+    data <- data - center
 
-  data <- data - center
-
-  return(list("center" = center,
-              "data"   = data))
+    return(list("center" = center,
+                "data"   = data))
 }
 
 

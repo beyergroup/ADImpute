@@ -72,6 +72,63 @@ GetDropoutProbabilities <- function(data, thre, cell.clusters = 2,
 }
 
 
+#' @title Get dropout probabilities
+#'
+#' @description \code{GetDropoutProbabilities} computes dropout probabilities
+#' (probability of being a dropout that should be imputed rather than a true
+#' biological zero) using an adaptation of scImpute's approach
+#'
+#' @usage HandleBiologicalZeros(data, imputed, thre = 0.5, cell.clusters,
+#' labels = NULL, type = "count", ncores, genelen = ADImpute::transcript_length,
+#' prob.mat = NULL)
+#'
+#' @param data matrix; original data before imputation
+#' @param imputed list; imputation results for considered methods
+#' @param thre numeric; between 0 and 1 specifying the threshold to determine
+#' dropout values
+#' @param cell.clusters integer; number of cell subpopulations
+#' @param labels character; vector specifying the cell type of each column of
+#' \code{data}
+#' @param type A character specifying the type of values in the expression
+#' matrix. Can be "count" or "TPM"
+#' @param ncores integer; number of cores used for paralell computation
+#' @param genelen matrix with at least 2 columns: "hgnc_symbol" and
+#' "transcript_length"
+#' @param prob.mat matrix with same dimensions as \code{data} containing the
+#' dropout probabilities for the corresponding entries
+#'
+#' @details This function follows scImpute's model to distinguish between
+#' true biological zeros and dropouts, and is based on adapted code from the
+#' scImpute R package.
+#'
+#' @return list with 2 components: \code{zerofiltered}, a list equivalent to
+#' \code{imputed} but with entries of imputed likely biological zeros set back
+#' to zero, and \code{dropoutprobabilities}
+#' matrix with same dimensions as \code{data} containing the dropout
+#' probabilities for the corresponding entries
+#'
+HandleBiologicalZeros <- function(data, imputed, thre = 0.5, cell.clusters,
+                                  labels = NULL, type = "count", ncores,
+                                  genelen = ADImpute::transcript_length,
+                                  prob.mat = NULL){
+
+    # the probability is not given - compute it
+    if(is.null(prob.mat))
+        prob.mat <- GetDropoutProbabilities(data = data, thre = thre,
+                                            cell.clusters = cell.clusters,
+                                            labels = labels, type = type,
+                                            ncores = ncores, genelen = genelen)
+    # use probability matrix
+    cl <- parallel::makeCluster(ncores)
+    zerofiltered <- parallel::parLapply(cl, imputed, SetBiologicalZeros,
+                                        drop_probs = prob.mat, thre = thre,
+                                        was_zero = data == 0)
+    parallel::stopCluster(cl)
+
+    return(list("zerofiltered" = zerofiltered,
+                "dropoutprobabilities" = prob.mat))
+}
+
 
 #' @title Set biological zeros
 #'

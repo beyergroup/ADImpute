@@ -9,8 +9,8 @@ method.choice = NULL, scale = 1, pseudo.count = 1, labels = NULL,
 cell.clusters = 2, drop_thre = NULL, type = "count",
 tr.length = ADImpute::transcript_length, cores = 4, net.coef = NULL,
 network.path = system.file("extdata", "network.coefficients.zip",
-package = "ADImpute"), net.implementation = "iteration", drop.exclude = TRUE,
-bulk = NULL, true.zero.thr = NULL, prob.mat = NULL, ...)
+package = "ADImpute"), net.implementation = "iteration", bulk = NULL,
+true.zero.thr = NULL, prob.mat = NULL, ...)
 }
 \arguments{
 \item{data}{matrix; raw counts (genes as rows and samples as columns)}
@@ -60,9 +60,6 @@ coefficients. Defaults to the zip file included in ADImpute installation}
 \item{net.implementation}{character; either "iteration", for an iterative
 solution, or "pseudoinv", to use Moore-Penrose pseudo-inversion as a
 solution.}
-
-\item{drop.exclude}{logical; should zeros be discarded for the calculation
-of genewise average expression levels? (defaults to TRUE)}
 
 \item{bulk}{vector of reference bulk RNA-seq, if available (average across
 samples)}
