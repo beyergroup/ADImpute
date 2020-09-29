@@ -90,26 +90,26 @@ CheckArguments_Impute <- function(data, method.choice, do, tr.length,
 #'
 DataCheck_Matrix <- function(data){
 
-  # check format
-  if(!is.matrix(data)){
-    cat("Converting input to matrix.\n")
-    data <- as.matrix(data)
-  }
+    # check format
+    if(!is.matrix(data)){
+        cat("Converting input to matrix.\n")
+        data <- as.matrix(data)
+    }
 
-  # check if entries are numeric
-  if(!is.numeric(data)){stop("Input must be numeric.\n")}
+    # check if entries are numeric
+    if(!is.numeric(data)){stop("Input must be numeric.\n")}
 
-  # check dimnames
-  if(any(is.null(dimnames(data)))){stop("Input has NULL dimnames.\n")}
+    # check dimnames
+    if(any(is.null(dimnames(data)))){stop("Input has NULL dimnames.\n")}
 
-  # look for NAs
-  if(any(is.na(data))){
-    cat("Converting NAs to zero.\n")
-    if(all(is.na(data))){stop("Input has only NAs.\n")}
-    data[is.na(data)] <- 0
-  }
+    # look for NAs
+    if(any(is.na(data))){
+        cat("Converting NAs to zero.\n")
+        if(all(is.na(data))){stop("Input has only NAs.\n")}
+        data[is.na(data)] <- 0
+    }
 
-  return(data)
+    return(data)
 }
 
 
@@ -126,24 +126,21 @@ DataCheck_Matrix <- function(data){
 #'
 DataCheck_Network <- function(network){
 
-  # 1st column is O
-  if(colnames(network)[1] != "O")
-    stop("First column of network matrix must be the intercept (O).\n")
+    # 1st column is O
+    if(colnames(network)[1] != "O")
+        stop("First column of network matrix must be the intercept (O).\n")
 
-  # is a matrix
-  if(!is.matrix(network)){
-    cat("Converting network to matrix.\n")
-    network <- as.matrix(network)
-  }
+    # is a matrix
+    if(!methods::is(network, 'sparseMatrix')){
+        cat("Converting network to dgCMatrix.\n")
+        network <- methods::as(network, "dgCMatrix")
+    }
 
-  # contents are numeric
-  storage.mode(network) <- "numeric"
+    # contents are not all 0
+    if(!(any(network != 0)))
+        stop("No non-zero coefficients in network matrix.\n")
 
-  # contents are not all 0
-  if(!(any(network != 0)))
-    stop("No non-zero coefficients in network matrix.\n")
-
-  return(network)
+    return(network)
 }
 
 
@@ -161,31 +158,31 @@ DataCheck_Network <- function(network){
 #'
 DataCheck_TrLength <- function(trlength){
 
-  # coerce to data.frame
-  if(!is.data.frame(trlength)){
-    cat("Converting input to data.frame.\n")
-    trlength <- as.data.frame(trlength)
-  }
+    # coerce to data.frame
+    if(!is.data.frame(trlength)){
+        cat("Converting input to data.frame.\n")
+        trlength <- as.data.frame(trlength)
+    }
 
-  if(nrow(trlength) < 1)
-    stop("Not enough rows in transcript length data.\n")
+    if(nrow(trlength) < 1)
+        stop("Not enough rows in transcript length data.\n")
 
-  # check if required colnames are present
-  if(!all(c("hgnc_symbol","transcript_length") %in% colnames(trlength)))
-    stop(cat("Transcript length data must contain the following colnames:",
-             "hgnc_symbol, transcript_length\n"))
+    # check if required colnames are present
+    if(!all(c("hgnc_symbol","transcript_length") %in% colnames(trlength)))
+        stop(cat("Transcript length data must contain the following colnames:",
+                 "hgnc_symbol, transcript_length\n"))
 
-  # check if columns have the right format
-  if(!(is.factor(trlength$hgnc_symbol) | is.character(trlength$hgnc_symbol)))
-    stop("hgnc_symbol column must be character/factor.\n")
+    # check if columns have the right format
+    if(!(is.factor(trlength$hgnc_symbol) | is.character(trlength$hgnc_symbol)))
+        stop("hgnc_symbol column must be character/factor.\n")
 
-  storage.mode(trlength$transcript_length) <- "numeric"
+    storage.mode(trlength$transcript_length) <- "numeric"
 
-  # remove lines with "" hgnc_symbol
-  hgnc_symbol <- NULL # get rid of check note
-  trlength <- subset(trlength, subset = hgnc_symbol != "")
-  if(nrow(trlength) < 1)
-    stop("Not enough non-empty gene symbols in transcript length data.\n")
+    # remove lines with "" hgnc_symbol
+    hgnc_symbol <- NULL # get rid of check note
+    trlength <- subset(trlength, subset = hgnc_symbol != "")
+    if(nrow(trlength) < 1)
+        stop("Not enough non-empty gene symbols in transcript length data.\n")
 
-  return(trlength)
+    return(trlength)
 }

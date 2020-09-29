@@ -8,9 +8,8 @@ Impute(data, do = "Ensemble", write = FALSE, outdir = getwd(),
 method.choice = NULL, scale = 1, pseudo.count = 1, labels = NULL,
 cell.clusters = 2, drop_thre = NULL, type = "count",
 tr.length = ADImpute::transcript_length, cores = 4, net.coef = NULL,
-network.path = system.file("extdata", "network.coefficients.zip",
-package = "ADImpute"), net.implementation = "iteration", bulk = NULL,
-true.zero.thr = NULL, prob.mat = NULL, ...)
+net.implementation = "iteration", bulk = NULL, true.zero.thr = NULL,
+prob.mat = NULL, ...)
 }
 \arguments{
 \item{data}{matrix; raw counts (genes as rows and samples as columns)}
@@ -51,11 +50,11 @@ matrix. Can be "count" or "TPM"}
 
 \item{cores}{integer; number of cores used for paralell computation}
 
-\item{net.coef}{matrix; network coefficients. Please provide
-either \code{net.coef} or \code{network.path}.}
-
-\item{network.path}{character; path to .txt or .rds file with network
-coefficients. Defaults to the zip file included in ADImpute installation}
+\item{net.coef}{matrix; network coefficients. Please provide if you don't
+want to use ADImpute's network model. Must contain one first column "O"
+acconting for the intercept of the model and otherwise be an adjacency matrix
+with hgnc_symbols in rows and columns. Doesn't have to be squared. See
+\code{ADImpute::demo_net} for a small example.}
 
 \item{net.implementation}{character; either "iteration", for an iterative
 solution, or "pseudoinv", to use Moore-Penrose pseudo-inversion as a
@@ -123,7 +122,7 @@ net.implementation = "pseudoinv", net.coef = ADImpute::demo_net,
 cores = 2)
 # Don't impute biological zeros
 imputed_data <- Impute(do = "Baseline", data = norm_data, cores = 2,
-true.zero.thr = .2)
+net.coef = ADImpute::demo_net, true.zero.thr = .2)
 
 }
 \seealso{

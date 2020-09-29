@@ -20,6 +20,18 @@
 #'
 "demo_net"
 
+#' @title Transcriptome wide gene regulatory network
+#'
+#' @description Gene Regulatory Network used by ADImpute's Network imputation
+#' method. First column, \code{O}, corresponds to the intercept of a gene-
+#' -specific predicion model. The remaining rows and columns correspond to the
+#' adjacency matrix of the inferred network, where rows are target genes and
+#' columns are predictors. Genes are identified by their hgnc_symbol.
+#'
+#' @format dgCMatrix
+#'
+"network.coefficients"
+
 #' @title Table for transcript length calculations
 #'
 #' @description A data.frame to be used for transcript length computations.

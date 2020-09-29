@@ -22,6 +22,8 @@ Imports:
     DrImpute,
     kernlab,
     MASS,
+    Matrix,
+    methods,
     parallel,
     rsvd,
     SAVER,

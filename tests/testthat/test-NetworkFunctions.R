@@ -10,10 +10,8 @@ test_that("ArrangeData works", {
 
   # throws error when path to coefficients is not given
   expect_error(ArrangeData(testdata),
-               "Please provide a valid path for network coefficients.\n")
+               "Please provide valid network coefficients.\n")
   # when path to coefficients is invalid
-  expect_error(ArrangeData(testdata, network.path = "123/abc.zip"),
-               "Please provide a valid path for network coefficients.\n")
 
   # returns a list
   expect_is(ArrangeData(testdata, net.coef = testnet), "list")
@@ -24,7 +22,7 @@ test_that("ArrangeData works", {
   expect_is(ArrangeData(testdata, net.coef = testnet)$O,
             "numeric")
   expect_is(ArrangeData(testdata, net.coef = testnet)$network,
-            "matrix")
+            "dgCMatrix")
   expect_is(ArrangeData(testdata, net.coef = testnet)$data,
             "matrix")
 

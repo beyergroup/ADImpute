@@ -148,15 +148,12 @@ ImputeDrImpute <- function(data, write = FALSE){
 
 #' @title Network-based imputation
 #'
-#' @usage ImputeNetwork(data, net.coef = NULL, network.path = NULL,
-#' cores = 4, type = "iteration", write = FALSE, ...)
+#' @usage ImputeNetwork(data, net.coef = NULL, cores = 4, type = "iteration",
+#' write = FALSE, ...)
 #'
 #' @param data matrix with entries equal to zero to be imputed, normalized
 #' and log2-transformed (genes as rows and samples as columns)
-#' @param net.coef matrix; network coefficients. Please provide
-#' either \code{net.coef} or \code{network.path}.
-#' @param network.path character; path to .txt or .rds file with network
-#' coefficients
+#' @param net.coef matrix; network coefficients.
 #' @param cores integer; number of cores to use
 #' @param type character; either "iteration", for an iterative solution, or
 #' "pseudoinv", to use Moore-Penrose pseudo-inversion as a solution.
@@ -164,7 +161,7 @@ ImputeDrImpute <- function(data, write = FALSE){
 #' @param ... additional arguments to \code{ImputeNetParallel}
 #'
 #' @details Imputes dropouts using a gene regulatory network trained on external
-#' data, as provided in \code{network.path}. Dropout expression values are
+#' data, as provided in \code{net.coef}. Dropout expression values are
 #' estimated from the expression of their predictor genes and the network
 #' coefficients.
 #'
@@ -174,7 +171,6 @@ ImputeDrImpute <- function(data, write = FALSE){
 #'
 ImputeNetwork <- function(data,
                           net.coef = NULL,
-                          network.path = NULL,
                           cores = 4,
                           type = "iteration",
                           write = FALSE,
@@ -188,7 +184,7 @@ ImputeNetwork <- function(data,
     ArgumentCheck::finishArgCheck(Check)
 
     # Limit data and network to genes common to both
-    arranged <- ArrangeData(data, network.path, net.coef)
+    arranged <- ArrangeData(data, net.coef)
 
     cat("Data dim:", paste(dim(arranged$data), collapse = " x "), "\n")
     cat("Network dim:", paste(dim(arranged$network), collapse = " x "), "\n")
@@ -199,7 +195,7 @@ ImputeNetwork <- function(data,
 
     dropout_mat <- arranged$data == 0 # dropout indexes in the data matrix
 
-    cat("Starting network-based imputation\n")
+    cat("Calling network-based imputation\n")
     new_imp <- ImputeNetParallel(dropout_mat, arranged, cores, type, ...)
 
     res <- data

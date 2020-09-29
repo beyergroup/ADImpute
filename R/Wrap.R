@@ -24,9 +24,8 @@
 #' write = FALSE, train.ratio = .7, train.only = TRUE, mask.ratio = .1,
 #' outdir = getwd(), scale = 1, pseudo.count = 1, labels = NULL,
 #' cell.clusters = 2, drop_thre = NULL, type = "count", cores = 4,
-#' net.coef = NULL, network.path = system.file("extdata",
-#' "network.coefficients.zip", package="ADImpute"), net.implementation =
-#' "iteration", tr.length = ADImpute::transcript_length, bulk = NULL, ...)
+#' net.coef = ADImpute::network.coefficients, net.implementation = "iteration",
+#' tr.length = ADImpute::transcript_length, bulk = NULL, ...)
 #'
 #' @description \code{EvaluateMethods} returns the best-performing imputation
 #' method for each gene in the dataset
@@ -56,10 +55,11 @@
 #' @param type A character specifying the type of values in the expression
 #' matrix. Can be "count" or "TPM"
 #' @param cores integer; number of cores used for paralell computation
-#' @param net.coef matrix; network coefficients. Please provide
-#' either \code{net.coef} or \code{network.path}.
-#' @param network.path character; path to .txt or .rds file with network
-#' coefficients. Defaults to the zip file included in ADImpute installation
+#' @param net.coef matrix; network coefficients. Please provide if you don't
+#' want to use ADImpute's network model. Must contain one first column "O"
+#' acconting for the intercept of the model and otherwise be an adjacency matrix
+#' with hgnc_symbols in rows and columns. Doesn't have to be squared. See
+#' \code{ADImpute::demo_net} for a small example.
 #' @param net.implementation character; either "iteration", for an iterative
 #' solution, or "pseudoinv", to use Moore-Penrose pseudo-inversion as a
 #' solution.
@@ -82,8 +82,7 @@
 #' # Normalize demo data
 #' norm_data <- NormalizeRPM(ADImpute::demo_data)
 #' method_choice <- EvaluateMethods(norm_data, do = c("Baseline","DrImpute"),
-#' outdir = tempdir())
-#' unlink(file.path(tempdir(),"ADImpute"), recursive = TRUE, force = TRUE)
+#' cores = 2)
 #'
 #' @seealso \code{\link{ImputeBaseline}},
 #' \code{\link{ImputeDrImpute}},
@@ -95,11 +94,10 @@ EvaluateMethods <- function(data, do = c("Baseline", "DrImpute", "Network"),
                         write = FALSE, train.ratio = .7, train.only = TRUE,
                         mask.ratio = .1, outdir = getwd(), scale = 1,
                         pseudo.count = 1, labels = NULL, cell.clusters = 2,
-                        drop_thre = NULL, type = "count", cores = 4,
-                        net.coef = NULL, network.path = system.file("extdata",
-                            "network.coefficients.zip", package="ADImpute"),
-                        net.implementation = "iteration", tr.length =
-                            ADImpute::transcript_length, bulk = NULL, ...){
+                        drop_thre = NULL, type = "count", cores = 4, net.coef =
+                          ADImpute::network.coefficients, net.implementation =
+                          "iteration", tr.length = ADImpute::transcript_length,
+                        bulk = NULL, ...){
 
     # Check arguments
     Check <- CreateArgCheck(missing = list("data" = missing(data)),
@@ -126,9 +124,7 @@ EvaluateMethods <- function(data, do = c("Baseline", "DrImpute", "Network"),
                           drop_thre = drop_thre, type = type,
                           tr.length = tr.length, #
                           bulk = bulk, # SCRABBLE argument
-                          cores = cores,
-                          net.coef = net.coef,
-                          network.path = network.path,
+                          cores = cores, net.coef = net.coef,
                           net.implementation = net.implementation, ...)
 
   # Run optimum choice
@@ -145,9 +141,8 @@ EvaluateMethods <- function(data, do = c("Baseline", "DrImpute", "Network"),
 #' @usage Impute(data, do = "Ensemble", write = FALSE, outdir = getwd(),
 #' method.choice = NULL, scale = 1, pseudo.count = 1, labels = NULL,
 #' cell.clusters = 2, drop_thre = NULL, type = "count",
-#' tr.length = ADImpute::transcript_length, cores = 4, net.coef = NULL,
-#' network.path = system.file("extdata", "network.coefficients.zip",
-#' package = "ADImpute"), net.implementation = "iteration", bulk = NULL,
+#' tr.length = ADImpute::transcript_length, cores = 4, net.coef =
+#' ADImpute::network.coefficients, net.implementation = "iteration", bulk = NULL,
 #' true.zero.thr = NULL, prob.mat = NULL, ...)
 #'
 #' @description \code{Impute} performs dropout imputation based on the
@@ -179,10 +174,11 @@ EvaluateMethods <- function(data, do = c("Baseline", "DrImpute", "Network"),
 #' @param tr.length matrix with at least 2 columns: "hgnc_symbol" and
 #' "transcript_length"
 #' @param cores integer; number of cores used for paralell computation
-#' @param net.coef matrix; network coefficients. Please provide
-#' either \code{net.coef} or \code{network.path}.
-#' @param network.path character; path to .txt or .rds file with network
-#' coefficients. Defaults to the zip file included in ADImpute installation
+#' @param net.coef matrix; network coefficients. Please provide if you don't
+#' want to use ADImpute's network model. Must contain one first column "O"
+#' acconting for the intercept of the model and otherwise be an adjacency matrix
+#' with hgnc_symbols in rows and columns. Doesn't have to be squared. See
+#' \code{ADImpute::demo_net} for a small example.
 #' @param net.implementation character; either "iteration", for an iterative
 #' solution, or "pseudoinv", to use Moore-Penrose pseudo-inversion as a
 #' solution.
@@ -238,7 +234,7 @@ EvaluateMethods <- function(data, do = c("Baseline", "DrImpute", "Network"),
 #' cores = 2)
 #' # Don't impute biological zeros
 #' imputed_data <- Impute(do = "Baseline", data = norm_data, cores = 2,
-#' true.zero.thr = .2)
+#' net.coef = ADImpute::demo_net, true.zero.thr = .2)
 #'
 #' @seealso \code{\link{EvaluateMethods}},
 #' \code{\link{ImputeBaseline}},
@@ -251,9 +247,8 @@ EvaluateMethods <- function(data, do = c("Baseline", "DrImpute", "Network"),
 Impute <- function(data, do = "Ensemble", write = FALSE, outdir = getwd(),
             method.choice = NULL, scale = 1, pseudo.count = 1,
             labels = NULL, cell.clusters = 2, drop_thre = NULL, type = "count",
-            tr.length = ADImpute::transcript_length, cores = 4, net.coef = NULL,
-            network.path = system.file("extdata", "network.coefficients.zip",
-                package="ADImpute"), net.implementation = "iteration",
+            tr.length = ADImpute::transcript_length, cores = 4, net.coef =
+              ADImpute::network.coefficients, net.implementation = "iteration",
             bulk = NULL, true.zero.thr = NULL, prob.mat = NULL, ...){
 
     # Check arguments
@@ -286,7 +281,7 @@ Impute <- function(data, do = "Ensemble", write = FALSE, outdir = getwd(),
       imputed$Baseline <- ImputeBaseline(log_masked_norm, write = write)
     if("network" %in% tolower(do))
       imputed$Network <- ImputeNetwork(log_masked_norm, net.coef,
-          network.path, type = net.implementation, cores, write  = write, ...)
+                          type = net.implementation, cores, write  = write, ...)
     if("drimpute" %in% tolower(do))
         imputed$DrImpute <- ImputeDrImpute(log_masked_norm, write = write)
     if("ensemble" %in% tolower(do))

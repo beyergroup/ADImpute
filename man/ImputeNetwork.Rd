@@ -4,18 +4,14 @@
 \alias{ImputeNetwork}
 \title{Network-based imputation}
 \usage{
-ImputeNetwork(data, net.coef = NULL, network.path = NULL,
-cores = 4, type = "iteration", write = FALSE, ...)
+ImputeNetwork(data, net.coef = NULL, cores = 4, type = "iteration",
+write = FALSE, ...)
 }
 \arguments{
 \item{data}{matrix with entries equal to zero to be imputed, normalized
 and log2-transformed (genes as rows and samples as columns)}
 
-\item{net.coef}{matrix; network coefficients. Please provide
-either \code{net.coef} or \code{network.path}.}
-
-\item{network.path}{character; path to .txt or .rds file with network
-coefficients}
+\item{net.coef}{matrix; network coefficients.}
 
 \item{cores}{integer; number of cores to use}
 
@@ -34,7 +30,7 @@ Network-based imputation
 }
 \details{
 Imputes dropouts using a gene regulatory network trained on external
-data, as provided in \code{network.path}. Dropout expression values are
+data, as provided in \code{net.coef}. Dropout expression values are
 estimated from the expression of their predictor genes and the network
 coefficients.
 }

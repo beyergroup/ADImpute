@@ -20,58 +20,42 @@
 
 #' @title Data trimming
 #'
-#' @usage ArrangeData(data, network.path = NULL, net.coef = NULL)
+#' @usage ArrangeData(data, net.coef = NULL)
 #'
 #' @description \code{ArrangeData} finds common genes to the network and
 #' provided data and limits both datasets to these
 #'
 #' @param data matrix with entries equal to zero to be imputed (genes as rows
 #' and samples as columns)
-#' @param network.path character; path to .txt, .rds or .zip file with network
-#' coefficients
 #' @param net.coef matrix; object containing network coefficients
 #'
 #' @return list; data matrix, network coefficients matrix and intercept for
 #' genes common between the data matrix and the network
 #'
-ArrangeData <- function(data,
-                        network.path = NULL,
-                        net.coef = NULL){
+ArrangeData <- function(data, net.coef = NULL){
 
-  if(is.null(data))
-    stop("Please provide an input data matrix.\n")
+    if(is.null(data))
+        stop("Please provide an input data matrix.\n")
 
-  if(is.null(net.coef)){
-    if(is.null(network.path)){
-      stop("Please provide a valid path for network coefficients.\n")
-    } else{
-      if(!file.exists(network.path))
-        stop("Please provide a valid path for network coefficients.\n")
-      net.coef <- ReadNetwork(network.path)
-    }
-  } else{
-    if(!is.null(network.path))
-      cat("Ignoring path to network coefficients and using provided matrix.\n")
-  }
+    if(is.null(net.coef))
+        stop("Please provide valid network coefficients.\n")
 
-  data <- DataCheck_Matrix(data)
-  net.coef <- DataCheck_Network(net.coef)
+    data <- DataCheck_Matrix(data)
+    net.coef <- DataCheck_Network(net.coef)
 
-  O <- net.coef[,1] # network intercept
-  network_matrix <- net.coef[,-1] # network coefficients
+    O <- net.coef[,1] # network intercept
+    network_matrix <- net.coef[,-1] # network coefficients
 
-  comm_targ <- intersect(rownames(network_matrix), rownames(data))
-  comm_pred <- intersect(colnames(network_matrix), rownames(data))
+    comm_targ <- intersect(rownames(network_matrix), rownames(data))
+    comm_pred <- intersect(colnames(network_matrix), rownames(data))
 
-  comm <- union(comm_targ, comm_pred)
+    comm <- union(comm_targ, comm_pred)
 
-  network_matrix <- round(network_matrix[comm_targ, comm_pred], 2)
-  O              <- round(O[comm_targ], 2)
-  data           <- data[comm, ]
+    network_matrix <- round(network_matrix[comm_targ, comm_pred], 2)
+    O <- round(O[comm_targ], 2)
+    data <- data[comm, ]
 
-  return(list("data"    = data,
-              "network" = network_matrix,
-              "O"       = O))
+    return(list("data" = data, "network" = network_matrix, "O" = O))
 }
 
 
@@ -131,8 +115,8 @@ ImputeNetParallel <- function(dropout.matrix,
 
   dropouts <- intersect(rownames(dropout.matrix)[rowSums(dropout.matrix) != 0],
                         rownames(arranged$network)) # dropouts in >= 1 cell
-  predictors <- colnames(arranged$network)[
-    colSums(arranged$network[dropouts, ]) != 0] # all available predictors
+  predictors <- colnames(arranged$network)[Matrix::colSums(
+    arranged$network[dropouts, ]) != 0] # all available predictors
 
   arranged$network <- arranged$network[dropouts, predictors]
 
@@ -190,7 +174,7 @@ ImputeNonPredictiveDropouts <- function(net, expr){
   if(!all(colnames(net) %in% names(expr)))
     stop("Not all predictors are included in the expression vector.\n")
 
-  net <- net[ ,which(colSums(net != 0) != 0)]
+  net <- net[ ,which(Matrix::colSums(net != 0) != 0)]
   solution <- net%*%expr[colnames(net)]
 
   return(solution)
@@ -225,14 +209,14 @@ ImputePredictiveDropouts <- function(net, thr = 0.01, expr){
 
   # I - squared_A can be inverted
   cat("Computing pseudoinverse\n")
-  pinv <- MASS::ginv(diag(nrow(squared_A))-squared_A, tol = thr)
+  pinv <- MASS::ginv(diag(nrow(squared_A))-as.matrix(squared_A), tol = thr)
   dimnames(pinv) <- dimnames(squared_A)
   rm(squared_A); gc()
 
   # find C (quantified predictors)
   cat("Computing constant contribution C\n")
-  net <- net[ ,!(colnames(net) %in% rownames(net)), drop = FALSE]
-  net <- net[ ,colSums(net != 0) != 0, drop = FALSE]
+  net <- net[ , !(colnames(net) %in% rownames(net)), drop = FALSE]
+  net <- net[ , Matrix::colSums(net != 0) != 0, drop = FALSE]
   C <- net%*%expr[colnames(net)]
   rm(net); gc()
 
@@ -267,7 +251,7 @@ PseudoInverseSolution_percell <- function(expr, net, drop_ind, thr = 0.01){
              intersect(colnames(net), names(expr))]
 
   # restrict to predictors that are predictive of the dropouts
-  net <- net[,which(colSums(net != 0) != 0)]
+  net <- net[,which(Matrix::colSums(net != 0) != 0)]
 
   # dropouts can themselves be predictors of other genes:
   # Y_drop = A_drop*Y_drop + A_quant*Y_quant
@@ -297,58 +281,3 @@ PseudoInverseSolution_percell <- function(expr, net, drop_ind, thr = 0.01){
   return(final)
 }
 
-
-#' @title Network loading
-#'
-#' @usage ReadNetwork(network.path)
-#'
-#' @description \code{ReadNetwork} loads the matrix of network coefficients
-#'
-#' @param network.path character; path to .txt, .rds or .zip file with network
-#' coefficients
-#'
-#' @return matrix with network coefficients and intercept in the first column
-#'
-ReadNetwork <- function(network.path){
-
-  if (grepl(network.path, pattern = ".txt")){
-
-    cat("Reading .txt file with network coefficients\n")
-
-    m <- readLines(network.path)
-    cnames <- m[1]
-    cnames <- strsplit(cnames, split = "\t")[[1]]
-    # mm <- sapply(m[-1], function(x) strsplit(x, split = "\t")[[1]],
-    #              simplify = TRUE, USE.NAMES = FALSE)
-    mm <- lapply(list(m[-1]), function(x) strsplit(x, split = "\t")[[1]])
-    mm <- do.call(rbind, mm)
-    # mm <- t(mm)
-    rnames <- mm[,1]
-    mm <- mm[,-1]
-    storage.mode(mm) <- "numeric"
-    rownames(mm) <- rnames
-    colnames(mm) <- cnames
-
-    return(mm)
-
-  } else if (grepl(network.path, pattern = ".rds")){
-
-    cat("Reading .rds file with network coefficients\n")
-
-    load(network.path)
-
-    return(net.coef)
-
-  } else if (grepl(network.path, pattern = ".zip")){
-
-    cat("Reading .zip file with network coefficients\n")
-    net.coef <- utils::read.table(unz(network.path,
-                                                  "network.coefficients.txt"))
-
-    return(as.matrix(net.coef))
-
-  } else{
-    stop("Please input txt, rds or zip file\n")
-  }
-
-}
