@@ -17,32 +17,63 @@
 #'
 CreateArgCheck <- function(missing = NULL, match = NULL, acceptable = NULL){
 
-  Check <- ArgumentCheck::newArgCheck()
+    Check <- ArgumentCheck::newArgCheck()
 
-  # errors for missing arguments
-  if(!is.null(missing)){
-    for(varname in names(missing)){
-      if(missing[[varname]]){
-        ArgumentCheck::addError(paste("A value for ", varname,
-                                      " was not provided", sep = "'"),
-                                Check)
-      }
-    }
-  }
+    # errors for missing arguments
+    if(!is.null(missing)){
+      for(varname in names(missing)){
+        if(missing[[varname]]){
+          ArgumentCheck::addError(paste("A value for ", varname,
+                                        " was not provided", sep = "'"),
+                                  Check)}}}
 
-  # errors for arguments outside of predefined options
-  if(!(is.null(match)) & !(is.null(acceptable))){
-    for(varname in names(match)){
-     if(!(match[[varname]] %in% acceptable[[varname]]))
-        ArgumentCheck::addError(paste(NULL, varname, " must be one of ",
-                                      paste(acceptable[[varname]],
-                                            collapse = "', '"),
-                                      NULL, sep = "'"),
-                                Check)
-    }
-  }
+    # errors for arguments outside of predefined options
+    if(!(is.null(match)) & !(is.null(acceptable))){
+        for(varname in names(match)){
+            if(!(match[[varname]] %in% acceptable[[varname]]))
+                ArgumentCheck::addError(paste(NULL, varname," must be one of ",
+                                              paste(acceptable[[varname]],
+                                              collapse = "', '"),
+                                              NULL, sep = "'"), Check)}}
+
+    # errors for classes
 
   return(Check)
+}
+
+
+CheckArguments_Impute <- function(data, method.choice, do, tr.length,
+                                  labels, cell.clusters, true.zero.thr,
+                                  drop_thre){
+
+    if (is.null(tr.length))
+        tr.length <- ADImpute::transcript_length
+
+    if(is.null(method.choice) & ("ensemble" %in% tolower(do))){
+        stop(paste0("Please provide method.choice for Ensemble imputation. ",
+                    "Consider running EvaluateMethods()\n"))
+    }
+
+    if(is.null(labels) & is.null(cell.clusters))
+        stop(paste0("Please provide cell type labels ('labels') or number of",
+                    " cell clusters ('cell.clusters')\n"))
+
+    l <- tolower(do) %in% c("baseline","drimpute","ensemble","network","saver",
+                            "scimpute","scrabble")
+    if(any(!l))
+        warning(paste0("The following methods were detected as input but are",
+                       " not supported and will be ignored: ",
+                       paste(names(l)[!l], collapse = ", ")))
+
+    if(!is.null(true.zero.thr)){
+        if((true.zero.thr < 0) | (true.zero.thr > 1))
+            stop("true.zero.thr must be a numeric between 0 and 1")}
+    if(!is.null(drop_thre)){
+        if((drop_thre < 0) | (drop_thre > 1))
+            stop("drop_thre must be a numeric between 0 and 1")
+    }
+
+  return(NULL)
 }
 
 
@@ -118,9 +149,9 @@ DataCheck_Network <- function(network){
 
 #' @title Data check (transcript length)
 #'
-#' @usage DataCheck_TranscriptLength(trlength)
+#' @usage DataCheck_TrLength(trlength)
 #'
-#' @description \code{DataCheck_TranscriptLength} tests for potential format and
+#' @description \code{DataCheck_TrLength} tests for potential format and
 #' storage issues with the object encoding transcript length, for e.g. TPM
 #' normalization. Helper function to ADImpute.
 #'
@@ -128,7 +159,7 @@ DataCheck_Network <- function(network){
 #'
 #' @return transcript length object with needed adjustments
 #'
-DataCheck_TranscriptLength <- function(trlength){
+DataCheck_TrLength <- function(trlength){
 
   # coerce to data.frame
   if(!is.data.frame(trlength)){

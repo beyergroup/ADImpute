@@ -8,9 +8,10 @@ EvaluateMethods(data, do = c("Baseline", "DrImpute", "Network"),
 write = FALSE, train.ratio = .7, train.only = TRUE, mask.ratio = .1,
 outdir = getwd(), scale = 1, pseudo.count = 1, labels = NULL,
 cell.clusters = 2, drop_thre = NULL, type = "count", cores = 4,
-network.coefficients = NULL, network.path = system.file("extdata",
-"network.coefficients.zip", package="ADImpute"), network.imputation =
-"iteration", transcript.length = NULL, drop.exclude = TRUE, bulk = NULL, ...)
+net.coef = NULL, network.path = system.file("extdata",
+"network.coefficients.zip", package="ADImpute"), net.implementation =
+"iteration", tr.length = ADImpute::transcript_length, drop.exclude = TRUE,
+bulk = NULL, ...)
 }
 \arguments{
 \item{data}{matrix; normalized counts, not logged (genes as rows and samples
@@ -52,17 +53,17 @@ matrix. Can be "count" or "TPM"}
 
 \item{cores}{integer; number of cores used for paralell computation}
 
-\item{network.coefficients}{matrix; network coefficients. Please provide
-either \code{network.coefficients} or \code{network.path}.}
+\item{net.coef}{matrix; network coefficients. Please provide
+either \code{net.coef} or \code{network.path}.}
 
 \item{network.path}{character; path to .txt or .rds file with network
 coefficients. Defaults to the zip file included in ADImpute installation}
 
-\item{network.imputation}{character; either "iteration", for an iterative
+\item{net.implementation}{character; either "iteration", for an iterative
 solution, or "pseudoinv", to use Moore-Penrose pseudo-inversion as a
 solution.}
 
-\item{transcript.length}{matrix with at least 2 columns: "hgnc_symbol" and
+\item{tr.length}{matrix with at least 2 columns: "hgnc_symbol" and
 "transcript_length"}
 
 \item{drop.exclude}{logical; should zeros be discarded for the calculation

@@ -24,9 +24,10 @@
 #' write = FALSE, train.ratio = .7, train.only = TRUE, mask.ratio = .1,
 #' outdir = getwd(), scale = 1, pseudo.count = 1, labels = NULL,
 #' cell.clusters = 2, drop_thre = NULL, type = "count", cores = 4,
-#' network.coefficients = NULL, network.path = system.file("extdata",
-#' "network.coefficients.zip", package="ADImpute"), network.imputation =
-#' "iteration", transcript.length = NULL, drop.exclude = TRUE, bulk = NULL, ...)
+#' net.coef = NULL, network.path = system.file("extdata",
+#' "network.coefficients.zip", package="ADImpute"), net.implementation =
+#' "iteration", tr.length = ADImpute::transcript_length, drop.exclude = TRUE,
+#' bulk = NULL, ...)
 #'
 #' @description \code{EvaluateMethods} returns the best-performing imputation
 #' method for each gene in the dataset
@@ -56,14 +57,14 @@
 #' @param type A character specifying the type of values in the expression
 #' matrix. Can be "count" or "TPM"
 #' @param cores integer; number of cores used for paralell computation
-#' @param network.coefficients matrix; network coefficients. Please provide
-#' either \code{network.coefficients} or \code{network.path}.
+#' @param net.coef matrix; network coefficients. Please provide
+#' either \code{net.coef} or \code{network.path}.
 #' @param network.path character; path to .txt or .rds file with network
 #' coefficients. Defaults to the zip file included in ADImpute installation
-#' @param network.imputation character; either "iteration", for an iterative
+#' @param net.implementation character; either "iteration", for an iterative
 #' solution, or "pseudoinv", to use Moore-Penrose pseudo-inversion as a
 #' solution.
-#' @param transcript.length matrix with at least 2 columns: "hgnc_symbol" and
+#' @param tr.length matrix with at least 2 columns: "hgnc_symbol" and
 #' "transcript_length"
 #' @param drop.exclude logical; should zeros be discarded for the calculation
 #' of genewise average expression levels? (defaults to TRUE)
@@ -93,29 +94,24 @@
 #'
 #' @export
 #'
-EvaluateMethods <- function(data,
-                            do = c("Baseline", "DrImpute", "Network"),
-                            write = FALSE, train.ratio = .7,
-                            train.only = TRUE, mask.ratio = .1,
-                            outdir = getwd(), scale = 1, pseudo.count = 1,
-                            labels = NULL, cell.clusters = 2, drop_thre = NULL,
-                            type = "count", cores = 4,
-                            network.coefficients = NULL,
-                            network.path = system.file("extdata",
-                              "network.coefficients.zip", package="ADImpute"),
-                            network.imputation = "iteration",
-                            transcript.length = NULL, drop.exclude = TRUE,
-                            bulk = NULL, ...){
+EvaluateMethods <- function(data, do = c("Baseline", "DrImpute", "Network"),
+                        write = FALSE, train.ratio = .7, train.only = TRUE,
+                        mask.ratio = .1, outdir = getwd(), scale = 1,
+                        pseudo.count = 1, labels = NULL, cell.clusters = 2,
+                        drop_thre = NULL, type = "count", cores = 4,
+                        net.coef = NULL, network.path = system.file("extdata",
+                            "network.coefficients.zip", package="ADImpute"),
+                        net.implementation = "iteration",
+                        tr.length = ADImpute::transcript_length,
+                        drop.exclude = TRUE, bulk = NULL, ...){
 
-  # Check arguments
-  if (is.null(transcript.length))
-    transcript.length <- ADImpute::transcript_length
-  Check <- CreateArgCheck(missing = list("data" = missing(data)),
-                          match = list("type" = type),
-                          acceptable = list("type" = c("TPM","count")))
+    # Check arguments
+    Check <- CreateArgCheck(missing = list("data" = missing(data)),
+                            match = list("type" = type),
+                            acceptable = list("type" = c("TPM","count")))
   ArgumentCheck::finishArgCheck(Check)
   data <- DataCheck_Matrix(data)
-  transcript.length <- DataCheck_TranscriptLength(transcript.length)
+  tr.length <- DataCheck_TrLength(tr.length)
 
   if(write){
     savedir <- getwd(); dir.create(paste0(outdir,"/training"))
@@ -130,14 +126,14 @@ EvaluateMethods <- function(data,
                           write = write, outdir = getwd(),
                           scale = scale, pseudo.count = pseudo.count,
                           # scImpute arguments below
-                          count_path = NULL, labels = labels,
-                          cell.clusters = cell.clusters, drop_thre = drop_thre,
-                          type = type, transcript.length = transcript.length,
-                          # add count_path argument for scImpute runs
+                          labels = labels, cell.clusters = cell.clusters,
+                          drop_thre = drop_thre, type = type,
+                          tr.length = tr.length, #
                           bulk = bulk, # SCRABBLE argument
                           cores = cores,
-                          network.coefficients = network.coefficients,
+                          net.coef = net.coef,
                           network.path = network.path,
+                          net.implementation = net.implementation,
                           drop.exclude = drop.exclude, ...)
 
   # Run optimum choice
@@ -151,13 +147,13 @@ EvaluateMethods <- function(data,
 
 #' @title Dropout imputation using gene-specific best-performing methods
 #'
-#' @usage Impute(data, do = "Ensemble", write = FALSE,outdir = getwd(),
-#' method.choice = NULL, scale = 1, pseudo.count = 1, count_path = NULL,
-#' labels = NULL, cell.clusters = 2, drop_thre = NULL, type = "count",
-#' transcript.length = NULL, cores = 4, network.coefficients = NULL,
-#' network.path = system.file("extdata", "network.coefficients.zip", package =
-#' "ADImpute"), network.imputation = "iteration", drop.exclude = TRUE, bulk =
-#' NULL, true.zero.thr = NULL, prob.mat = NULL, ...)
+#' @usage Impute(data, do = "Ensemble", write = FALSE, outdir = getwd(),
+#' method.choice = NULL, scale = 1, pseudo.count = 1, labels = NULL,
+#' cell.clusters = 2, drop_thre = NULL, type = "count",
+#' tr.length = ADImpute::transcript_length, cores = 4, net.coef = NULL,
+#' network.path = system.file("extdata", "network.coefficients.zip",
+#' package = "ADImpute"), net.implementation = "iteration", drop.exclude = TRUE,
+#' bulk = NULL, true.zero.thr = NULL, prob.mat = NULL, ...)
 #'
 #' @description \code{Impute} performs dropout imputation based on the
 #' performance results obtained in the training data, coupled to normalization
@@ -178,7 +174,6 @@ EvaluateMethods <- function(data,
 #' (defaults to 1)
 #' @param pseudo.count integer; pseudo-count to be added to expression levels
 #' to avoid log(0) (defaults to 1)
-#' @param count_path character; path to data file
 #' @param labels character; vector specifying the cell type of each column of
 #' \code{data}
 #' @param cell.clusters integer; number of cell subpopulations
@@ -186,14 +181,14 @@ EvaluateMethods <- function(data,
 #' determine dropout values
 #' @param type A character specifying the type of values in the expression
 #' matrix. Can be "count" or "TPM"
-#' @param transcript.length matrix with at least 2 columns: "hgnc_symbol" and
+#' @param tr.length matrix with at least 2 columns: "hgnc_symbol" and
 #' "transcript_length"
 #' @param cores integer; number of cores used for paralell computation
-#' @param network.coefficients matrix; network coefficients. Please provide
-#' either \code{network.coefficients} or \code{network.path}.
+#' @param net.coef matrix; network coefficients. Please provide
+#' either \code{net.coef} or \code{network.path}.
 #' @param network.path character; path to .txt or .rds file with network
 #' coefficients. Defaults to the zip file included in ADImpute installation
-#' @param network.imputation character; either "iteration", for an iterative
+#' @param net.implementation character; either "iteration", for an iterative
 #' solution, or "pseudoinv", to use Moore-Penrose pseudo-inversion as a
 #' solution.
 #' @param drop.exclude logical; should zeros be discarded for the calculation
@@ -244,9 +239,9 @@ EvaluateMethods <- function(data,
 #' norm_data <- NormalizeRPM(demo_data)
 #' # Impute with particular method(s)
 #' imputed_data <- Impute(do = "Network", data = norm_data[,1:10],
-#' network.coefficients = ADImpute::demo_net, cores = 2)
+#' net.coef = ADImpute::demo_net, cores = 2)
 #' imputed_data <- Impute(do = "Network", data = norm_data[,1:10],
-#' network.imputation = "pseudoinv", network.coefficients = ADImpute::demo_net,
+#' net.implementation = "pseudoinv", net.coef = ADImpute::demo_net,
 #' cores = 2)
 #' # Don't impute biological zeros
 #' imputed_data <- Impute(do = "Baseline", data = norm_data, cores = 2,
@@ -260,126 +255,68 @@ EvaluateMethods <- function(data,
 #'
 #' @export
 #'
-Impute <- function(data,
-                   do = "Ensemble",
-                   write = FALSE, outdir = getwd(),
-                   method.choice = NULL, scale = 1, pseudo.count = 1,
-                   # scImpute arguments:
-                   count_path = NULL, labels = NULL, cell.clusters = 2,
-                   drop_thre = NULL, type = "count", transcript.length = NULL, #
-                   cores = 4, network.coefficients = NULL,
-                   network.path = system.file("extdata",
-                                              "network.coefficients.zip",
-                                              package="ADImpute"),
-                   network.imputation = "iteration",
-                   drop.exclude = TRUE,
-                   bulk = NULL, # SCRABBLE argument
-                   true.zero.thr = NULL, prob.mat = NULL, ...){
+Impute <- function(data, do = "Ensemble", write = FALSE, outdir = getwd(),
+            method.choice = NULL, scale = 1, pseudo.count = 1,
+            labels = NULL, cell.clusters = 2, drop_thre = NULL, type = "count",
+            tr.length = ADImpute::transcript_length, cores = 4,
+            net.coef = NULL, network.path = system.file("extdata",
+                "network.coefficients.zip", package="ADImpute"),
+            net.implementation = "iteration", drop.exclude = TRUE, bulk = NULL,
+            true.zero.thr = NULL, prob.mat = NULL, ...){
 
-  # Check arguments
-  if (is.null(transcript.length))
-    transcript.length <- ADImpute::transcript_length
-  if(is.null(method.choice) & ("ensemble" %in% tolower(do))){
-    stop("Please provide method.choice for Ensemble imputation.
-         Consider running EvaluateMethods()\n")
-  }
-  Check <- CreateArgCheck(missing = list("data" = missing(data)),
-                          match = list("type" = type),
-                          acceptable = list("type" = c("TPM","count")))
-  ArgumentCheck::finishArgCheck(Check)
-  data <- DataCheck_Matrix(data)
-  transcript.length <- DataCheck_TranscriptLength(transcript.length)
+    # Check arguments
+    Check <- CreateArgCheck(missing = list("data" = missing(data)),
+                            match = list("type" = type),
+                            acceptable = list("type" = c("TPM","count")))
+    ArgumentCheck::finishArgCheck(Check)
+    CheckArguments_Impute(data, method.choice, do, tr.length,
+        labels, cell.clusters, true.zero.thr, drop_thre)
+    data <- DataCheck_Matrix(data)
+    tr.length <- DataCheck_TrLength(tr.length)
 
-  if(write){
-    savedir <- getwd(); dir.create(paste0(outdir,"/imputation"))
-    setwd(paste0(outdir,"/imputation")); on.exit(setwd(savedir))
-  }
+    if(write){
+        savedir <- getwd(); dir.create(paste0(outdir,"/imputation"))
+        setwd(paste0(outdir,"/imputation")); on.exit(setwd(savedir))}
 
-  if("ensemble" %in% tolower(do))
-    do <- union(c(do, "Network"), unique(method.choice))
+    if("ensemble" %in% tolower(do))
+        do <- union(c(do, "Network"), unique(method.choice))
 
-  imputed <- list()
+    imputed <- list()
 
-  if("scimpute" %in% tolower(do)){
-    cat("scImpute is not supported by default. Please check XXXX for details.\n")
-    # # Get type of input masked file
-    # if(grepl(".txt", count_path)){infile <- "txt"
-    # } else if(grepl(".rds", count_path)){infile <- "rds"
-    # } else if (grepl(".csv", count_path)){infile <- "csv"
-    # } else{stop(paste0("Cannot recognize input count path to scImpute.",
-    #                    "Please provide .txt, .rds or .csv file\n"))}
-    #
-    # imputed$scImpute <- ImputeScImpute(count_path,
-    #                                    infile = infile,
-    #                                    outfile = "rds",
-    #                                    out_dir = "scImpute/",
-    #                                    labeled = is.null(labels),
-    #                                    Kcluster = cell.clusters,
-    #                                    labels = labels,
-    #                                    drop_thre = drop_thre,
-    #                                    ncores = cores,
-    #                                    type = type,
-    #                                    transcript.length = transcript.length)
-    # imputed$scImpute <- log2( (imputed$scImpute / scale) + pseudo.count)
-  }
+    if("saver" %in% tolower(do)){
+        imputed$SAVER <- ImputeSAVER(data, cores, write = write)
+        imputed$SAVER <- log2( (imputed$SAVER / scale) + pseudo.count)
+    }
+    # Insert call to scImpute and SCRABBLE
 
-  if("saver" %in% tolower(do)){
-    imputed$SAVER <- ImputeSAVER(data, cores, try.mean = FALSE,
-                                 write.to.file = write)
-    imputed$SAVER <- log2( (imputed$SAVER / scale) + pseudo.count)
-  }
+    log_masked_norm <- log2( (data / scale) + pseudo.count)
 
-  if("scrabble" %in% tolower(do)){
-    cat("scImpute is not supported by default. Please check XXXX for details.\n")
-    # imputed$SCRABBLE <- ImputeSCRABBLE(data, bulk)
-    # imputed$SCRABBLE <- log2( (imputed$SCRABBLE / scale) + pseudo.count)
-  }
+    if("baseline" %in% tolower(do))
+      imputed$Baseline <- ImputeBaseline(log_masked_norm,
+                                         drop.exclude = drop.exclude,
+                                         write = write)
+    if("network" %in% tolower(do))
+      imputed$Network <- ImputeNetwork(log_masked_norm, net.coef,
+          network.path, type = net.implementation, cores,
+          drop.exclude = drop.exclude, write  = write, ...)
+    if("drimpute" %in% tolower(do))
+        imputed$DrImpute <- ImputeDrImpute(log_masked_norm, write = write)
+    if("ensemble" %in% tolower(do))
+        imputed$Ensemble <- Combine(log_masked_norm,imputed,method.choice,write)
 
-  log_masked_norm <- log2( (data / scale) + pseudo.count)
-
-  if("baseline" %in% tolower(do))
-    imputed$Baseline <- ImputeBaseline(log_masked_norm,
-                                       drop.exclude = drop.exclude,
-                                       write.to.file = write)
-
-  if("network" %in% tolower(do))
-    imputed$Network <- ImputeNetwork(log_masked_norm,
-                                     network.coefficients,
-                                     network.path,
-                                     type = network.imputation,
-                                     cores,
-                                     drop.exclude = drop.exclude,
-                                     write.to.file = write,
-                                     ...)
-
-  if("drimpute" %in% tolower(do))
-    imputed$DrImpute <- ImputeDrImpute(log_masked_norm, write.to.file = write)
-
-  if("ensemble" %in% tolower(do))
-    imputed$Ensemble <- Combine(log_masked_norm, imputed, method.choice, write)
-
-  # Estimate true zeros
-  if(!is.null(true.zero.thr)){
-
-    # the probability is not given - compute it
-    if(is.null(prob.mat))
-      prob.mat <- GetDropoutProbabilities(data = data, thre = true.zero.thr,
-                                          cell.clusters = cell.clusters,
-                                          labels = labels, type = type,
-                                          ncores = cores,
-                                          genelen = transcript.length)
-    # use probability matrix
-    cl <- parallel::makeCluster(cores)
-    zerofiltered <- parallel::parLapply(cl, imputed, SetBiologicalZeros,
-                                        drop_probs = prob.mat,
-                                        thre = true.zero.thr,
-                                        was_zero = data == 0)
-    parallel::stopCluster(cl)
-
-    return(list("imputations" = imputed, "zerofiltered" = zerofiltered))
-
-  } else{
-
-    return(imputed)
-  }
-}
+    # Estimate true zeros
+    if(!is.null(true.zero.thr)){
+        # the probability is not given - compute it
+        if(is.null(prob.mat))
+            prob.mat <- GetDropoutProbabilities(data = data,
+                thre = true.zero.thr, cell.clusters = cell.clusters,
+                labels = labels, type = type, ncores = cores,
+                genelen = tr.length)
+        # use probability matrix
+        cl <- parallel::makeCluster(cores)
+        zerofiltered <- parallel::parLapply(cl, imputed, SetBiologicalZeros,
+                            drop_probs = prob.mat, thre = true.zero.thr,
+                            was_zero = data == 0)
+        parallel::stopCluster(cl)
+        return(list("imputations" = imputed, "zerofiltered" = zerofiltered))
+  } else{ return(imputed) } }

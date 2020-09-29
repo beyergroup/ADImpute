@@ -4,16 +4,15 @@
 \alias{ImputeNetwork}
 \title{Network-based imputation}
 \usage{
-ImputeNetwork(data, network.coefficients = NULL, network.path = NULL,
-cores = 4, type = "iteration", write.to.file = TRUE,
-drop.exclude = TRUE, ...)
+ImputeNetwork(data, net.coef = NULL, network.path = NULL,
+cores = 4, type = "iteration", write = FALSE, drop.exclude = TRUE, ...)
 }
 \arguments{
 \item{data}{matrix with entries equal to zero to be imputed, normalized
 and log2-transformed (genes as rows and samples as columns)}
 
-\item{network.coefficients}{matrix; network coefficients. Please provide
-either \code{network.coefficients} or \code{network.path}.}
+\item{net.coef}{matrix; network coefficients. Please provide
+either \code{net.coef} or \code{network.path}.}
 
 \item{network.path}{character; path to .txt or .rds file with network
 coefficients}
@@ -23,8 +22,7 @@ coefficients}
 \item{type}{character; either "iteration", for an iterative solution, or
 "pseudoinv", to use Moore-Penrose pseudo-inversion as a solution.}
 
-\item{write.to.file}{logical; should a file with the imputation results be
-written?}
+\item{write}{logical; should a file with the imputation results be written?}
 
 \item{drop.exclude}{logical; should zeros be discarded for the calculation
 of genewise average expression levels? (defaults to TRUE)}

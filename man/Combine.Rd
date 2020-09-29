@@ -4,7 +4,7 @@
 \alias{Combine}
 \title{Combine imputation methods}
 \usage{
-Combine(data, imputed, method.choice, write.to.file = FALSE)
+Combine(data, imputed, method.choice, write = FALSE)
 }
 \arguments{
 \item{data}{matrix with entries equal to zero to be imputed, already
@@ -16,8 +16,7 @@ considered methods}
 \item{method.choice}{named character; vector with the best performing method
 per gene}
 
-\item{write.to.file}{logical; should a file with the imputation results be
-written?}
+\item{write}{logical; should a file with the imputation results be written?}
 }
 \value{
 matrix; imputation results combining the best performing method

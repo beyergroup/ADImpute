@@ -20,7 +20,7 @@
 
 #' @title Combine imputation methods
 #'
-#' @usage Combine(data, imputed, method.choice, write.to.file = FALSE)
+#' @usage Combine(data, imputed, method.choice, write = FALSE)
 #'
 #' @param data matrix with entries equal to zero to be imputed, already
 #' normalized (genes as rows and samples as columns)
@@ -28,8 +28,7 @@
 #' per gene
 #' @param imputed list; list of matrices with imputation results for all
 #' considered methods
-#' @param write.to.file logical; should a file with the imputation results be
-#' written?
+#' @param write logical; should a file with the imputation results be written?
 #'
 #' @details Combines imputation results from all methods according to training
 #' results provided in \code{method.choice}
@@ -41,7 +40,7 @@
 Combine <- function(data,
                     imputed,
                     method.choice,
-                    write.to.file = FALSE){
+                    write = FALSE){
 
   cat("Combining imputation results into ensemble\n")
 
@@ -65,7 +64,7 @@ Combine <- function(data,
   imputed_combined <- data
   imputed_combined[dropouts] <- combined[dropouts]
 
-  if (write.to.file)
+  if (write)
     WriteTXT(imputed_combined, "final_imputation.txt")
 
   return(imputed_combined)
@@ -74,15 +73,14 @@ Combine <- function(data,
 
 #' @title Impute using average expression across all cells
 #'
-#' @usage ImputeBaseline(data, write.to.file = TRUE, drop.exclude = TRUE, ...)
+#' @usage ImputeBaseline(data, write = FALSE, drop.exclude = TRUE, ...)
 #'
 #' @description \code{ImputeBaseline} imputes dropouts using gene averages
 #' across cells
 #'
 #' @param data matrix with entries equal to zero to be imputed, normalized
 #' and log2-transformed (genes as rows and samples as columns)
-#' @param write.to.file logical; should a file with the imputation results be
-#' written?
+#' @param write logical; should a file with the imputation results be written?
 #' @param drop.exclude logical; should zeros be discarded for the calculation
 #' of genewise average expression levels? (defaults to TRUE)
 #' @param ... additional arguments to \code{saveRDS}
@@ -91,7 +89,7 @@ Combine <- function(data,
 #' values of genes
 #'
 ImputeBaseline <- function(data,
-                           write.to.file = TRUE,
+                           write = FALSE,
                            drop.exclude = TRUE,
                            ...){
 
@@ -117,7 +115,7 @@ ImputeBaseline <- function(data,
   res <- data
   res[dropouts] <- gene_avg_mat[dropouts]
 
-  if (write.to.file){
+  if (write){
     dir.create("Baseline")
     saveRDS(res, "Baseline/baseline_imputed.rds", ...)
   }
@@ -129,28 +127,27 @@ ImputeBaseline <- function(data,
 
 #' @title Use DrImpute
 #'
-#' @usage ImputeDrImpute(data, write.to.file = TRUE)
+#' @usage ImputeDrImpute(data, write = FALSE)
 #'
 #' @description \code{ImputeDrImpute} uses the DrImpute package for dropout
 #' imputation
 #'
 #' @param data matrix with entries equal to zero to be imputed, normalized
 #' and log2-transformed (genes as rows and samples as columns)
-#' @param write.to.file logical; should a file with the imputation results be
-#' written?
+#' @param write logical; should a file with the imputation results be written?
 #'
 #' @return matrix; imputation results from DrImpute
 #'
 #' @seealso \code{\link[DrImpute]{DrImpute}}
 #'
-ImputeDrImpute <- function(data, write.to.file = TRUE){
+ImputeDrImpute <- function(data, write = FALSE){
 
   cat("Imputing data using DrImpute\n")
 
   res <- DrImpute::DrImpute(as.matrix(data))
   colnames(res) <- colnames(data)
 
-  if(write.to.file){
+  if(write){
     dir.create("DrImpute")
     saveRDS(res, "DrImpute/drimputed.rds")
   }
@@ -161,21 +158,19 @@ ImputeDrImpute <- function(data, write.to.file = TRUE){
 
 #' @title Network-based imputation
 #'
-#' @usage ImputeNetwork(data, network.coefficients = NULL, network.path = NULL,
-#' cores = 4, type = "iteration", write.to.file = TRUE,
-#' drop.exclude = TRUE, ...)
+#' @usage ImputeNetwork(data, net.coef = NULL, network.path = NULL,
+#' cores = 4, type = "iteration", write = FALSE, drop.exclude = TRUE, ...)
 #'
 #' @param data matrix with entries equal to zero to be imputed, normalized
 #' and log2-transformed (genes as rows and samples as columns)
-#' @param network.coefficients matrix; network coefficients. Please provide
-#' either \code{network.coefficients} or \code{network.path}.
+#' @param net.coef matrix; network coefficients. Please provide
+#' either \code{net.coef} or \code{network.path}.
 #' @param network.path character; path to .txt or .rds file with network
 #' coefficients
 #' @param cores integer; number of cores to use
 #' @param type character; either "iteration", for an iterative solution, or
 #' "pseudoinv", to use Moore-Penrose pseudo-inversion as a solution.
-#' @param write.to.file logical; should a file with the imputation results be
-#' written?
+#' @param write logical; should a file with the imputation results be written?
 #' @param drop.exclude logical; should zeros be discarded for the calculation
 #' of genewise average expression levels? (defaults to TRUE)
 #' @param ... additional arguments to \code{ImputeNetParallel}
@@ -190,11 +185,11 @@ ImputeDrImpute <- function(data, write.to.file = TRUE){
 #' @seealso \code{\link{ImputeNetParallel}}
 #'
 ImputeNetwork <- function(data,
-                          network.coefficients = NULL,
+                          net.coef = NULL,
                           network.path = NULL,
                           cores = 4,
                           type = "iteration",
-                          write.to.file = TRUE,
+                          write = FALSE,
                           drop.exclude = TRUE,
                           ...){
 
@@ -206,7 +201,7 @@ ImputeNetwork <- function(data,
   ArgumentCheck::finishArgCheck(Check)
 
   # Limit data and network to genes common to both
-  arranged <- ArrangeData(data, network.path, network.coefficients)
+  arranged <- ArrangeData(data, network.path, net.coef)
 
   cat("Data dim:", paste(dim(arranged$data), collapse = " x "), "\n")
   cat("Network dim:", paste(dim(arranged$network), collapse = " x "), "\n")
@@ -228,7 +223,7 @@ ImputeNetwork <- function(data,
 
   res[res < 0] <- 0
 
-  if (write.to.file){
+  if (write){
     dir.create("Network")
     saveRDS(res, "Network/network_imputed.rds")
   }
@@ -240,7 +235,7 @@ ImputeNetwork <- function(data,
 
 #' @title Use SAVER
 #'
-#' @usage ImputeSAVER(data, cores, try.mean = FALSE, write.to.file = TRUE)
+#' @usage ImputeSAVER(data, cores, try.mean = FALSE, write = FALSE)
 #'
 #' @description \code{ImputeSAVER} uses the SAVER package for dropout
 #' imputation
@@ -250,30 +245,29 @@ ImputeNetwork <- function(data,
 #' @param cores integer; number of cores to use
 #' @param try.mean logical; whether to additionally use mean gene expression
 #' as prediction
-#' @param write.to.file logical; should a file with the imputation results be
-#' written?
+#' @param write logical; should a file with the imputation results be written?
 #'
 #' @return matrix; imputation results from SAVER
 #'
 #' @seealso \code{\link[SAVER]{saver}}
 #'
-ImputeSAVER <- function(data, cores, try.mean = FALSE, write.to.file = TRUE){
+ImputeSAVER <- function(data, cores, try.mean = FALSE, write = FALSE){
 
   cat("Imputing data using SAVER\n")
 
-  if(write.to.file)
+  if(write)
     dir.create("SAVER")
 
   if(try.mean){
     imp_mean <- SAVER::saver(data, size.factor = 1, ncores = cores,
                              null.model = TRUE)
-    if(write.to.file)
+    if(write)
       saveRDS(object = imp_mean, file = "SAVER/SAVER_nullmodel.rds")
   }
 
   res <- SAVER::saver(data, ncores = cores, size.factor = 1)
 
-  if (write.to.file){
+  if (write){
     dir.create("SAVER")
     saveRDS(object = res, file = "SAVER/SAVER.rds")
   }

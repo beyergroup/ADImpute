@@ -97,7 +97,7 @@ NormalizeTPM <- function(data,
   if (is.null(tr_length))
     tr_length <- ADImpute::transcript_length
 
-  tr_length <- DataCheck_TranscriptLength(tr_length)
+  tr_length <- DataCheck_TrLength(tr_length)
 
   # check input data
   data <- DataCheck_Matrix(data)

@@ -4,13 +4,13 @@
 \alias{Impute}
 \title{Dropout imputation using gene-specific best-performing methods}
 \usage{
-Impute(data, do = "Ensemble", write = FALSE,outdir = getwd(),
-method.choice = NULL, scale = 1, pseudo.count = 1, count_path = NULL,
-labels = NULL, cell.clusters = 2, drop_thre = NULL, type = "count",
-transcript.length = NULL, cores = 4, network.coefficients = NULL,
-network.path = system.file("extdata", "network.coefficients.zip", package =
-"ADImpute"), network.imputation = "iteration", drop.exclude = TRUE, bulk =
-NULL, true.zero.thr = NULL, prob.mat = NULL, ...)
+Impute(data, do = "Ensemble", write = FALSE, outdir = getwd(),
+method.choice = NULL, scale = 1, pseudo.count = 1, labels = NULL,
+cell.clusters = 2, drop_thre = NULL, type = "count",
+tr.length = ADImpute::transcript_length, cores = 4, net.coef = NULL,
+network.path = system.file("extdata", "network.coefficients.zip",
+package = "ADImpute"), net.implementation = "iteration", drop.exclude = TRUE,
+bulk = NULL, true.zero.thr = NULL, prob.mat = NULL, ...)
 }
 \arguments{
 \item{data}{matrix; raw counts (genes as rows and samples as columns)}
@@ -35,8 +35,6 @@ each gene}
 \item{pseudo.count}{integer; pseudo-count to be added to expression levels
 to avoid log(0) (defaults to 1)}
 
-\item{count_path}{character; path to data file}
-
 \item{labels}{character; vector specifying the cell type of each column of
 \code{data}}
 
@@ -48,18 +46,18 @@ determine dropout values}
 \item{type}{A character specifying the type of values in the expression
 matrix. Can be "count" or "TPM"}
 
-\item{transcript.length}{matrix with at least 2 columns: "hgnc_symbol" and
+\item{tr.length}{matrix with at least 2 columns: "hgnc_symbol" and
 "transcript_length"}
 
 \item{cores}{integer; number of cores used for paralell computation}
 
-\item{network.coefficients}{matrix; network coefficients. Please provide
-either \code{network.coefficients} or \code{network.path}.}
+\item{net.coef}{matrix; network coefficients. Please provide
+either \code{net.coef} or \code{network.path}.}
 
 \item{network.path}{character; path to .txt or .rds file with network
 coefficients. Defaults to the zip file included in ADImpute installation}
 
-\item{network.imputation}{character; either "iteration", for an iterative
+\item{net.implementation}{character; either "iteration", for an iterative
 solution, or "pseudoinv", to use Moore-Penrose pseudo-inversion as a
 solution.}
 
@@ -122,9 +120,9 @@ technical dropouts (genes expressed but not captured).
 norm_data <- NormalizeRPM(demo_data)
 # Impute with particular method(s)
 imputed_data <- Impute(do = "Network", data = norm_data[,1:10],
-network.coefficients = ADImpute::demo_net, cores = 2)
+net.coef = ADImpute::demo_net, cores = 2)
 imputed_data <- Impute(do = "Network", data = norm_data[,1:10],
-network.imputation = "pseudoinv", network.coefficients = ADImpute::demo_net,
+net.implementation = "pseudoinv", net.coef = ADImpute::demo_net,
 cores = 2)
 # Don't impute biological zeros
 imputed_data <- Impute(do = "Baseline", data = norm_data, cores = 2,

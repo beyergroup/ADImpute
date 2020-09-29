@@ -17,12 +17,19 @@ knitr::opts_chunk$set(eval = !is_check, collapse = TRUE, comment = "#>")
 library(ADImpute)
 ```
 
-For time and memory management reasons, this demo uses a subset of the Grun pancreas dataset. When using the ADImpute package, please run on the full datasets (no subsetting for genes), as the gene regulatory model employed uses expression information from all genes in the data.
+For time and memory management reasons, this demo uses a subset of the Grun
+pancreas dataset. When using the ADImpute package, please run on the full
+datasets (no subsetting for genes), as the gene regulatory model employed uses
+expression information from all genes in the data.
 ```{r}
 RPM <- NormalizeRPM(ADImpute::demo_data) # normalize for library size
 ```
 
-Evaluate methods to determine the best performing imputation method for each gene. This step sets a fraction of the quantified entries in the input data to zero, applies different normalization methods to the data and compares the imputation results to the original values. This allows ADImpute to determine which method imputes values with the lowest errors for each gene.
+Evaluate methods to determine the best performing imputation method for each
+gene. This step sets a fraction of the quantified entries in the input data to
+zero, applies different normalization methods to the data and compares the
+imputation results to the original values. This allows ADImpute to determine
+which method imputes values with the lowest errors for each gene.
 ```{r, warning=FALSE}
 set.seed(1)
 methods_pergene <- EvaluateMethods(data = RPM,
@@ -33,17 +40,19 @@ methods_pergene <- EvaluateMethods(data = RPM,
                                                       # them from the vector
                                    cores = 2,
                                    train.ratio = .7, mask.ratio = .2,
-                                   network.coefficients = ADImpute::demo_net)
+                                   net.coef = ADImpute::demo_net)
 head(methods_pergene) # show the best performing method for the first 6 genes
 ```
 
-After determining which method performs best for each gene, ADImpute redoes the imputation on the original data and combines the results of different methods into an ensemble.
+After determining which method performs best for each gene, ADImpute redoes the
+imputation on the original data and combines the results of different methods
+into an ensemble.
 ```{r, warning=FALSE}
 imputed <- Impute(do = "Ensemble",
                   method.choice = methods_pergene,
                   data = RPM,
                   cores = 2,
-                  network.coefficients = ADImpute::demo_net)
+                  net.coef = ADImpute::demo_net)
 str(imputed)
 ```
 

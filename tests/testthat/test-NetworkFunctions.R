@@ -16,19 +16,19 @@ test_that("ArrangeData works", {
                "Please provide a valid path for network coefficients.\n")
 
   # returns a list
-  expect_is(ArrangeData(testdata, network.coefficients = testnet), "list")
+  expect_is(ArrangeData(testdata, net.coef = testnet), "list")
 
   # returns the proper names and classes
-  expect_equal(names(ArrangeData(testdata, network.coefficients = testnet)),
+  expect_equal(names(ArrangeData(testdata, net.coef = testnet)),
                c("data","network","O"))
-  expect_is(ArrangeData(testdata, network.coefficients = testnet)$O,
+  expect_is(ArrangeData(testdata, net.coef = testnet)$O,
             "numeric")
-  expect_is(ArrangeData(testdata, network.coefficients = testnet)$network,
+  expect_is(ArrangeData(testdata, net.coef = testnet)$network,
             "matrix")
-  expect_is(ArrangeData(testdata, network.coefficients = testnet)$data,
+  expect_is(ArrangeData(testdata, net.coef = testnet)$data,
             "matrix")
 
-  arranged <- ArrangeData(testdata, network.coefficients = testnet)
+  arranged <- ArrangeData(testdata, net.coef = testnet)
   # length of intercept is the same as number of network targets
   expect_equal(length(arranged$O), nrow(arranged$network))
 

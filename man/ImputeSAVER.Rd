@@ -4,7 +4,7 @@
 \alias{ImputeSAVER}
 \title{Use SAVER}
 \usage{
-ImputeSAVER(data, cores, try.mean = FALSE, write.to.file = TRUE)
+ImputeSAVER(data, cores, try.mean = FALSE, write = FALSE)
 }
 \arguments{
 \item{data}{matrix with entries equal to zero to be imputed, normalized
@@ -15,8 +15,7 @@ ImputeSAVER(data, cores, try.mean = FALSE, write.to.file = TRUE)
 \item{try.mean}{logical; whether to additionally use mean gene expression
 as prediction}
 
-\item{write.to.file}{logical; should a file with the imputation results be
-written?}
+\item{write}{logical; should a file with the imputation results be written?}
 }
 \value{
 matrix; imputation results from SAVER

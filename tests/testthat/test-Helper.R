@@ -40,36 +40,35 @@ testtrlength3$hgnc_symbol <- seq_len(nrow(testtrlength3))
 testtrlength4 <- ADImpute::transcript_length
 testtrlength4$hgnc_symbol <- rep("", nrow(testtrlength4))
 
-test_that("DataCheck_TranscriptLength works", {
+test_that("DataCheck_TrLength works", {
 
   # Class of output is a data.frame
-  expect_is(DataCheck_TranscriptLength(ADImpute::transcript_length),
-            "data.frame")
-  expect_is(DataCheck_TranscriptLength(as.matrix(ADImpute::transcript_length)),
+  expect_is(DataCheck_TrLength(ADImpute::transcript_length),"data.frame")
+  expect_is(DataCheck_TrLength(as.matrix(ADImpute::transcript_length)),
             "data.frame")
 
   # Throws error when required colnames not present
-  expect_error(DataCheck_TranscriptLength(testtrlength1),
+  expect_error(DataCheck_TrLength(testtrlength1),
               cat("Transcript length data must contain the following colnames:",
                    "hgnc_symbol, transcript_length\n"))
-  expect_error(DataCheck_TranscriptLength(testtrlength2),
+  expect_error(DataCheck_TrLength(testtrlength2),
               cat("Transcript length data must contain the following colnames:",
                    "hgnc_symbol, transcript_length\n"))
   # when gene names are not character/factor
-  expect_error(DataCheck_TranscriptLength(testtrlength3),
+  expect_error(DataCheck_TrLength(testtrlength3),
                "hgnc_symbol column must be character/factor.\n")
   # when there are no rows
-  expect_error(DataCheck_TranscriptLength(testtrlength3[0,]),
+  expect_error(DataCheck_TrLength(testtrlength3[0,]),
                "Not enough rows in transcript length data.\n")
   # when all gene symbols are empty strings
-  expect_error(DataCheck_TranscriptLength(testtrlength4),
+  expect_error(DataCheck_TrLength(testtrlength4),
                "Not enough non-empty gene symbols in transcript length data.\n")
 
   # Converts character lengths to numeric
-  expect_is(DataCheck_TranscriptLength(as.matrix(
+  expect_is(DataCheck_TrLength(as.matrix(
     ADImpute::transcript_length))$transcript_length, "numeric")
 
   # Removes empty gene symbols
-  expect_false(any(as.character(DataCheck_TranscriptLength(
+  expect_false(any(as.character(DataCheck_TrLength(
     ADImpute::transcript_length)$hgnc_symbol) == ""))
 })

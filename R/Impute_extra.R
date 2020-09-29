@@ -1,21 +1,14 @@
 #' @title Use scImpute
 #'
-#' @usage ImputeScImpute(count_path, infile, outfile = "rds", out_dir,
-#' labeled, drop_thre, Kcluster, labels = NULL, ncores = 4, type = "TPM",
-#' transcript.length = NULL, genelen = NULL)
+#' @usage ImputeScImpute(data, labeled, drop_thre, Kcluster, labels = NULL,
+#' ncores = 4, type = "count", outdir = tempdir(), tr.length =
+#' ADImpute::transcript_length, genelen = NULL)
 #'
 #' @description \code{ImputeScImpute} uses the scImpute package for dropout
 #' imputation
 #'
-#' @param count_path A character specifying the full path of the raw count
-#' matrix
-#' @param infile A character specifying the type of file storing the raw count
-#' matrix; can be "csv", "txt", or "rds". The input file shoule have rows
-#' representing genes and columns representing cells, with its first row as cell
-#' names and first column as gene names
-#' @param outfile A character specifying the type of file storing the imputed
-#' count matrix; can be "csv", "txt", or "rds"
-#' @param out_dir A character specifying the full path of the output directory,
+#' @param data matrix; data to be imputed
+#' @param outdir A character specifying the full path of the output directory,
 #' which is used to store all intermdediate and final outputs
 #' @param labeled A logical value indicating whether cell type information is
 #' available. \code{labels} must be specified if \code{labeled = TRUE}
@@ -31,7 +24,7 @@
 #' computation
 #' @param type A character specifying the type of values in the expression
 #' matrix. Can be "count" or "TPM"
-#' @param transcript.length matrix with at least 2 columns: "hgnc_symbol" and
+#' @param tr.length matrix with at least 2 columns: "hgnc_symbol" and
 #' "transcript_length"
 #' @param genelen An integer vector giving the length of each gene. Order must
 #' match the gene orders in the expression matrix. genelen must be specified if
@@ -41,75 +34,58 @@
 #'
 #' @seealso \code{\link[scImpute]{scimpute}}
 #'
-ImputeScImpute <- function(count_path,
-                           infile,
-                           outfile = "rds",
-                           out_dir,
-                           labeled,
-                           drop_thre,
-                           Kcluster,
-                           labels = NULL,
-                           ncores = 4,
-                           type = "TPM",
-                           transcript.length = NULL,
+ImputeScImpute <- function(data, labeled, drop_thre, Kcluster, labels = NULL,
+                           ncores = 4, type = "count", outdir = tempdir(),
+                           tr.length = ADImpute::transcript_length,
                            genelen = NULL){
 
-
-
-  # Get genlen if needed
-  if (type == "TPM"){
-    if (is.null(transcript.length)){
-      tr_length <- ADImpute::transcript_length
-    } else{
-      tr_length <- transcript.length
+    # Get genlen if needed
+    if (type == "TPM"){
+        if (is.null(tr.length)){
+          tr_length <- ADImpute::transcript_length
+        } else{ tr_length <- tr.length }
+        common <- intersect(rownames(data), genelen$hgnc_symbol)
+        data <- data[common, ]
+        genelen <- genelen[match(common,genelen$hgnc_symbol), ]
     }
 
-    # Median length of all transcripts for a given gene
-    med_length <- stats::aggregate(x = tr_length$transcript_length,
-                  by = list("hgnc_symbol" = tr_length$hgnc_symbol),
-                                   FUN = stats::median)
-    if (infile == "txt"){
-      data <- utils::read.table(count_path)
-    } else if (infile == "rds"){
-      data <- readRDS(count_path)
-    }else{
-      data <- utils::read.csv(count_path)
+    if(labeled == TRUE & is.null(labels))
+      stop("'labels' must be specified when 'labeled = TRUE'!")
+    if(labeled == FALSE & is.null(Kcluster))
+      stop("'Kcluster' must be specified when 'labeled = FALSE'!")
+    if(!(type %in% c("count", "TPM")))
+      stop("expression values can be either 'count' or 'TPM'!")
+    if(type == "TPM" & is.null(genelen))
+      stop("'genelen' must be specified when type = 'TPM'!")
+
+    count_lnorm = read_count(raw_count = data, type = type, genelen = genelen)
+    saveRDS(count_lnorm, paste0(outdir,"/count_lnorm.rds"))
+
+    if(labeled == TRUE){
+        if(length(labels) != ncol(count_lnorm))
+          stop("number of cells does not match number of labels !")
     }
-    common <- intersect(rownames(data), med_length$hgnc_symbol)
-    data   <- data[common, ]
-    count_path <- paste0(strsplit(count_path,
-                                  split = paste0("\\.", infile))[[1]][1],
-                         "_red.csv")
-    infile <- "csv"
-    WriteCSV(data, count_path)
-    genelen <- as.integer(med_length[match(common, med_length$hgnc_symbol), 2])
-    saveRDS(genelen, paste0(out_dir,"genelength.rds"))
-  }
 
-  # Call scImpute
-  scImpute::scimpute(count_path = count_path,
-                     infile = infile,
-                     outfile = outfile,
-                     out_dir = out_dir,
-                     labeled = labeled,
-                     drop_thre = drop_thre,
-                     Kcluster = Kcluster,
-                     labels = labels,
-                     ncores = ncores,
-                     type = type,
-                     genelen = genelen)
+    # Call scImpute's functions
+    scImpute::scimpute(count_path = paste0(outdir,"/count_lnorm.rds"),
+                       infile = "rds", outfile = "rds", out_dir = outdir,
+                       labeled = labeled, drop_thre = drop_thre,
+                       Kcluster = Kcluster, labels = labels, ncores = ncores,
+                       type = type, genelen = genelen)
 
-  # Read scImpute output
-  res <- as.matrix(readRDS(paste0(out_dir, "scimpute_count.rds")))
+    # Read scImpute output
+    res <- as.matrix(readRDS(paste0(outdir, "scimpute_count.rds")))
 
-  return(res)
+    tryCatch(unlink(outdir, recursive = T))
+
+    return(res)
 }
 
 
 
 #' @title Use SCRABBLE
 #'
-#' @usage ImputeSCRABBLE(data, bulk = NULL, write.to.file = T)
+#' @usage ImputeSCRABBLE(data, bulk = NULL, write = FALSE)
 #'
 #' @description \code{ImputeSCRABBLE} uses the SCRABBLE package for dropout
 #' imputation
@@ -118,21 +94,24 @@ ImputeScImpute <- function(count_path,
 #' (genes as rows and samples as columns)
 #' @param bulk vector of reference bulk RNA-seq, if available (average across
 #' samples)
-#' @param write.to.file logical; should a file with the imputation results be
-#' written?
+#' @param write logical; should a file with the imputation results be written?
 #'
 #' @return matrix; imputation results from SCRABBLE
 #'
 #' @seealso \code{\link[SCRABBLE]{scrabble}}
 #'
-ImputeSCRABBLE <- function(data, bulk = NULL, write.to.file = TRUE){
+ImputeSCRABBLE <- function(data, bulk = NULL, write = FALSE){
 
   if(is.null(bulk)){
     cat("Taking average of single cell data as reference bulk for
         SCRABBLE imputation.\n")
     bulk <- rowMeans(data)
 
-    res <- SCRABBLE::scrabble(list(data, bulk), parameter = c(1,1e-6,1e-4))
+    res <- tryCatch(SCRABBLE::scrabble(list(data, bulk),
+                                       parameter = c(1,1e-6,1e-4)),
+                    error = function(e){
+                      stop(cat("Error:",e$message,"\nIs SCRABBLE installed?"))
+                    })
     rownames(res) <- rownames(data)
     colnames(res) <- colnames(data)
 
@@ -149,10 +128,38 @@ ImputeSCRABBLE <- function(data, bulk = NULL, write.to.file = TRUE){
     colnames(res) <- colnames(data)
   }
 
-  if (write.to.file){
+  if (write){
     dir.create("SCRABBLE")
     saveRDS(res, "SCRABBLE/SCRABBLE_imputed.rds")
   }
 
   return(res)
 }
+
+
+
+
+
+# call to scImpute
+
+# if("scimpute" %in% tolower(do)){
+#   cat("Make sure you have previously installed scImpute via GitHub.\n")
+#   res <- tryCatch(ImputeScImpute(count_path, labeled = is.null(labels),
+#                                  Kcluster = cell.clusters, labels = labels, drop_thre = drop_thre,
+#                                  ncores = cores, type = type, tr.length = tr.length),
+#                   error = function(e){
+#                     stop(cat("Error:",e$message,
+#                              "\nTry sourcing the Impute_extra.R file."))})
+#   imputed$scImpute <- log2( (res / scale) + pseudo.count)
+# }
+
+
+# if("scrabble" %in% tolower(do)){
+#   cat("Make sure you have previously installed SCRABBLE via GitHub.\n")
+#   res <- tryCatch(ImputeSCRABBLE(data, bulk), error = function(e) {
+#     stop(cat("Error:",e$message,
+#              "\nTry sourcing the Impute_extra.R file."))})
+#   imputed$SCRABBLE <- log2( (res / scale) + pseudo.count)
+#   rm(res);gc()
+# }
+

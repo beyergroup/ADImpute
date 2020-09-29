@@ -4,14 +4,13 @@
 \alias{ImputeDrImpute}
 \title{Use DrImpute}
 \usage{
-ImputeDrImpute(data, write.to.file = TRUE)
+ImputeDrImpute(data, write = FALSE)
 }
 \arguments{
 \item{data}{matrix with entries equal to zero to be imputed, normalized
 and log2-transformed (genes as rows and samples as columns)}
 
-\item{write.to.file}{logical; should a file with the imputation results be
-written?}
+\item{write}{logical; should a file with the imputation results be written?}
 }
 \value{
 matrix; imputation results from DrImpute

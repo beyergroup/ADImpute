@@ -20,7 +20,7 @@
 
 #' @title Data trimming
 #'
-#' @usage ArrangeData(data, network.path = NULL, network.coefficients = NULL)
+#' @usage ArrangeData(data, network.path = NULL, net.coef = NULL)
 #'
 #' @description \code{ArrangeData} finds common genes to the network and
 #' provided data and limits both datasets to these
@@ -29,25 +29,25 @@
 #' and samples as columns)
 #' @param network.path character; path to .txt, .rds or .zip file with network
 #' coefficients
-#' @param network.coefficients matrix; object containing network coefficients
+#' @param net.coef matrix; object containing network coefficients
 #'
 #' @return list; data matrix, network coefficients matrix and intercept for
 #' genes common between the data matrix and the network
 #'
 ArrangeData <- function(data,
                         network.path = NULL,
-                        network.coefficients = NULL){
+                        net.coef = NULL){
 
   if(is.null(data))
     stop("Please provide an input data matrix.\n")
 
-  if(is.null(network.coefficients)){
+  if(is.null(net.coef)){
     if(is.null(network.path)){
       stop("Please provide a valid path for network coefficients.\n")
     } else{
       if(!file.exists(network.path))
         stop("Please provide a valid path for network coefficients.\n")
-      network.coefficients <- ReadNetwork(network.path)
+      net.coef <- ReadNetwork(network.path)
     }
   } else{
     if(!is.null(network.path))
@@ -55,10 +55,10 @@ ArrangeData <- function(data,
   }
 
   data <- DataCheck_Matrix(data)
-  network.coefficients <- DataCheck_Network(network.coefficients)
+  net.coef <- DataCheck_Network(net.coef)
 
-  O <- network.coefficients[,1] # network intercept
-  network_matrix <- network.coefficients[,-1] # network coefficients
+  O <- net.coef[,1] # network intercept
+  network_matrix <- net.coef[,-1] # network coefficients
 
   comm_targ <- intersect(rownames(network_matrix), rownames(data))
   comm_pred <- intersect(colnames(network_matrix), rownames(data))
@@ -343,15 +343,15 @@ ReadNetwork <- function(network.path){
 
     load(network.path)
 
-    return(network.coefficients)
+    return(net.coef)
 
   } else if (grepl(network.path, pattern = ".zip")){
 
     cat("Reading .zip file with network coefficients\n")
-    network.coefficients <- utils::read.table(unz(network.path,
+    net.coef <- utils::read.table(unz(network.path,
                                                   "network.coefficients.txt"))
 
-    return(as.matrix(network.coefficients))
+    return(as.matrix(net.coef))
 
   } else{
     stop("Please input txt, rds or zip file\n")

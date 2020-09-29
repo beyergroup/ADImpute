@@ -66,13 +66,16 @@ find_neighbors_labeled = function(count_hv, J, Kcluster = NULL,  ncores,
     if (npc < 3){ npc = 3 }
     mat_pcs = t(pca$x[, seq_len(npc)])
 
-    dist_cells_list = parallel::mclapply(seq_along(cell_inds), function(id1){
+    cl <- parallel::makeCluster(ncores)
+    dist_cells_list = parallel::parLapply(cl, seq_along(cell_inds),
+                                          function(id1){
       d = vapply(seq_len(id1), function(id2){
         sse = sum((mat_pcs[, id1] - mat_pcs[, id2])^2)
         sqrt(sse)
       }, FUN.VALUE = 1.0)
       return(c(d, rep(0, length(cell_inds)-id1)))
-    }, mc.cores = ncores)
+    })
+    parallel::stopCluster(cl)
     dist_cells = matrix(0, nrow = length(cell_inds), ncol = length(cell_inds))
     for(cellid in seq_along(cell_inds)){
       dist_cells[cellid, ] = dist_cells_list[[cellid]]}
@@ -109,15 +112,18 @@ find_neighbors_unlabeled <- function(count_hv, J, Kcluster = NULL,
 
     ## detect outliers
     print("calculating cell distances ...")
-    dist_cells_list = parallel::mclapply(seq_len(J), function(id1){
+    cl <- parallel::makeCluster(ncores)
+    dist_cells_list = parallel::parLapply(cl, seq_len(J), function(id1){
       d = vapply(seq_len(id1), function(id2){
         sse = sum((mat_pcs[, id1] - mat_pcs[, id2])^2)
         sqrt(sse)
       }, FUN.VALUE = 1.0)
       return(c(d, rep(0, J-id1)))
-    }, mc.cores = ncores)
+    })
+    parallel::stopCluster(cl)
+
     dist_cells = matrix(0, nrow = J, ncol = J)
-    for(cellid in seq_len(J)){ dist_cells[cellid, ] = dist_cells_list[[cellid]] }
+    for(cellid in seq_len(J)){ dist_cells[cellid, ] = dist_cells_list[[cellid]]}
     dist_cells = dist_cells + t(dist_cells)
 
     min_dist = vapply(seq_len(J), function(i){min(dist_cells[i, -i])},
@@ -198,7 +204,8 @@ get_mix_parameters <-
   {
     count = as.matrix(count)
     null_genes = which(abs(rowSums(count) - point * ncol(count)) < 1e-10)
-    parslist = parallel::mclapply(seq_len(nrow(count)), function(ii) {
+    cl <- parallel::makeCluster(ncores)
+    parslist = parallel::parLapply(cl, seq_len(nrow(count)), function(ii) {
       if (ii %% 2000 == 0) {
         gc()
         print(ii)
@@ -210,7 +217,8 @@ get_mix_parameters <-
       paramt = tryCatch(get_mix(xdata, point), #silent = TRUE,
                         error = function(e) rep(NA,5))
       return(paramt)
-    }, mc.cores = ncores)
+    })
+    parallel::stopCluster(cl)
     parslist = Reduce(rbind, parslist)
     colnames(parslist) = c("rate", "alpha", "beta", "mu", "sigma")
     return(parslist)
@@ -243,11 +251,13 @@ imputation_model8 = function(count, labeled = FALSE, point, drop_thre = 0.5,
     if (npc < 3){ npc = 3 }
     mat_pcs = t(pca$x[, seq_len(npc)]) # columns are cells
 
-    dist_cells_list = parallel::mclapply(seq_len(J), function(id1){
+    cl <- parallel::makeCluster(ncores)
+    dist_cells_list = parallel::parLapply(cl, seq_len(J), function(id1){
       d = vapply(seq_len(id1), function(id2){
         sse = sum((mat_pcs[, id1] - mat_pcs[, id2])^2)
         sqrt(sse)}, FUN.VALUE = 1.0);
-      return(c(d, rep(0, J-id1)))}, mc.cores = ncores)
+      return(c(d, rep(0, J-id1)))})
+    parallel::stopCluster(cl)
     dist_cells = matrix(0, nrow = J, ncol = J)
     for(cellid in seq_len(J)){dist_cells[cellid, ] = dist_cells_list[[cellid]]}
     dist_cells = dist_cells + t(dist_cells)
@@ -255,12 +265,12 @@ imputation_model8 = function(count, labeled = FALSE, point, drop_thre = 0.5,
     print("inferring cell similarities ...")
     # set.seed(Kcluster)
     neighbors_res = find_neighbors_unlabeled(count_hv = count_hv, J = J,
-                                             Kcluster = Kcluster, ncores = ncores)
+                                             Kcluster = Kcluster,
+                                             ncores = ncores)
     dist_cells = neighbors_res$dist_cells; clust = neighbors_res$clust
   }
   # mixture model
   droprate <- MixtureModel(count, clust, ncores, drop_thre)
-
   return(droprate)
 }
 
@@ -385,7 +395,8 @@ read_count <-
 
     totalCounts_by_cell = colSums(raw_count)
     totalCounts_by_cell[totalCounts_by_cell == 0] = 1
-    raw_count = sweep(raw_count, MARGIN = 2, 10^6/totalCounts_by_cell, FUN = "*")
+    raw_count = sweep(raw_count, MARGIN = 2, 10^6/totalCounts_by_cell,
+                      FUN = "*")
     if (min(raw_count) < 0) {
       stop("smallest read count cannot be negative!")
     }

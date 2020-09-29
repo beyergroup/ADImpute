@@ -42,17 +42,14 @@
 #'
 #' @seealso \code{\link{ComputeMSEGenewise}}
 #'
-ChooseMethod <- function(real,
-                         masked,
-                         imputed,
-                         write.to.file = TRUE) {
-  if (!all(colnames(real) == colnames(masked)) &&
-      all(rownames(real) == rownames(masked)))
-    stop("Error! Colnames / rownames before and after masking don't match.\n")
+ChooseMethod <- function(real, masked, imputed, write.to.file = TRUE) {
 
-  which_masked <-
-    (real != 0) & (masked == 0) # distinguishes masked values from
-  # dropouts in the original data
+    if (!all(colnames(real) == colnames(masked)) &&
+        all(rownames(real) == rownames(masked)))
+      stop("Error! Colnames / rownames before and after masking don't match.\n")
+
+    which_masked <- (real != 0) & (masked == 0) # distinguishes masked values
+                                          # from dropouts in the original data
 
   MSE <- lapply(imputed,
                 function(x)
