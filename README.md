@@ -7,19 +7,21 @@
 # ADImpute
 ADImpute predicts unmeasured gene expression values from single cell RNA-sequencing data (dropout imputation). This R-package combines multiple dropout imputation methods, including a novel gene regulatory network-based method.
 
+ADImpute was developed in R 4.0.2, under Linux Mint 20, and tested in Linux, OS X and Windows.
+For further questions, please contact: ana.carolina.leote@uni-koeln.de
+
 ## Installation
 ADImpute requires R version 4.0.
 The following R commands should allow you to install ADImpute from github (< 10 seconds):
-
 ```
 # install.packages("devtools")
 devtools::install_github("anacarolinaleote/ADImpute")
 library(ADImpute)
 ```
 
-# Quick start
+## Quick start
 
-## Imputation with method(s) of choice
+### Imputation with method(s) of choice
 ADImpute currently supports, by default, DrImpute and two novel imputation
 methods: a baseline method, "Baseline", where genes are imputed with their
 average quantified expression across the dataset, and a regulatory-network-
@@ -33,7 +35,7 @@ imputed <- Impute(data = RPM,
                   net.coef = ADImpute::demo_net)
 ```
 
-## Imputation with ensemble
+### Imputation with ensemble
 In addition to running different methods on the data, ADImpute can also
 determine which of these performs best for each gene and perform an "Ensemble"
 imputation, which combines the best performing methods for different genes.
@@ -65,7 +67,7 @@ imputed <- Impute(do = "Ensemble",
                   net.coef = ADImpute::demo_net)
 ```
 
-# Determination of biological zeros
+### Determination of biological zeros
 Some zeros in the data correspond to genes expressed in the cell, but not
 captured upon sequencing - the technical dropouts - while others correspond to
 genes truly not expressed in the cell - the biological zeros. In order to avoid
@@ -82,7 +84,7 @@ imputed <- Impute(do = "Baseline",
                   true.zero.thr = .3)
 ```
 
-# Imputation with SCRABBLE and scImpute
+### Imputation with SCRABBLE and scImpute
 In order to use SCRABBLE and/or scImpute imputation, please follow these steps:
 1) install scImpute and/or SCRABBLE from their github repositories
 2) open the file Impute_extra.R in the source R/ folder of ADImpute
@@ -90,8 +92,3 @@ In order to use SCRABBLE and/or scImpute imputation, please follow these steps:
 source R/ folder of ADImpute, line #276.
 4) re-load ADImpute
 
-For an example of the usage of the ADImpute package, follow the < 10min [tutorial](https://github.com/anacarolinaleote/ADImpute/blob/master/vignettes/ADImpute_tutorial.Rmd).
-
-ADImpute was developed in R 4.0.2, under Linux Mint 20, and tested in Linux, OS X and Windows.
-
-For further questions, please contact: ana.carolina.leote@uni-koeln.de
