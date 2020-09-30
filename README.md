@@ -31,6 +31,7 @@ genes in the cell.
 ```
 RPM <- ADImpute::NormalizeRPM(ADImpute::demo_data)
 imputed <- Impute(data = RPM,
+                  do = c("Baseline","Network","DrImpute"),
                   cores = 2,
                   net.coef = ADImpute::demo_net)
 ```
@@ -87,8 +88,9 @@ imputed <- Impute(do = "Baseline",
 ### Imputation with SCRABBLE and scImpute
 In order to use SCRABBLE and/or scImpute imputation, please follow these steps:
 1) install scImpute and/or SCRABBLE from their github repositories
+2) clone the ADImpute repository
 2) open the file Impute_extra.R in the source R/ folder of ADImpute
 3) copy the commented lines at the end of the script to the file Wrap.R in the
 source R/ folder of ADImpute, line #276.
-4) re-load ADImpute
+4) re-load ADImpute using devtools::load_all() on ADImpute's folder
 
