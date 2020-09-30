@@ -58,7 +58,7 @@ with hgnc_symbols in rows and columns. Doesn't have to be squared. See
 
 \item{net.implementation}{character; either "iteration", for an iterative
 solution, or "pseudoinv", to use Moore-Penrose pseudo-inversion as a
-solution.}
+solution. "pseudoinv" is not advised for big data.}
 
 \item{bulk}{vector of reference bulk RNA-seq, if available (average across
 samples)}
@@ -76,7 +76,12 @@ probabilities for each gene in each cell}
 }
 \value{
 list of imputation results (normalized, log-transformed) for all
-selected methods in \code{do}
+selected methods in \code{do}. If \code{true.zero.thr} is defined, returns a
+list of 3 elements: 1) a list, \code{imputations}, containing the
+direct imputation results from each method; 2) a list, \code{zerofiltered},
+containing the results of imputation in \code{imputations} after setting
+biological zeros back to zero; 3) a matrix, \code{dropoutprobabilities},
+containing the dropout probability matrix used to set biological zeros.
 }
 \description{
 \code{Impute} performs dropout imputation based on the

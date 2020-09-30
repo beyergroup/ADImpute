@@ -62,7 +62,7 @@
 #' \code{ADImpute::demo_net} for a small example.
 #' @param net.implementation character; either "iteration", for an iterative
 #' solution, or "pseudoinv", to use Moore-Penrose pseudo-inversion as a
-#' solution.
+#' solution. "pseudoinv" is not advised for big data.
 #' @param tr.length matrix with at least 2 columns: "hgnc_symbol" and
 #' "transcript_length"
 #' @param bulk vector of reference bulk RNA-seq, if available (average across
@@ -186,7 +186,7 @@ EvaluateMethods <- function(data, do = c("Baseline", "DrImpute", "Network"),
 #' \code{ADImpute::demo_net} for a small example.
 #' @param net.implementation character; either "iteration", for an iterative
 #' solution, or "pseudoinv", to use Moore-Penrose pseudo-inversion as a
-#' solution.
+#' solution. "pseudoinv" is not advised for big data.
 #' @param bulk vector of reference bulk RNA-seq, if available (average across
 #' samples)
 #' @param true.zero.thr if set to NULL (default), no true zero estimation is
@@ -199,7 +199,12 @@ EvaluateMethods <- function(data, do = c("Baseline", "DrImpute", "Network"),
 #' @param ... additional parameters to pass to network-based imputation
 #'
 #' @return list of imputation results (normalized, log-transformed) for all
-#' selected methods in \code{do}
+#' selected methods in \code{do}. If \code{true.zero.thr} is defined, returns a
+#' list of 3 elements: 1) a list, \code{imputations}, containing the
+#' direct imputation results from each method; 2) a list, \code{zerofiltered},
+#' containing the results of imputation in \code{imputations} after setting
+#' biological zeros back to zero; 3) a matrix, \code{dropoutprobabilities},
+#' containing the dropout probability matrix used to set biological zeros.
 #'
 #' @details Values that are 0 in \code{data} are imputed according to the
 #' best-performing methods indicated in \code{method.choice}. Currently

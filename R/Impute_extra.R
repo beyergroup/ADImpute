@@ -140,20 +140,20 @@ ImputeSCRABBLE <- function(data, bulk = NULL, write = FALSE){
 
 
 
-# call to scImpute
 
+# call to scImpute
 # if("scimpute" %in% tolower(do)){
 #   cat("Make sure you have previously installed scImpute via GitHub.\n")
 #   res <- tryCatch(ImputeScImpute(count_path, labeled = is.null(labels),
-#                                  Kcluster = cell.clusters, labels = labels, drop_thre = drop_thre,
-#                                  ncores = cores, type = type, tr.length = tr.length),
+#             Kcluster = cell.clusters, labels = labels, drop_thre = drop_thre,
+#             ncores = cores, type = type, tr.length = tr.length),
 #                   error = function(e){
 #                     stop(cat("Error:",e$message,
 #                              "\nTry sourcing the Impute_extra.R file."))})
 #   imputed$scImpute <- log2( (res / scale) + pseudo.count)
 # }
 
-
+# call to SCRABBLE
 # if("scrabble" %in% tolower(do)){
 #   cat("Make sure you have previously installed SCRABBLE via GitHub.\n")
 #   res <- tryCatch(ImputeSCRABBLE(data, bulk), error = function(e) {

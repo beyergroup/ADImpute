@@ -67,3 +67,25 @@ test_that("Impute works", {
                                    cores = 2, do = "SCRABBLE")))
 
 })
+
+
+imputation <- Impute(data = ADImpute::demo_data, do = "Baseline",
+                     cores = 2, true.zero.thr = .3)
+
+test_that("Impute works with biological zero determination", {
+
+    # output is a list
+    expect_is(imputation, "list")
+    # elements are appropriate
+    expect_is(imputation$imputations, "list")
+    expect_is(imputation$zerofiltered, "list")
+    expect_is(imputation$dropoutprobabilities, "matrix")
+
+    # entries that are zero are less after setting biological zeros
+    expect_true(sum(imputation$imputations$Baseline == 0) <
+                    sum(imputation$zerofiltered$Baseline == 0))
+
+    # works when providing labels
+    expect_is(Impute(data = ADImpute::demo_data, do = "Baseline", cores = 2,
+           labels = c(rep("A",20),rep("B",30)), true.zero.thr = .3), "list")
+})

@@ -59,7 +59,7 @@ with hgnc_symbols in rows and columns. Doesn't have to be squared. See
 
 \item{net.implementation}{character; either "iteration", for an iterative
 solution, or "pseudoinv", to use Moore-Penrose pseudo-inversion as a
-solution.}
+solution. "pseudoinv" is not advised for big data.}
 
 \item{tr.length}{matrix with at least 2 columns: "hgnc_symbol" and
 "transcript_length"}
