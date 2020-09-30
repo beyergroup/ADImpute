@@ -8,8 +8,8 @@ EvaluateMethods(data, do = c("Baseline", "DrImpute", "Network"),
 write = FALSE, train.ratio = .7, train.only = TRUE, mask.ratio = .1,
 outdir = getwd(), scale = 1, pseudo.count = 1, labels = NULL,
 cell.clusters = 2, drop_thre = NULL, type = "count", cores = 4,
-net.coef = NULL, net.implementation = "iteration", tr.length =
-ADImpute::transcript_length, bulk = NULL, ...)
+net.coef = ADImpute::network.coefficients, net.implementation = "iteration",
+tr.length = ADImpute::transcript_length, bulk = NULL, ...)
 }
 \arguments{
 \item{data}{matrix; normalized counts, not logged (genes as rows and samples

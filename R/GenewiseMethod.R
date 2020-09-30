@@ -51,22 +51,15 @@ ChooseMethod <- function(real, masked, imputed, write.to.file = TRUE) {
     which_masked <- (real != 0) & (masked == 0) # distinguishes masked values
                                           # from dropouts in the original data
 
-  MSE <- lapply(imputed,
-                function(x)
-                  vapply(rownames(real),
-                         function(g) {
+    MSE <- lapply(imputed, function(x) vapply(rownames(real),
+                        function(g) {
                            if (g %in% rownames(x)) {
                              ComputeMSEGenewise(
                                real = real[g, ],
                                masked = which_masked[g, ],
                                imputed = x[g, ],
                                baseline = identical(x, imputed$Baseline)
-                             )
-                           } else{
-                             NA
-                           }
-                         },
-                         FUN.VALUE = 1))
+                             )} else{ NA }}, FUN.VALUE = 1))
   MSE <- do.call(cbind, MSE)
 
   # keep cases where at least 2 methods are available for comparison

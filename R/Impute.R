@@ -90,6 +90,10 @@ ImputeBaseline <- function(data, write = FALSE, ...){
 
     cat("Imputing data using average expression\n")
 
+    if(missing(data) | is.null(data))
+        stop("Please provide an input data matrix\n")
+    data <- as.matrix(data)
+
     dropouts <- data == 0
 
     # Compute mean expression levels across cells
@@ -132,15 +136,19 @@ ImputeBaseline <- function(data, write = FALSE, ...){
 #'
 ImputeDrImpute <- function(data, write = FALSE){
 
-  cat("Imputing data using DrImpute\n")
+    cat("Imputing data using DrImpute\n")
 
-  res <- DrImpute::DrImpute(as.matrix(data))
-  colnames(res) <- colnames(data)
+    if(missing(data) | is.null(data))
+      stop("Please provide an input data matrix\n")
+    data <- as.matrix(data)
 
-  if(write){
-    dir.create("DrImpute")
-    saveRDS(res, "DrImpute/drimputed.rds")
-  }
+    res <- DrImpute::DrImpute(as.matrix(data))
+    colnames(res) <- colnames(data)
+
+    if(write){
+      dir.create("DrImpute")
+      saveRDS(res, "DrImpute/drimputed.rds")
+    }
 
   return(res)
 }
@@ -180,7 +188,7 @@ ImputeNetwork <- function(data,
 
     # Check arguments
     Check <- CreateArgCheck(match = list("type" = type),
-                            acceptable = list("type"=c("iteration","pseudoinv")))
+                            acceptable =list("type"=c("iteration","pseudoinv")))
     ArgumentCheck::finishArgCheck(Check)
 
     # Limit data and network to genes common to both
@@ -235,24 +243,28 @@ ImputeNetwork <- function(data,
 #'
 ImputeSAVER <- function(data, cores, try.mean = FALSE, write = FALSE){
 
-  cat("Imputing data using SAVER\n")
+    cat("Imputing data using SAVER\n")
 
-  if(write)
-    dir.create("SAVER")
+    if(missing(data) | is.null(data))
+        stop("Please provide an input data matrix.\n")
 
-  if(try.mean){
-    imp_mean <- SAVER::saver(data, size.factor = 1, ncores = cores,
-                             null.model = TRUE)
     if(write)
-      saveRDS(object = imp_mean, file = "SAVER/SAVER_nullmodel.rds")
-  }
+        dir.create("SAVER")
 
-  res <- SAVER::saver(data, ncores = cores, size.factor = 1)
+    if(try.mean){
+        imp_mean <- SAVER::saver(data, size.factor = 1, ncores = cores,
+                                 null.model = TRUE)
+        if(write)
+            saveRDS(object = imp_mean, file = "SAVER/SAVER_nullmodel.rds")
+    }
 
-  if (write){
-    dir.create("SAVER")
-    saveRDS(object = res, file = "SAVER/SAVER.rds")
-  }
+    res <- SAVER::saver(data, size.factor = 1, ncores = cores,
+                        estimates.only = TRUE)
 
-  return(res$estimate)
+    if (write){
+        dir.create("SAVER")
+        saveRDS(object = res, file = "SAVER/SAVER.rds")
+    }
+
+    return(res)
 }

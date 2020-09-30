@@ -141,6 +141,7 @@ ImputeNetParallel <- function(dropout.matrix,
     }
     imp <- arranged$centered
   } else{
+    arranged$network <- as.matrix(arranged$network)
     cl <- parallel::makeCluster(cores)
     imp <- parallel::parSapply(cl, seq_len(ncol(arranged$centered)),
                                function(i) {

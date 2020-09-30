@@ -232,9 +232,6 @@ EvaluateMethods <- function(data, do = c("Baseline", "DrImpute", "Network"),
 #' imputed_data <- Impute(do = "Network", data = norm_data[,1:10],
 #' net.implementation = "pseudoinv", net.coef = ADImpute::demo_net,
 #' cores = 2)
-#' # Don't impute biological zeros
-#' imputed_data <- Impute(do = "Baseline", data = norm_data, cores = 2,
-#' net.coef = ADImpute::demo_net, true.zero.thr = .2)
 #'
 #' @seealso \code{\link{EvaluateMethods}},
 #' \code{\link{ImputeBaseline}},
