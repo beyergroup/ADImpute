@@ -1,5 +1,5 @@
 ---
-title: "ADImpute_tutorial"
+title: "ADImpute tutorial"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{ADImpute_tutorial}
@@ -21,17 +21,33 @@ For time and memory management reasons, this demo uses a subset of the Grun
 pancreas dataset. When using the ADImpute package, please run on the full
 datasets (no subsetting for genes), as the gene regulatory model employed uses
 expression information from all genes in the data.
-```{r}
-RPM <- NormalizeRPM(ADImpute::demo_data) # normalize for library size
+
+## Imputation with method(s) of choice
+ADImpute currently supports, by default, DrImpute and two novel imputation
+methods: a baseline method, "Baseline", where genes are imputed with their
+average quantified expression across the dataset, and a regulatory-network-
+-based method, which uses previously learnt regulatory models of gene expression
+to infer the expression of dropout genes from the expression of other relevant
+genes in the cell.
+```{r warning=FALSE}
+RPM <- ADImpute::NormalizeRPM(ADImpute::demo_data)
+imputed <- Impute(data = RPM,
+                  do = c("Baseline","Network","DrImpute"),
+                  cores = 2,
+                  net.coef = ADImpute::demo_net)
 ```
 
-Evaluate methods to determine the best performing imputation method for each
-gene. This step sets a fraction of the quantified entries in the input data to
-zero, applies different normalization methods to the data and compares the
+## Imputation with ensemble
+In addition to running different methods on the data, ADImpute can also
+determine which of these performs best for each gene and perform an "Ensemble"
+imputation, which combines the best performing methods for different genes.
+First, evaluate methods to determine the best performing imputation method for
+each gene. This step sets a fraction of the quantified entries in the input data
+to zero, applies different imputation methods to the data and compares the
 imputation results to the original values. This allows ADImpute to determine
 which method imputes values with the lowest errors for each gene.
 ```{r, warning=FALSE}
-set.seed(1)
+RPM <- ADImpute::NormalizeRPM(ADImpute::demo_data)
 methods_pergene <- EvaluateMethods(data = RPM,
                                    do = c("Baseline", "DrImpute",
                                           "Network"), # these are the default
@@ -41,9 +57,8 @@ methods_pergene <- EvaluateMethods(data = RPM,
                                    cores = 2,
                                    train.ratio = .7, mask.ratio = .2,
                                    net.coef = ADImpute::demo_net)
-head(methods_pergene) # show the best performing method for the first 6 genes
+head(methods_pergene)
 ```
-
 After determining which method performs best for each gene, ADImpute redoes the
 imputation on the original data and combines the results of different methods
 into an ensemble.
@@ -54,6 +69,28 @@ imputed <- Impute(do = "Ensemble",
                   cores = 2,
                   net.coef = ADImpute::demo_net)
 str(imputed)
+```
+
+## Determination of biological zeros
+Some zeros in the data correspond to genes expressed in the cell, but not
+captured upon sequencing - the technical dropouts - while others correspond to
+genes truly not expressed in the cell - the biological zeros. In order to avoid
+imputation of biological zeros, ADImpute adapts the well-established approach of
+scImpute for the computation of the probability of each entry to be a technical
+dropout. A matrix of such probabilities, of the same size as the original data,
+can be provided by the user, or computed by ADImpute using scImpute's approach,
+as below. To activate this option, provide a value for true.zero.thr in the call
+to Impute(), as exemplified below:
+```{r, warning=FALSE}
+imputed <- Impute(do = "Baseline",
+                  data = RPM,
+                  cores = 2,
+                  true.zero.thr = .3)
+str(imputed)
+```
+
+```{r}
+library(ADImpute)
 ```
 
 ```{r}

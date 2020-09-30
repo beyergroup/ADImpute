@@ -1,6 +1,6 @@
 
 <!-- badges: start -->
-  [![Travis build status](https://travis-ci.com/anacarolinaleote/ADImpute.svg?branch=master)](https://travis-ci.com/anacarolinaleote/ADImpute)
+[![Build Status](https://travis-ci.com/anacarolinaleote/ADImpute.svg?branch=master)](https://travis-ci.com/anacarolinaleote/ADImpute)
   [![Build status](https://ci.appveyor.com/api/projects/status/qsslj60tuvcg75vr?svg=true)](https://ci.appveyor.com/project/anacarolinaleote/adimpute)
 <!-- badges: end -->
 
@@ -42,7 +42,7 @@ determine which of these performs best for each gene and perform an "Ensemble"
 imputation, which combines the best performing methods for different genes.
 First, evaluate methods to determine the best performing imputation method for
 each gene. This step sets a fraction of the quantified entries in the input data
-to zero, applies different normalization methods to the data and compares the
+to zero, applies different imputation methods to the data and compares the
 imputation results to the original values. This allows ADImpute to determine
 which method imputes values with the lowest errors for each gene.
 ```
