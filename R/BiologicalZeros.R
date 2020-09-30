@@ -49,26 +49,26 @@ GetDropoutProbabilities <- function(data, thre, cell.clusters = 2,
                                     labels = NULL, type = "count", ncores,
                                     genelen = ADImpute::transcript_length){
 
-  labeled <- !is.null(labels)
+    labeled <- !is.null(labels)
 
-  if(type == "TPM"){
-    common <- intersect(rownames(data), genelen$hgnc_symbol)
-    data <- data[common, ]
-    genelen <- genelen[match(common,genelen$hgnc_symbol), ]
-  }
-  count_lnorm = read_count(raw_count = data, type = type, genelen = genelen)
+    if(type == "TPM"){
+        common <- intersect(rownames(data), genelen$hgnc_symbol)
+        data <- data[common, ]
+        genelen <- genelen[match(common,genelen$hgnc_symbol), ]
+    }
+    count_lnorm = read_count(raw_count = data, type = type, genelen = genelen)
 
-  if(!labeled){
-    dropmat = imputation_model8(count = count_lnorm, labeled = labeled,
-                                point = log10(1.01), drop_thre = thre,
-                                Kcluster = cell.clusters, ncores = ncores)
-  }else{
-    dropmat = imputation_wlabel_model8(count = count_lnorm, labeled = labeled,
-                                       cell_labels = labels,
-                                       point = log10(1.01), drop_thre = thre,
-                                       ncores = ncores, Kcluster = NULL)
-  }
-  return(dropmat)
+    if(!labeled){
+        dropmat = imputation_model8(count = count_lnorm, labeled = labeled,
+                                    point = log10(1.01), drop_thre = thre,
+                                    Kcluster = cell.clusters, ncores = ncores)
+    }else{
+        dropmat = imputation_wlabel_model8(count = count_lnorm,
+                            labeled = labeled, cell_labels = labels,
+                            point = log10(1.01), drop_thre = thre,
+                            ncores = ncores, Kcluster = NULL)
+    }
+    return(dropmat)
 }
 
 
@@ -108,9 +108,9 @@ GetDropoutProbabilities <- function(data, thre, cell.clusters = 2,
 #' probabilities for the corresponding entries
 #'
 HandleBiologicalZeros <- function(data, imputed, thre = 0.5, cell.clusters,
-                                  labels = NULL, type = "count", ncores,
-                                  genelen = ADImpute::transcript_length,
-                                  prob.mat = NULL){
+                                labels = NULL, type = "count", ncores,
+                                genelen = ADImpute::transcript_length,
+                                prob.mat = NULL){
 
     # the probability is not given - compute it
     if(is.null(prob.mat))
@@ -155,21 +155,21 @@ HandleBiologicalZeros <- function(data, imputed, thre = 0.5, cell.clusters,
 #'
 SetBiologicalZeros <- function(imputation, drop_probs, thre = .2, was_zero){
 
-  if(!all.equal(dim(imputation), dim(drop_probs))){
-    # limit both to the set of common genes / cells
-    common_genes <- intersect(rownames(imputation), rownames(drop_probs))
-    common_cells <- intersect(colnames(imputation), colnames(drop_probs))
-    imputation <- imputation[common_genes, common_cells]
-    drop_probs <- drop_probs[common_genes, common_cells]
-  }
+    if(!all.equal(dim(imputation), dim(drop_probs))){
+        # limit both to the set of common genes / cells
+        common_genes <- intersect(rownames(imputation), rownames(drop_probs))
+        common_cells <- intersect(colnames(imputation), colnames(drop_probs))
+        imputation <- imputation[common_genes, common_cells]
+        drop_probs <- drop_probs[common_genes, common_cells]
+    }
 
-  # do not impute entries with NA probability (give prob = 0)
-  drop_probs[is.na(drop_probs)] <- 0
+    # do not impute entries with NA probability (give prob = 0)
+    drop_probs[is.na(drop_probs)] <- 0
 
-  # set prob < threshold to zero
-  set_to_zero <- drop_probs < thre
-  imputed_entries <- was_zero & (imputation != 0) # limit to imputed values
-  imputation[set_to_zero & imputed_entries] <- 0
+    # set prob < threshold to zero
+    set_to_zero <- drop_probs < thre
+    imputed_entries <- was_zero & (imputation != 0) # limit to imputed values
+    imputation[set_to_zero & imputed_entries] <- 0
 
-  return(imputation)
+    return(imputation)
 }

@@ -247,6 +247,7 @@ ImputeSAVER <- function(data, cores, try.mean = FALSE, write = FALSE){
 
     if(missing(data) | is.null(data))
         stop("Please provide an input data matrix.\n")
+    data <- as.matrix(data)
 
     if(write)
         dir.create("SAVER")

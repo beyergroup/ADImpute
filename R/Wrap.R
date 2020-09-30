@@ -91,49 +91,54 @@
 #' @export
 #'
 EvaluateMethods <- function(data, do = c("Baseline", "DrImpute", "Network"),
-                        write = FALSE, train.ratio = .7, train.only = TRUE,
-                        mask.ratio = .1, outdir = getwd(), scale = 1,
-                        pseudo.count = 1, labels = NULL, cell.clusters = 2,
-                        drop_thre = NULL, type = "count", cores = 4, net.coef =
-                          ADImpute::network.coefficients, net.implementation =
-                          "iteration", tr.length = ADImpute::transcript_length,
-                        bulk = NULL, ...){
+                    write = FALSE, train.ratio = .7, train.only = TRUE,
+                    mask.ratio = .1, outdir = getwd(), scale = 1, pseudo.count =
+                      1, labels = NULL, cell.clusters = 2, drop_thre = NULL,
+                    type = "count", cores = 4, net.coef =
+                      ADImpute::network.coefficients, net.implementation =
+                      "iteration", tr.length = ADImpute::transcript_length,
+                    bulk = NULL, ...){
 
     # Check arguments
     Check <- CreateArgCheck(missing = list("data" = missing(data)),
                             match = list("type" = type),
-                            acceptable = list("type" = c("TPM","count")))
-  ArgumentCheck::finishArgCheck(Check)
-  data <- DataCheck_Matrix(data)
-  tr.length <- DataCheck_TrLength(tr.length)
+                            acceptable = list("type" = c("TPM","count")),
+                            null = list("net.coef" = is.null(net.coef),
+                                        "data" = is.null(data)))
+    ArgumentCheck::finishArgCheck(Check)
+    data <- DataCheck_Matrix(data)
+    tr.length <- DataCheck_TrLength(tr.length)
 
-  if(write){
-    savedir <- getwd(); dir.create(paste0(outdir,"/training"))
-    setwd(paste0(outdir,"/training")); on.exit(setwd(savedir))
-  }
+    if(sum(tolower(do) %in% c("baseline","drimpute","network")) < 2){
+      warning(paste0("You are using less than 2 of the default supported ",
+                     "methods. Make sure you pass at least 2 viable methods ",
+                     "for performance comparison.\n"))
+    }
 
-  train_data <- CreateTrainData(data, train.ratio = train.ratio,
-                                train.only = train.only,
-                                mask = mask.ratio, write = write)
+    if(write){ savedir <- getwd(); dir.create(paste0(outdir,"/training"))
+                setwd(paste0(outdir,"/training")); on.exit(setwd(savedir))}
 
-  train_imputed <- Impute(data = train_data$mask, do = do[do != "Ensemble"],
-                          write = write, outdir = getwd(),
-                          scale = scale, pseudo.count = pseudo.count,
-                          # scImpute arguments below
-                          labels = labels, cell.clusters = cell.clusters,
-                          drop_thre = drop_thre, type = type,
-                          tr.length = tr.length, #
-                          bulk = bulk, # SCRABBLE argument
-                          cores = cores, net.coef = net.coef,
-                          net.implementation = net.implementation, ...)
+    train_data <- CreateTrainData(data, train.ratio = train.ratio,
+                                    train.only = train.only,
+                                    mask = mask.ratio, write = write)
 
-  # Run optimum choice
-  choice <- ChooseMethod(real = round(train_data$train, 2),
-                         masked = round(train_data$mask, 2),
-                         imputed = train_imputed, write.to.file = write)
+    train_imputed <- Impute(data = train_data$mask, do = do[do != "Ensemble"],
+                            write = write, outdir = getwd(),
+                            scale = scale, pseudo.count = pseudo.count,
+                            # scImpute arguments below
+                            labels = labels, cell.clusters = cell.clusters,
+                            drop_thre = drop_thre, type = type,
+                            tr.length = tr.length, #
+                            bulk = bulk, # SCRABBLE argument
+                            cores = cores, net.coef = net.coef,
+                            net.implementation = net.implementation, ...)
 
-  return(choice)
-}
+    # Run optimum choice
+    choice <- ChooseMethod(real = round(train_data$train, 2),
+                            masked = round(train_data$mask, 2),
+                            imputed = train_imputed, write.to.file = write)
+
+  return(choice)}
 
 
 #' @title Dropout imputation using gene-specific best-performing methods
@@ -142,8 +147,8 @@ EvaluateMethods <- function(data, do = c("Baseline", "DrImpute", "Network"),
 #' method.choice = NULL, scale = 1, pseudo.count = 1, labels = NULL,
 #' cell.clusters = 2, drop_thre = NULL, type = "count",
 #' tr.length = ADImpute::transcript_length, cores = 4, net.coef =
-#' ADImpute::network.coefficients, net.implementation = "iteration", bulk = NULL,
-#' true.zero.thr = NULL, prob.mat = NULL, ...)
+#' ADImpute::network.coefficients, net.implementation = "iteration",
+#' bulk = NULL, true.zero.thr = NULL, prob.mat = NULL, ...)
 #'
 #' @description \code{Impute} performs dropout imputation based on the
 #' performance results obtained in the training data, coupled to normalization
@@ -242,28 +247,26 @@ EvaluateMethods <- function(data, do = c("Baseline", "DrImpute", "Network"),
 #' @export
 #'
 Impute <- function(data, do = "Ensemble", write = FALSE, outdir = getwd(),
-            method.choice = NULL, scale = 1, pseudo.count = 1,
-            labels = NULL, cell.clusters = 2, drop_thre = NULL, type = "count",
-            tr.length = ADImpute::transcript_length, cores = 4, net.coef =
+            method.choice = NULL, scale = 1, pseudo.count = 1, labels = NULL,
+            cell.clusters = 2, drop_thre = NULL, type = "count", tr.length =
+              ADImpute::transcript_length, cores = 4, net.coef =
               ADImpute::network.coefficients, net.implementation = "iteration",
             bulk = NULL, true.zero.thr = NULL, prob.mat = NULL, ...){
 
     # Check arguments
     Check <- CreateArgCheck(missing = list("data" = missing(data)),
                             match = list("type" = type),
-                            acceptable = list("type" = c("TPM","count")))
+                            acceptable = list("type" = c("TPM","count")),
+                            null = list("net.coef" = is.null(net.coef),
+                                        "data" = is.null(data)))
     ArgumentCheck::finishArgCheck(Check)
-    CheckArguments_Impute(data, method.choice, do, tr.length,
-        labels, cell.clusters, true.zero.thr, drop_thre)
-    data <- DataCheck_Matrix(data)
-    tr.length <- DataCheck_TrLength(tr.length)
+    CheckArguments_Impute(data, method.choice, do, tr.length, labels,
+                          cell.clusters, true.zero.thr, drop_thre)
+    data <- DataCheck_Matrix(data); tr.length <- DataCheck_TrLength(tr.length)
+    if(write){savedir <- getwd(); dir.create(paste0(outdir,"/imputation"))
+              setwd(paste0(outdir,"/imputation")); on.exit(setwd(savedir))}
 
-    if(write){
-        savedir <- getwd(); dir.create(paste0(outdir,"/imputation"))
-        setwd(paste0(outdir,"/imputation")); on.exit(setwd(savedir))}
-
-    if("ensemble" %in% tolower(do))
-        do <- union(c(do, "Network"), unique(method.choice))
+    if("ensemble" %in% tolower(do)){do <- c(do,"Network",unique(method.choice))}
 
     imputed <- list()
 
@@ -286,14 +289,10 @@ Impute <- function(data, do = "Ensemble", write = FALSE, outdir = getwd(),
 
     # Estimate true zeros
     if(!is.null(true.zero.thr)){
-
-        results <- list("imputations" = imputed)
-        results <- c(results,
+        results <- c(list("imputations" = imputed),
                      HandleBiologicalZeros(data = data, imputed = imputed,
                             thre = true.zero.thr, cell.clusters = cell.clusters,
                             labels = labels, type = type, ncores = cores,
                             genelen = tr.length, prob.mat))
-
         return(results)
-
   } else{ return(imputed) } }

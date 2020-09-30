@@ -4,7 +4,8 @@
 \alias{CreateArgCheck}
 \title{Argument check}
 \usage{
-CreateArgCheck(missing = NULL, match = NULL, acceptable = NULL)
+CreateArgCheck(missing = NULL, match = NULL, acceptable = NULL,
+null = NULL)
 }
 \arguments{
 \item{missing}{named list; logical. Name corresponds to variable name, and
@@ -15,6 +16,9 @@ entry to its value.}
 
 \item{acceptable}{named list. Name corresponds to variable name, and
 corresponding entry to its acceptable values.}
+
+\item{null}{named list; logical. Name corresponds to variable name, and
+corresponding entry to whether it was NULL in the function call.}
 }
 \value{
 argument check object.

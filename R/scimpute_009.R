@@ -101,8 +101,7 @@ find_neighbors_unlabeled <- function(count_hv, J, Kcluster = NULL,
   }else{
       var_thre = 0.6
       pca = rsvd::rpca(t(count_hv), k = 1000, center = TRUE, scale = FALSE)
-      eigs = (pca$sdev)^2
-      var_cum = cumsum(eigs)/sum(eigs)
+      eigs = (pca$sdev)^2; var_cum = cumsum(eigs)/sum(eigs)
       if(max(var_cum) <= var_thre){ npc = length(var_cum) }else{
         npc = which.max(var_cum > var_thre); npc = max(npc, Kcluster)
       }
@@ -115,8 +114,7 @@ find_neighbors_unlabeled <- function(count_hv, J, Kcluster = NULL,
     cl <- parallel::makeCluster(ncores)
     dist_cells_list = parallel::parLapply(cl, seq_len(J), function(id1){
       d = vapply(seq_len(id1), function(id2){
-        sse = sum((mat_pcs[, id1] - mat_pcs[, id2])^2)
-        sqrt(sse)
+        sse = sum((mat_pcs[, id1] - mat_pcs[, id2])^2); sqrt(sse)
       }, FUN.VALUE = 1.0)
       return(c(d, rep(0, J-id1)))
     })
@@ -138,114 +136,112 @@ find_neighbors_unlabeled <- function(count_hv, J, Kcluster = NULL,
     print("cluster sizes:"); print(spec_res@size)
     nbs = rep(NA, J); nbs[non_out] = spec_res
 
-    return(list(dist_cells = dist_cells, clust = nbs))
-}
+    return(list(dist_cells = dist_cells, clust = nbs))}
 
 
 find_va_genes = function(parslist, subcount){
-  point = log10(1.01)
-  valid_genes = which( (rowSums(subcount) > point * ncol(subcount)) &
-                         stats::complete.cases(parslist) )
-  if(length(valid_genes) == 0) return(valid_genes)
-  # find out genes that violate assumption
-  mu = parslist[, "mu"]
-  sgene1 = which(mu <= log10(1+1.01))
-  # sgene2 = which(mu <= log10(10+1.01) & mu - parslist[,5] > log10(1.01))
+    point = log10(1.01)
+    valid_genes = which( (rowSums(subcount) > point * ncol(subcount)) &
+                           stats::complete.cases(parslist) )
+    if(length(valid_genes) == 0) return(valid_genes)
+    # find out genes that violate assumption
+    mu = parslist[, "mu"]
+    sgene1 = which(mu <= log10(1+1.01))
+    # sgene2 = which(mu <= log10(10+1.01) & mu - parslist[,5] > log10(1.01))
 
-  dcheck1 = stats::dgamma(mu+1, shape = parslist[, "alpha"],
-                          rate = parslist[, "beta"])
-  dcheck2 = stats::dnorm(mu+1, mean = parslist[, "mu"],
-                         sd = parslist[, "sigma"])
-  sgene3 = which(dcheck1 >= dcheck2 & mu <= 1)
-  sgene = union(sgene1, sgene3)
-  valid_genes = setdiff(valid_genes, sgene)
-  return(valid_genes)
+    dcheck1 = stats::dgamma(mu+1, shape = parslist[, "alpha"],
+                            rate = parslist[, "beta"])
+    dcheck2 = stats::dnorm(mu+1, mean = parslist[, "mu"],
+                           sd = parslist[, "sigma"])
+    sgene3 = which(dcheck1 >= dcheck2 & mu <= 1)
+    sgene = union(sgene1, sgene3)
+    valid_genes = setdiff(valid_genes, sgene)
+    return(valid_genes)
 }
 
 ### root-finding equation
 fn = function(alpha, target){
-  log(alpha) - digamma(alpha) - target
+    log(alpha) - digamma(alpha) - target
 }
 
 
 ### estimate parameters in the mixture distribution
 get_mix = function(xdata, point){
-  inits = rep(0, 5)
-  inits[1] = sum(xdata == point)/length(xdata)
-  if (inits[1] == 0) {inits[1] = 0.01}
-  inits[2:3] = c(0.5, 1)
-  xdata_rm = xdata[xdata > point]
-  inits[4:5] = c(mean(xdata_rm), stats::sd(xdata_rm))
-  if (is.na(inits[5])) {inits[5] = 0}
-  paramt = inits
-  eps = 10
-  iter = 0
-  loglik_old = 0
+    inits = rep(0, 5)
+    inits[1] = sum(xdata == point)/length(xdata)
+    if (inits[1] == 0) {inits[1] = 0.01}
+    inits[2:3] = c(0.5, 1)
+    xdata_rm = xdata[xdata > point]
+    inits[4:5] = c(mean(xdata_rm), stats::sd(xdata_rm))
+    if (is.na(inits[5])) {inits[5] = 0}
+    paramt = inits
+    eps = 10
+    iter = 0
+    loglik_old = 0
 
-  while(eps > 0.5) {
-    wt = calculate_weight(xdata, paramt)
-    paramt[1] = sum(wt[, 1])/nrow(wt)
-    paramt[4] = sum(wt[, 2] * xdata)/sum(wt[, 2])
-    paramt[5] = sqrt(sum(wt[, 2] * (xdata - paramt[4])^2)/sum(wt[, 2]))
-    paramt[2:3] = update_gmm_pars(x=xdata, wt=wt[,1])
+    while(eps > 0.5) {
+        wt = calculate_weight(xdata, paramt)
+        paramt[1] = sum(wt[, 1])/nrow(wt)
+        paramt[4] = sum(wt[, 2] * xdata)/sum(wt[, 2])
+        paramt[5] = sqrt(sum(wt[, 2] * (xdata - paramt[4])^2)/sum(wt[, 2]))
+        paramt[2:3] = update_gmm_pars(x=xdata, wt=wt[,1])
 
-    loglik = sum(log10(dmix(xdata, paramt)))
-    eps = (loglik - loglik_old)^2
-    loglik_old = loglik
-    iter = iter + 1
-    if (iter > 100)
-      break
+        loglik = sum(log10(dmix(xdata, paramt)))
+        eps = (loglik - loglik_old)^2
+        loglik_old = loglik
+        iter = iter + 1
+        if (iter > 100){ break }
   }
   return(paramt)
 }
 
-get_mix_parameters <-
-  function (count, point = log10(1.01), path, ncores = 8)
-  {
+get_mix_parameters <- function (count, point = log10(1.01), path, ncores = 8){
+
     count = as.matrix(count)
     null_genes = which(abs(rowSums(count) - point * ncol(count)) < 1e-10)
     cl <- parallel::makeCluster(ncores)
     parslist = parallel::parLapply(cl, seq_len(nrow(count)), function(ii) {
-      if (ii %% 2000 == 0) {
-        gc()
-        print(ii)
-      }
-      if (ii %in% null_genes) {
-        return(rep(NA, 5))
-      }
-      xdata = count[ii, ]
-      paramt = tryCatch(get_mix(xdata, point), #silent = TRUE,
-                        error = function(e) rep(NA,5))
-      return(paramt)
+        if (ii %% 2000 == 0) {
+            gc()
+            print(ii)
+        }
+        if (ii %in% null_genes) {
+            return(rep(NA, 5))
+        }
+        xdata = count[ii, ]
+        paramt = tryCatch(get_mix(xdata, point), #silent = TRUE,
+                          error = function(e) rep(NA,5))
+        return(paramt)
     })
     parallel::stopCluster(cl)
     parslist = Reduce(rbind, parslist)
     colnames(parslist) = c("rate", "alpha", "beta", "mu", "sigma")
     return(parslist)
-  }
+}
 
 
 imputation_model8 = function(count, labeled = FALSE, point, drop_thre = 0.5,
                              Kcluster = 10, ncores){
 
-  count = as.matrix(count); I = nrow(count); J = ncol(count); count_imp = count
+    count = as.matrix(count); I = nrow(count); J = ncol(count)
+    count_imp = count
 
-  # find highly variable genes
-  count_hv = find_hv_genes(count, I, J);
-  print("searching candidate neighbors ... ")
-  if(Kcluster == 1){
-    clust = rep(1, J)
-    if(J < 5000){
-      var_thre = 0.4; pca = stats::prcomp(t(count_hv))
-      eigs = (pca$sdev)^2; var_cum = cumsum(eigs)/sum(eigs)
-      if(max(var_cum) <= var_thre){ npc = length(var_cum)
-      }else{ npc = which.max(var_cum > var_thre); npc = max(npc, Kcluster) }
+    # find highly variable genes
+    count_hv = find_hv_genes(count, I, J);
+    print("searching candidate neighbors ... ")
+    if(Kcluster == 1){
+        clust = rep(1, J)
+        if(J < 5000){
+            var_thre = 0.4; pca = stats::prcomp(t(count_hv))
+            eigs = (pca$sdev)^2; var_cum = cumsum(eigs)/sum(eigs)
+            if(max(var_cum) <= var_thre){ npc = length(var_cum)
+        }else{ npc = which.max(var_cum > var_thre); npc = max(npc, Kcluster) }
     }else{
-      var_thre = 0.6
-      pca = rsvd::rpca(t(count_hv), k = 1000, center = TRUE, scale = FALSE)
-      eigs = (pca$sdev)^2; var_cum = cumsum(eigs)/sum(eigs)
-      if(max(var_cum) <= var_thre){ npc = length(var_cum)
-      }else{ npc = which.max(var_cum > var_thre); npc = max(npc, Kcluster) }
+        var_thre = 0.6
+        pca = rsvd::rpca(t(count_hv), k = 1000, center = TRUE, scale = FALSE)
+        eigs = (pca$sdev)^2; var_cum = cumsum(eigs)/sum(eigs)
+        if(max(var_cum) <= var_thre){ npc = length(var_cum)
+        }else{ npc = which.max(var_cum > var_thre); npc = max(npc, Kcluster) }
     }
 
     if (npc < 3){ npc = 3 }
@@ -253,86 +249,78 @@ imputation_model8 = function(count, labeled = FALSE, point, drop_thre = 0.5,
 
     cl <- parallel::makeCluster(ncores)
     dist_cells_list = parallel::parLapply(cl, seq_len(J), function(id1){
-      d = vapply(seq_len(id1), function(id2){
-        sse = sum((mat_pcs[, id1] - mat_pcs[, id2])^2)
-        sqrt(sse)}, FUN.VALUE = 1.0);
-      return(c(d, rep(0, J-id1)))})
+        d = vapply(seq_len(id1), function(id2){
+            sse = sum((mat_pcs[, id1] - mat_pcs[, id2])^2)
+            sqrt(sse)}, FUN.VALUE = 1.0);
+        return(c(d, rep(0, J-id1)))})
     parallel::stopCluster(cl)
     dist_cells = matrix(0, nrow = J, ncol = J)
     for(cellid in seq_len(J)){dist_cells[cellid, ] = dist_cells_list[[cellid]]}
     dist_cells = dist_cells + t(dist_cells)
-  }else{
+    }else{
     print("inferring cell similarities ...")
     # set.seed(Kcluster)
     neighbors_res = find_neighbors_unlabeled(count_hv = count_hv, J = J,
                                              Kcluster = Kcluster,
                                              ncores = ncores)
     dist_cells = neighbors_res$dist_cells; clust = neighbors_res$clust
-  }
-  # mixture model
-  droprate <- MixtureModel(count, clust, ncores, drop_thre)
-  return(droprate)
+    }
+    # mixture model
+    droprate <- MixtureModel(count, clust, ncores, drop_thre)
+    return(droprate)
 }
 
 
 imputation_wlabel_model8 = function(count, labeled, cell_labels = NULL, point,
                                     drop_thre, Kcluster = NULL, ncores){
 
-  if(!(is.character(cell_labels) | is.numeric(cell_labels) |
-       is.integer(cell_labels))){
-    stop("cell_labels should be a character or integer vector!")
-  }
+    if(!(is.character(cell_labels) | is.numeric(cell_labels) |
+        is.integer(cell_labels))){
+      stop("cell_labels should be a character or integer vector!")}
 
-  count = as.matrix(count); I = nrow(count); J = ncol(count); count_imp = count
+    count = as.matrix(count); I = nrow(count); J = ncol(count); count_imp =count
 
-  count_hv = find_hv_genes(count, I, J)
-  print("searching candidate neighbors ... ")
-  neighbors_res = find_neighbors_labeled(count_hv = count_hv, J = J,
-                                 ncores = ncores, cell_labels = cell_labels)
-  dist_list = neighbors_res$dist_list
-  clust = neighbors_res$clust
+    count_hv = find_hv_genes(count, I, J)
+    print("searching candidate neighbors ... ")
+    neighbors_res = find_neighbors_labeled(count_hv = count_hv, J = J,
+                            ncores = ncores, cell_labels = cell_labels)
+    dist_list = neighbors_res$dist_list; clust = neighbors_res$clust
 
-  # mixture model
-  nclust = sum(!is.na(unique(clust)))
-  cl = parallel::makeCluster(ncores, outfile="")
-  doParallel::registerDoParallel(cl)
+    # mixture model
+    nclust = sum(!is.na(unique(clust)))
+    cl = parallel::makeCluster(ncores, outfile="")
+    doParallel::registerDoParallel(cl)
 
-  droprate = list()
-  for(cc in seq_len(nclust)){
-    print(paste("estimating dropout probability for type", cc, "..."))
-    parslist <- get_mix_parameters(count = count[, which(clust == cc),
-                                                 drop = FALSE],
-                                   point = log10(1.01), ncores = ncores)
+    droprate = list()
+    for(cc in seq_len(nclust)){
+        print(paste("estimating dropout probability for type", cc, "..."))
+        parslist <- get_mix_parameters(count = count[, which(clust == cc),
+                                                     drop = FALSE],
+                                       point = log10(1.01), ncores = ncores)
+        cells = which(clust == cc)
+        if(length(cells) <= 1){ next }
+        print("searching for valid genes ...")
+        valid_genes = find_va_genes(parslist, subcount = count[, cells])
+        if(length(valid_genes) <= 10){ next }
 
-    cells = which(clust == cc)
-    if(length(cells) <= 1){ next }
-    print("searching for valid genes ...")
-    valid_genes = find_va_genes(parslist, subcount = count[, cells])
-    if(length(valid_genes) <= 10){ next }
+        subcount = count[valid_genes, cells, drop = FALSE]
+        Ic = length(valid_genes); Jc = ncol(subcount)
+        parslist = parslist[valid_genes, , drop = FALSE]
 
-    subcount = count[valid_genes, cells, drop = FALSE]
-    Ic = length(valid_genes); Jc = ncol(subcount)
-    parslist = parslist[valid_genes, , drop = FALSE]
+        droprate[[cc]] = t(vapply(seq_len(Ic), function(i) {
+            wt = calculate_weight(subcount[i, ], parslist[i, ])
+            return(wt[, 1])}, FUN.VALUE = rep(1.0,Jc)))
+        dimnames(droprate[[cc]]) <- dimnames(subcount)
+        mucheck = sweep(subcount, MARGIN = 1, parslist[, "mu"], FUN = ">")
+        droprate[[cc]][mucheck & droprate[[cc]] > drop_thre] = 0
+    }
+    parallel::stopCluster(cl)
 
-    droprate[[cc]] = t(vapply(seq_len(Ic), function(i) {
-      wt = calculate_weight(subcount[i, ], parslist[i, ])
-      return(wt[, 1])
-    }, FUN.VALUE = rep(1.0,Jc)))
-    dimnames(droprate[[cc]]) <- dimnames(subcount)
-    mucheck = sweep(subcount, MARGIN = 1, parslist[, "mu"], FUN = ">")
-    droprate[[cc]][mucheck & droprate[[cc]] > drop_thre] = 0
-  }
-  parallel::stopCluster(cl)
+    dropratem <- matrix(data = NA, nrow = nrow(count), ncol = ncol(count),
+                        dimnames = dimnames(count))
+    for(dmat in droprate){ dropratem[rownames(dmat),colnames(dmat)] <- dmat}
 
-  dropratem <- matrix(data = NA, nrow = nrow(count), ncol = ncol(count),
-                      dimnames = dimnames(count))
-  for(dmat in droprate){
-    dropratem[rownames(dmat),colnames(dmat)] <- dmat
-  }
-
-  return(dropratem)
-
-}
+  return(dropratem)}
 
 
 MixtureModel <- function(count, clust, ncores, drop_thre){

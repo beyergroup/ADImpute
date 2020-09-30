@@ -8,8 +8,8 @@ Impute(data, do = "Ensemble", write = FALSE, outdir = getwd(),
 method.choice = NULL, scale = 1, pseudo.count = 1, labels = NULL,
 cell.clusters = 2, drop_thre = NULL, type = "count",
 tr.length = ADImpute::transcript_length, cores = 4, net.coef =
-ADImpute::network.coefficients, net.implementation = "iteration", bulk = NULL,
-true.zero.thr = NULL, prob.mat = NULL, ...)
+ADImpute::network.coefficients, net.implementation = "iteration",
+bulk = NULL, true.zero.thr = NULL, prob.mat = NULL, ...)
 }
 \arguments{
 \item{data}{matrix; raw counts (genes as rows and samples as columns)}

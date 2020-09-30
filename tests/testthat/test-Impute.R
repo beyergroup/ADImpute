@@ -60,20 +60,3 @@ test_that("ImputeNetwork works", {
 })
 
 
-
-test_that("ImputeSAVER works", {
-
-    out <- ImputeSAVER(data = ADImpute::demo_data, cores = 2)
-
-    # test output is a matrix or dgCMatrix
-    expect_is(out, c("matrix","dgCMatrix"))
-    # test output dimensions are the same as in
-    expect_equivalent(dim(ADImpute::demo_data), dim(out))
-
-    # test that it throws an appropriate error when no data
-    expect_error(ImputeSAVER(data = NULL, cores = 1),
-                 "Please provide an input data matrix.")
-
-    # test number of zeros decreases
-    expect_true(sum(ADImpute::demo_data == 0) > sum(out == 0))
-})

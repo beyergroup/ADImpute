@@ -2,7 +2,8 @@
 
 #' @title Argument check
 #'
-#' @usage CreateArgCheck(missing = NULL, match = NULL, acceptable = NULL)
+#' @usage CreateArgCheck(missing = NULL, match = NULL, acceptable = NULL,
+#' null = NULL)
 #'
 #' @description \code{CreateArgCheck} creates tests for argument correctness.
 #'
@@ -12,69 +13,96 @@
 #' entry to its value.
 #' @param acceptable named list. Name corresponds to variable name, and
 #' corresponding entry to its acceptable values.
+#' @param null named list; logical. Name corresponds to variable name, and
+#' corresponding entry to whether it was NULL in the function call.
 #'
 #' @return argument check object.
 #'
-CreateArgCheck <- function(missing = NULL, match = NULL, acceptable = NULL){
+CreateArgCheck <- function(missing = NULL, match = NULL, acceptable = NULL,
+                           null = NULL){
 
     Check <- ArgumentCheck::newArgCheck()
 
     # errors for missing arguments
     if(!is.null(missing)){
-      for(varname in names(missing)){
-        if(missing[[varname]]){
-          ArgumentCheck::addError(paste("A value for ", varname,
-                                        " was not provided", sep = "'"),
-                                  Check)}}}
+        for(varname in names(missing)){
+            if(missing[[varname]]){
+                ArgumentCheck::addError(paste("A value for ", varname,
+                                              " was not provided", sep = "'"),
+                                        Check)}}}
 
     # errors for arguments outside of predefined options
     if(!(is.null(match)) & !(is.null(acceptable))){
         for(varname in names(match)){
             if(!(match[[varname]] %in% acceptable[[varname]]))
                 ArgumentCheck::addError(paste(NULL, varname," must be one of ",
-                                              paste(acceptable[[varname]],
-                                              collapse = "', '"),
-                                              NULL, sep = "'"), Check)}}
+                                                paste(acceptable[[varname]],
+                                                collapse = "', '"),
+                                                NULL, sep = "'"), Check)}}
 
-    # errors for classes
+    # errors for NULL arguments
+    if(!is.null(null)){
+        for(varname in names(null)){
+            if(null[[varname]]){
+                ArgumentCheck::addError(paste(NULL, varname,
+                                            " must have non-NULL value",
+                                            sep = "'"),
+                                        Check)}}}
 
-  return(Check)
+    return(Check)
 }
 
 
 CheckArguments_Impute <- function(data, method.choice, do, tr.length,
-                                  labels, cell.clusters, true.zero.thr,
-                                  drop_thre){
+                            labels, cell.clusters, true.zero.thr, drop_thre){
 
     if (is.null(tr.length))
         tr.length <- ADImpute::transcript_length
 
     if(is.null(method.choice) & ("ensemble" %in% tolower(do))){
         stop(paste0("Please provide method.choice for Ensemble imputation. ",
-                    "Consider running EvaluateMethods()\n"))
-    }
+                    "Consider running EvaluateMethods()\n"))}
 
     if(is.null(labels) & is.null(cell.clusters))
         stop(paste0("Please provide cell type labels ('labels') or number of",
                     " cell clusters ('cell.clusters')\n"))
 
+    if(is.null(do))
+        stop("Please provide appropriate imputation methods\n")
     l <- tolower(do) %in% c("baseline","drimpute","ensemble","network","saver",
                             "scimpute","scrabble")
     if(any(!l))
         warning(paste0("The following methods were detected as input but are",
-                       " not supported and will be ignored: ",
-                       paste(names(l)[!l], collapse = ", ")))
+                        " not supported and will be ignored: ",
+                        paste(NULL, paste(do[!l], collapse = "', '"), NULL,
+                            sep = "'")))
+    if("scimpute" %in% tolower(do)){
+        warning(paste0(
+            "You are trying to run scImpute, which is not supported by ",
+            "default. Make sure you have installed scImpute from GitHub and ",
+            "added the call to ImputescImpute() to the ADImpute code. ",
+            "To add this call, move the code at Impute_extra.R#145 to ",
+            "Wrap.R#276 and uncomment it.\n"))
+    }
+    if("scrabble" %in% tolower(do)){
+        warning(paste0(
+            "You are trying to run SCRABBLE, which is not supported by ",
+            "default. Make sure you have installed SCRABBLE from GitHub and ",
+            "added the call to ImputeSCRABBLE() to the ADImpute code. ",
+            "To add this call, move the code at Impute_extra.R#157 to ",
+            "Wrap.R#276 and uncomment it.\n"))
+    }
+    if(sum(l) == 0)
+        stop("Please provide at least one supported method\n")
 
     if(!is.null(true.zero.thr)){
         if((true.zero.thr < 0) | (true.zero.thr > 1))
             stop("true.zero.thr must be a numeric between 0 and 1")}
     if(!is.null(drop_thre)){
         if((drop_thre < 0) | (drop_thre > 1))
-            stop("drop_thre must be a numeric between 0 and 1")
-    }
+            stop("drop_thre must be a numeric between 0 and 1")}
 
-  return(NULL)
-}
+  return(NULL)}
 
 
 #' @title Data check (matrix)
