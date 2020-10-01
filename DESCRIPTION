@@ -1,7 +1,7 @@
 Package: ADImpute
 Type: Package
 Title: Adaptive Dropout Imputer (ADImpute)
-Version: 0.99.1
+Version: 0.99.2
 Description: This package predicts unmeasured gene expression values from single
     cell RNA-sequencing data (dropout imputation). ADImpute can combine existing
     imputation mehods and 2 novel ones: an average-based model and a gene
