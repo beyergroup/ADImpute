@@ -1,21 +1,16 @@
 # ADImpute predicts unmeasured gene expression values from single cell
 # RNA-sequencing data (dropout imputation). This R-package combines multiple
-# dropout imputation methods, including a novel gene regulatory network-based
-# method.
-# Copyright (C) 2020  Ana Carolina Leote
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
+# dropout imputation methods, including a novel gene regulatory
+# network-based method.  Copyright (C) 2020 Ana Carolina Leote This program
+# is free software: you can redistribute it and/or modify it under the terms
+# of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.  This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
+# Public License for more details.  You should have received a copy of the
+# GNU General Public License along with this program.  If not, see
+# <https://www.gnu.org/licenses/>.
 
 
 #' @title Data read
@@ -29,44 +24,36 @@
 #'
 #' @return matrix; raw counts (genes as rows and samples as columns)
 #'
-ReadData <- function(path, ...){
+ReadData <- function(path, ...) {
 
-  # Read data
-  if (grepl(path, pattern = ".txt")){
+    # Read data
+    if (grepl(path, pattern = ".txt")) {
 
-    data <- data.frame(data.table::fread(file = path,
-                                         header = TRUE,
-                                         sep = "\t",
-                                         showProgress = TRUE,
-                                         ...),
-                       row.names = 1)
+        data <- data.frame(data.table::fread(file = path, header = TRUE,
+            sep = "\t",  showProgress = TRUE, ...), row.names = 1)
 
-    cat("Data loaded\n")
+        cat("Data loaded\n")
 
-  } else if (grepl(path, pattern = ".csv")){
+    } else if (grepl(path, pattern = ".csv")) {
 
-    data <- data.frame(data.table::fread(file = path,
-                                         header = TRUE,
-                                         sep = ",",
-                                         showProgress = TRUE,
-                                         ...),
-                       row.names = 1)
+        data <- data.frame(data.table::fread(file = path, header = TRUE,
+            sep = ",", showProgress = TRUE, ...), row.names = 1)
 
-    cat("Data loaded\n")
+        cat("Data loaded\n")
 
-  } else {
+    } else {
 
-    stop("Please input txt or csv file")
-  }
+        stop("Please input txt or csv file")
+    }
 
-  # Check for NAs - if yes convert to 0
-  if (sum(is.na(data)) > 0){
+    # Check for NAs - if yes convert to 0
+    if (sum(is.na(data)) > 0) {
 
-    data[is.na(data)] <- 0
-    cat("NAs converted to 0\n")
-  }
+        data[is.na(data)] <- 0
+        cat("NAs converted to 0\n")
+    }
 
-  return(as.matrix(data))
+    return(as.matrix(data))
 }
 
 
@@ -88,11 +75,11 @@ ReadData <- function(path, ...){
 #'
 #' @export
 #'
-WriteTXT <- function(object, file){
+WriteTXT <- function(object, file) {
 
-  utils::write.table(object, file, quote = FALSE, sep = "\t")
+    utils::write.table(object, file, quote = FALSE, sep = "\t")
 
-  return(NULL)
+    return(NULL)
 }
 
 
@@ -114,10 +101,9 @@ WriteTXT <- function(object, file){
 #'
 #' @export
 #'
-WriteCSV <- function(object, file){
+WriteCSV <- function(object, file) {
 
-  utils::write.csv(object, file)
+    utils::write.csv(object, file)
 
-  return(NULL)
+    return(NULL)
 }
-

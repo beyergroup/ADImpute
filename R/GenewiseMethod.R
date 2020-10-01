@@ -1,21 +1,16 @@
 # ADImpute predicts unmeasured gene expression values from single cell
 # RNA-sequencing data (dropout imputation). This R-package combines multiple
-# dropout imputation methods, including a novel gene regulatory network-based
-# method.
-# Copyright (C) 2020  Ana Carolina Leote
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
+# dropout imputation methods, including a novel gene regulatory
+# network-based method.  Copyright (C) 2020 Ana Carolina Leote This program
+# is free software: you can redistribute it and/or modify it under the terms
+# of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.  This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
+# Public License for more details.  You should have received a copy of the
+# GNU General Public License along with this program.  If not, see
+# <https://www.gnu.org/licenses/>.
 
 
 #' @title Method choice per gene
@@ -46,36 +41,33 @@ ChooseMethod <- function(real, masked, imputed, write.to.file = TRUE) {
 
     if (!all(colnames(real) == colnames(masked)) &&
         all(rownames(real) == rownames(masked)))
-      stop("Error! Colnames / rownames before and after masking don't match.\n")
+        stop("Error! Dimnames before and after masking don't match.\n")
 
-    which_masked <- (real != 0) & (masked == 0) # distinguishes masked values
-                                          # from dropouts in the original data
+    which_masked <- (real != 0) & (masked == 0)  # distinguishes masked values
+    # from dropouts in the original data
 
-    MSE <- lapply(imputed, function(x) vapply(rownames(real),
-                        function(g) {
-                           if (g %in% rownames(x)) {
-                             ComputeMSEGenewise(
-                               real = real[g, ],
-                               masked = which_masked[g, ],
-                               imputed = x[g, ],
-                               baseline = identical(x, imputed$Baseline)
-                             )} else{ NA }}, FUN.VALUE = 1))
-  MSE <- do.call(cbind, MSE)
+    MSE <- lapply(imputed, function(x) vapply(rownames(real), function(g) {
+        if (g %in% rownames(x)) {
+            ComputeMSEGenewise(real = real[g, ], masked = which_masked[g, ],
+                imputed = x[g, ], baseline = identical(x, imputed$Baseline))
+        } else {
+            NA
+        }
+    }, FUN.VALUE = 1))
+    MSE <- do.call(cbind, MSE)
 
-  # keep cases where at least 2 methods are available for comparison
-  MSE <- MSE[which(rowSums(!is.na(MSE)) >= 2),]
+    # keep cases where at least 2 methods are available for comparison
+    MSE <- MSE[which(rowSums(!is.na(MSE)) >= 2), ]
 
-  cat("Imputation errors computed for", nrow(MSE), "genes\n")
+    cat("Imputation errors computed for", nrow(MSE), "genes\n")
 
-  best_method <- vapply(apply(MSE, 1, which.min),
-                        function(x)
-                          colnames(MSE)[x],
-                        FUN.VALUE = "Method_name")
+    best_method <- vapply(apply(MSE, 1, which.min),
+        function(x) colnames(MSE)[x], FUN.VALUE = "Method_name")
 
-  if (write.to.file)
-    WriteTXT(cbind(MSE, best_method), "method_choices.txt")
+    if (write.to.file)
+        WriteTXT(cbind(MSE, best_method), "method_choices.txt")
 
-  return(best_method)
+    return(best_method)
 }
 
 
@@ -95,30 +87,26 @@ ChooseMethod <- function(real, masked, imputed, write.to.file = TRUE) {
 #'
 #' @return MSE of all imputations indicated by \code{masked}
 #'
-ComputeMSEGenewise <- function(real,
-                               masked,
-                               imputed,
-                               baseline) {
-  if (baseline) {
-    index <- masked # Baseline always imputes
-    if (sum(index) == 0) {
-      mse <- NA
-    } else{
-      mse <- sum((imputed[index] - real[index]) ^ 2,
-                 na.rm = TRUE) / sum(index, na.rm = TRUE)
+ComputeMSEGenewise <- function(real, masked, imputed, baseline) {
+    if (baseline) {
+        index <- masked  # Baseline always imputes
+        if (sum(index) == 0) {
+            mse <- NA
+        } else {
+            mse <- sum((imputed[index] - real[index])^2, na.rm = TRUE)/
+                sum(index, na.rm = TRUE)
+        }
+    } else {
+        index <- masked & (imputed != 0)  # not assess if value is not imputed
+        if (sum(index) == 0) {
+            mse <- NA
+        } else {
+            mse <- sum((imputed[index] - real[index])^2, na.rm = TRUE)/
+                sum(index, na.rm = TRUE)
+        }
     }
-  } else{
-    index <-
-      masked & (imputed != 0) # do not assess if value is not imputed
-    if (sum(index) == 0) {
-      mse <- NA
-    } else{
-      mse <- sum((imputed[index] - real[index]) ^ 2,
-                 na.rm = TRUE) / sum(index, na.rm = TRUE)
-    }
-  }
 
-  return(mse)
+    return(mse)
 }
 
 
@@ -141,19 +129,18 @@ ComputeMSEGenewise <- function(real,
 #'
 #' @return list with resulting matrix after subsetting and after masking
 #'
-CreateTrainData <- function(data, train.ratio = .7, train.only = TRUE,
-                            mask = .1, write = FALSE) {
+CreateTrainData <- function(data, train.ratio = 0.7, train.only = TRUE,
+                            mask = 0.1, write = FALSE) {
 
     # Split data for training
     train_norm <- SplitData(data, ratio = train.ratio, write.to.file = write,
-                            train.only = train.only)
+        train.only = train.only)
 
     # Mask selected training data
-    masked_train_norm <- MaskData(train_norm,
-                                  write.to.file = write,
-                                  mask = mask)
+    masked_train_norm <- MaskData(train_norm, write.to.file = write,
+        mask = mask)
 
-    return(list("train" = train_norm, "mask" = masked_train_norm))
+    return(list(train = train_norm, mask = masked_train_norm))
 }
 
 
@@ -175,35 +162,32 @@ CreateTrainData <- function(data, train.ratio = .7, train.only = TRUE,
 #' @return matrix containing masked raw counts (genes as rows and samples as
 #' columns)
 #'
-MaskData <- function(data,
-                     write.to.file = FALSE,
-                     mask = .1) {
-  cat("Masking training data\n")
+MaskData <- function(data, write.to.file = FALSE, mask = 0.1) {
 
-  data <- DataCheck_Matrix(data)
+    cat("Masking training data\n")
 
-  # Original matrix sparcity
-  sparcity <- sprintf("%.2f", sum(data == 0) / length(data))
-  cat("original sparcity", sparcity, "\n")
+    data <- DataCheck_Matrix(data)
 
-  rowmask <-
-    round(mask * ncol(data)) # samples to be masked per gene
-  maskable <- data != 0 # maskable samples (originally not dropouts)
+    # Original matrix sparcity
+    sparcity <- sprintf("%.2f", sum(data == 0)/length(data))
+    cat("original sparcity", sparcity, "\n")
 
-  maskidx <- t(vapply(seq_len(nrow(maskable)),
-                      function(x)
-                        MaskerPerGene(maskable[x, ], rowmask = rowmask),
-                      FUN.VALUE = rep(FALSE, ncol(data))))
+    rowmask <- round(mask * ncol(data))  # samples to be masked per gene
+    maskable <- data != 0  # maskable samples (originally not dropouts)
 
-  data[maskidx] <- 0
-  sparcity <- sprintf("%.2f", sum(data == 0) / length(data))
-  cat("final sparcity", sparcity, "\n")
+    maskidx <- t(vapply(seq_len(nrow(maskable)),
+        function(x) MaskerPerGene(maskable[x, ], rowmask = rowmask),
+        FUN.VALUE = rep(FALSE, ncol(data))))
 
-  # Write to file
-  if (write.to.file)
-    WriteTXT(data, "masked_data.txt")
+    data[maskidx] <- 0
+    sparcity <- sprintf("%.2f", sum(data == 0)/length(data))
+    cat("final sparcity", sparcity, "\n")
 
-  return(data)
+    # Write to file
+    if (write.to.file)
+        WriteTXT(data, "masked_data.txt")
+
+    return(data)
 }
 
 
@@ -219,19 +203,19 @@ MaskData <- function(data,
 #' @return logical containing positions to mask
 #'
 MaskerPerGene <- function(x, rowmask) {
-  if (sum(x) > rowmask) {
-    # Randomly pick samples to mask
-    tomask <- sample(which(x), rowmask)
-    out <- rep(FALSE, length(x))
-    out[tomask] <- TRUE
-    names(out) <- names(x)
+    if (sum(x) > rowmask) {
+        # Randomly pick samples to mask
+        tomask <- sample(which(x), rowmask)
+        out <- rep(FALSE, length(x))
+        out[tomask] <- TRUE
+        names(out) <- names(x)
 
-    return(out)
+        return(out)
 
-  } else{
-    # Not enough non-dropout samples to mask up to defined ratio, mask all
-    return(x)
-  }
+    } else {
+        # Not enough non-dropout samples to mask up to defined ratio, mask all
+        return(x)
+    }
 }
 
 
@@ -249,31 +233,29 @@ MaskerPerGene <- function(x, rowmask) {
 #' FALSE writes both training and validation sets (defaults to TRUE)
 #'
 #' @details Selects a portion (\code{ratio}) of samples (columns in \code{data})
-#' to be used as training set and writes to file "training_raw.txt".
+#' to be used as training set and writes to file 'training_raw.txt'.
 #'
 #' @return matrix containing raw counts (genes as rows and samples as columns)
 #'
-SplitData <- function(data,
-                      ratio = .7,
-                      write.to.file = FALSE,
-                      train.only = TRUE) {
-  cat("Selecting training data\n")
+SplitData <- function(data, ratio = 0.7, write.to.file = FALSE,
+    train.only = TRUE) {
 
-  # Randomly select samples according to given ratio
-  train_samples <-
-    sample(colnames(data))[seq_len(round(ncol(data) * ratio))]
-  train_data    <- data[, train_samples]
+    cat("Selecting training data\n")
 
-  # Write to file
-  if (write.to.file)
-    WriteTXT(train_data, "training.txt")
+    # Randomly select samples according to given ratio
+    train_samples <- sample(colnames(data))[seq_len(round(ncol(data) * ratio))]
+    train_data <- data[, train_samples]
 
-  # Optionally create and write validation dataset
-  if (!train.only) {
-    validation_data <- data[,!(colnames(data) %in% train_samples)]
+    # Write to file
     if (write.to.file)
-      WriteTXT(validation_data, "validation.txt")
-  }
+        WriteTXT(train_data, "training.txt")
 
-  return(train_data)
+    # Optionally create and write validation dataset
+    if (!train.only) {
+        validation_data <- data[, !(colnames(data) %in% train_samples)]
+        if (write.to.file)
+            WriteTXT(validation_data, "validation.txt")
+    }
+
+    return(train_data)
 }

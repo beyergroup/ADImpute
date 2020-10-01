@@ -71,20 +71,3 @@ test_that("CenterData works", {
   expect_equivalent(CenterData(testdata1)$data[-3,],
                     CenterData(testdata)$data[-3,])
 })
-
-
-# cell_expression <- ADImpute::demo_data[,1]
-# net <- ADImpute::demo_net
-# net <- net[intersect(rownames(net),names(cell_expression)),
-#            intersect(colnames(net),names(cell_expression))]
-# cell_expression <- cell_expression[intersect(unique(unlist(dimnames(net))),
-#                                              names(cell_expression))]
-#
-#
-# test_that("ImputeNonPredictiveDropouts works", {
-#
-#   expect_true(length(ImputeNonPredictiveDropouts(net, cell_expression)) ==
-#                 nrow(net))
-# })
-
-

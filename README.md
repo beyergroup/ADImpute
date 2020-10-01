@@ -91,6 +91,6 @@ In order to use SCRABBLE and/or scImpute imputation, please follow these steps:
 2) clone the ADImpute repository
 2) open the file Impute_extra.R in the source R/ folder of ADImpute
 3) copy the commented lines at the end of the script to the file Wrap.R in the
-source R/ folder of ADImpute, line #276.
+source R/ folder of ADImpute, line #270.
 4) re-load ADImpute using devtools::load_all() on ADImpute's folder
 

@@ -4,20 +4,20 @@
 \alias{ImputeNetParallel}
 \title{Network-based parallel imputation}
 \usage{
-ImputeNetParallel(dropout.matrix, arranged, cores = 4,
-type = "iteration", max.iter = 50)
+ImputeNetParallel(drop.mat, arranged, cores = 4, type = 'iteration',
+max.iter = 50)
 #'
 }
 \arguments{
-\item{dropout.matrix}{matrix, logical; dropout entries in the data matrix
+\item{drop.mat}{matrix, logical; dropout entries in the data matrix
 (genes as rows and samples as columns)}
 
 \item{arranged}{list; output of \code{\link{ArrangeData}}}
 
 \item{cores}{integer; number of cores used for paralell computation}
 
-\item{type}{character; either "iteration", for an iterative solution, or
-"pseudoinv", to use Moore-Penrose pseudo-inversion as a solution.}
+\item{type}{character; either 'iteration', for an iterative solution, or
+'pseudoinv', to use Moore-Penrose pseudo-inversion as a solution.}
 
 \item{max.iter}{numeric; maximum number of iterations for network
 imputation. Set to -1 to remove limit (not recommended)}

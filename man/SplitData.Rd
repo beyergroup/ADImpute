@@ -25,5 +25,5 @@ matrix containing raw counts (genes as rows and samples as columns)
 }
 \details{
 Selects a portion (\code{ratio}) of samples (columns in \code{data})
-to be used as training set and writes to file "training_raw.txt".
+to be used as training set and writes to file 'training_raw.txt'.
 }

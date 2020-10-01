@@ -4,19 +4,19 @@
 \alias{Impute}
 \title{Dropout imputation using gene-specific best-performing methods}
 \usage{
-Impute(data, do = "Ensemble", write = FALSE, outdir = getwd(),
+Impute(data, do = 'Ensemble', write = FALSE, outdir = getwd(),
 method.choice = NULL, scale = 1, pseudo.count = 1, labels = NULL,
-cell.clusters = 2, drop_thre = NULL, type = "count",
+cell.clusters = 2, drop_thre = NULL, type = 'count',
 tr.length = ADImpute::transcript_length, cores = 4, net.coef =
-ADImpute::network.coefficients, net.implementation = "iteration",
+ADImpute::network.coefficients, net.implementation = 'iteration',
 bulk = NULL, true.zero.thr = NULL, prob.mat = NULL, ...)
 }
 \arguments{
 \item{data}{matrix; raw counts (genes as rows and samples as columns)}
 
 \item{do}{character; choice of methods to be used for imputation. Currently
-supported methods are \code{"Baseline"}, \code{"DrImpute"},
-\code{"Network"}, and \code{"Ensemble"}. Defaults to \code{"Ensemble"}.
+supported methods are \code{'Baseline'}, \code{'DrImpute'},
+\code{'Network'}, and \code{'Ensemble'}. Defaults to \code{'Ensemble'}.
 Not case-sensitive. Can include one or more methods. Non-supported methods
 will be ignored.}
 
@@ -43,22 +43,22 @@ to avoid log(0) (defaults to 1)}
 determine dropout values}
 
 \item{type}{A character specifying the type of values in the expression
-matrix. Can be "count" or "TPM"}
+matrix. Can be 'count' or 'TPM'}
 
-\item{tr.length}{matrix with at least 2 columns: "hgnc_symbol" and
-"transcript_length"}
+\item{tr.length}{matrix with at least 2 columns: 'hgnc_symbol' and
+'transcript_length'}
 
 \item{cores}{integer; number of cores used for paralell computation}
 
 \item{net.coef}{matrix; network coefficients. Please provide if you don't
-want to use ADImpute's network model. Must contain one first column "O"
+want to use ADImpute's network model. Must contain one first column 'O'
 acconting for the intercept of the model and otherwise be an adjacency matrix
 with hgnc_symbols in rows and columns. Doesn't have to be squared. See
 \code{ADImpute::demo_net} for a small example.}
 
-\item{net.implementation}{character; either "iteration", for an iterative
-solution, or "pseudoinv", to use Moore-Penrose pseudo-inversion as a
-solution. "pseudoinv" is not advised for big data.}
+\item{net.implementation}{character; either 'iteration', for an iterative
+solution, or 'pseudoinv', to use Moore-Penrose pseudo-inversion as a
+solution. 'pseudoinv' is not advised for big data.}
 
 \item{bulk}{vector of reference bulk RNA-seq, if available (average across
 samples)}
@@ -106,7 +106,7 @@ supported methods are:
  These results are supplied via \code{method.choice}. Applies the imputation
  results of the best performing method to the zero entries of each gene.
 }
-If \code{"Ensemble"} is included in \code{do}, \code{method.choice} has to
+If \code{'Ensemble'} is included in \code{do}, \code{method.choice} has to
 be provided (use output from \code{EvaluateMethods()}).
 \code{Impute} creates a directory \code{imputation} containing the
 imputation results of all methods in \code{do}.
@@ -120,10 +120,10 @@ technical dropouts (genes expressed but not captured).
 # Normalize demo data
 norm_data <- NormalizeRPM(demo_data)
 # Impute with particular method(s)
-imputed_data <- Impute(do = "Network", data = norm_data[,1:10],
+imputed_data <- Impute(do = 'Network', data = norm_data[,1:10],
 net.coef = ADImpute::demo_net, cores = 2)
-imputed_data <- Impute(do = "Network", data = norm_data[,1:10],
-net.implementation = "pseudoinv", net.coef = ADImpute::demo_net,
+imputed_data <- Impute(do = 'Network', data = norm_data[,1:10],
+net.implementation = 'pseudoinv', net.coef = ADImpute::demo_net,
 cores = 2)
 
 }

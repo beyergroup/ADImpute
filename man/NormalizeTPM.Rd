@@ -10,8 +10,8 @@ pseudo.count = 1)
 \arguments{
 \item{data}{matrix; raw data (genes as rows and samples as columns)}
 
-\item{tr_length}{data.frame with at least 2 columns: "hgnc_symbol"
-and "transcript_length"}
+\item{tr_length}{data.frame with at least 2 columns: 'hgnc_symbol'
+and 'transcript_length'}
 
 \item{log}{logical; log TPMs?}
 

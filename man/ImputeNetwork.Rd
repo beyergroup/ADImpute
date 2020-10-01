@@ -4,7 +4,7 @@
 \alias{ImputeNetwork}
 \title{Network-based imputation}
 \usage{
-ImputeNetwork(data, net.coef = NULL, cores = 4, type = "iteration",
+ImputeNetwork(data, net.coef = NULL, cores = 4, type = 'iteration',
 write = FALSE, ...)
 }
 \arguments{
@@ -15,8 +15,8 @@ and log2-transformed (genes as rows and samples as columns)}
 
 \item{cores}{integer; number of cores to use}
 
-\item{type}{character; either "iteration", for an iterative solution, or
-"pseudoinv", to use Moore-Penrose pseudo-inversion as a solution.}
+\item{type}{character; either 'iteration', for an iterative solution, or
+'pseudoinv', to use Moore-Penrose pseudo-inversion as a solution.}
 
 \item{write}{logical; should a file with the imputation results be written?}
 
