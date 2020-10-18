@@ -17,14 +17,13 @@ Depends:
     R (>= 4.0)
 Imports:
     ArgumentCheck,
+    BiocParallel,
     data.table,
-    doParallel,
     DrImpute,
     kernlab,
     MASS,
     Matrix,
     methods,
-    parallel,
     rsvd,
     SAVER,
     stats,

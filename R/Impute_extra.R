@@ -1,7 +1,7 @@
 #' @title Use scImpute
 #'
 #' @usage ImputeScImpute(data, labeled, drop_thre, Kcluster, labels = NULL,
-#' ncores = 4, type = 'count', outdir = tempdir(), tr.length =
+#' cores = 4, type = 'count', outdir = tempdir(), tr.length =
 #' ADImpute::transcript_length, genelen = NULL)
 #'
 #' @description \code{ImputeScImpute} uses the scImpute package for dropout
@@ -20,7 +20,7 @@
 #' @param labels A character vector specifying the cell type of each column in
 #' the raw count matrix. Only needed when \code{labeled = TRUE}. Each cell type
 #' should have at least two cells for imputation
-#' @param ncores A integer specifying the number of cores used for parallel
+#' @param cores A integer specifying the number of cores used for parallel
 #' computation
 #' @param type A character specifying the type of values in the expression
 #' matrix. Can be 'count' or 'TPM'
@@ -35,7 +35,7 @@
 #' @seealso \code{\link[scImpute]{scimpute}}
 #'
 ImputeScImpute <- function(data, labeled, drop_thre, Kcluster, labels = NULL,
-    ncores = 4, type = "count", outdir = tempdir(),
+    cores = 4, type = "count", outdir = tempdir(),
     tr.length = ADImpute::transcript_length, genelen = NULL) {
 
     # Get genlen if needed
@@ -71,7 +71,7 @@ ImputeScImpute <- function(data, labeled, drop_thre, Kcluster, labels = NULL,
     scImpute::scimpute(count_path = paste0(outdir, "/count_lnorm.rds"),
         infile = "rds", outfile = "rds", out_dir = outdir, labeled = labeled,
         drop_thre = drop_thre, Kcluster = Kcluster, labels = labels,
-        ncores = ncores, type = type, genelen = genelen)
+        cores = cores, type = type, genelen = genelen)
 
     # Read scImpute output
     res <- as.matrix(readRDS(paste0(outdir, "scimpute_count.rds")))
@@ -103,13 +103,13 @@ ImputeScImpute <- function(data, labeled, drop_thre, Kcluster, labels = NULL,
 ImputeSCRABBLE <- function(data, bulk = NULL, write = FALSE) {
 
     if (is.null(bulk)) {
-        cat("Taking average of single cell data as reference bulk for
+        message("Taking average of single cell data as reference bulk for
         SCRABBLE imputation.\n")
         bulk <- rowMeans(data)
 
         res <- tryCatch(SCRABBLE::scrabble(list(data, bulk),
             parameter = c(1, 1e-06, 1e-04)), error = function(e) {
-                stop(cat("Error:", e$message, "\nIs SCRABBLE installed?"))
+                stop(paste("Error:", e$message, "\nIs SCRABBLE installed?"))
             })
         rownames(res) <- rownames(data)
         colnames(res) <- colnames(data)
@@ -144,11 +144,11 @@ ImputeSCRABBLE <- function(data, bulk = NULL, write = FALSE) {
 
 # # # call to scImpute
 # if('scimpute' %in% tolower(do)){
-#     cat('Make sure you have previously installed scImpute via GitHub.\n')
+#     message('Make sure you have previously installed scImpute via GitHub.\n')
 #     res <- tryCatch(ImputeScImpute(count_path, labeled = is.null(labels),
 #             Kcluster = cell.clusters, labels = labels, drop_thre = drop_thre,
-#             ncores = cores, type = type, tr.length = tr.length),
-#         error = function(e){ stop(cat('Error:', e$message,
+#             cores = cores, type = type, tr.length = tr.length),
+#         error = function(e){ stop(paste('Error:', e$message,
 #             '\nTry sourcing the Impute_extra.R file.'))})
 #     imputed$scImpute <- log2( (res / scale) + pseudo.count)
 # }
@@ -156,9 +156,9 @@ ImputeSCRABBLE <- function(data, bulk = NULL, write = FALSE) {
 
 # # call to SCRABBLE
 # if('scrabble' %in% tolower(do)){
-#     cat('Make sure you have previously installed SCRABBLE via GitHub.\n')
+#     message('Make sure you have previously installed SCRABBLE via GitHub.\n')
 #     res <- tryCatch(ImputeSCRABBLE(data, bulk),
-#                     error = function(e) { stop(cat('Error:', e$message,
+#                     error = function(e) { stop(paste('Error:', e$message,
 #                         '\nTry sourcing the Impute_extra.R file.'))})
 #     imputed$SCRABBLE <- log2( (res / scale) + pseudo.count)
 #     rm(res);gc()

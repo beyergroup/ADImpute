@@ -4,8 +4,10 @@
 \alias{ImputeNetwork}
 \title{Network-based imputation}
 \usage{
-ImputeNetwork(data, net.coef = NULL, cores = 4, type = 'iteration',
-write = FALSE, ...)
+ImputeNetwork(data, net.coef = NULL,
+cores = BiocParallel::bpworkers(BPPARAM),
+BPPARAM = BiocParallel::SnowParam(type = "SOCK"),
+type = 'iteration', write = FALSE, ...)
 }
 \arguments{
 \item{data}{matrix with entries equal to zero to be imputed, normalized
@@ -14,6 +16,9 @@ and log2-transformed (genes as rows and samples as columns)}
 \item{net.coef}{matrix; network coefficients.}
 
 \item{cores}{integer; number of cores to use}
+
+\item{BPPARAM}{parallel back-end to be used during parallel computation.
+See \code{\link[BiocParallel]{BiocParallelParam-class}}.}
 
 \item{type}{character; either 'iteration', for an iterative solution, or
 'pseudoinv', to use Moore-Penrose pseudo-inversion as a solution.}

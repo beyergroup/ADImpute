@@ -122,7 +122,7 @@ DataCheck_Matrix <- function(data) {
 
     # check format
     if (!is.matrix(data)) {
-        cat("Converting input to matrix.\n")
+        message("Converting input to matrix.\n")
         data <- as.matrix(data)
     }
 
@@ -138,7 +138,7 @@ DataCheck_Matrix <- function(data) {
 
     # look for NAs
     if (any(is.na(data))) {
-        cat("Converting NAs to zero.\n")
+        message("Converting NAs to zero.\n")
         if (all(is.na(data))) {
             stop("Input has only NAs.\n")
         }
@@ -168,7 +168,7 @@ DataCheck_Network <- function(network) {
 
     # is a matrix
     if (!methods::is(network, "sparseMatrix")) {
-        cat("Converting network to dgCMatrix.\n")
+        message("Converting network to dgCMatrix.\n")
         network <- methods::as(network, "dgCMatrix")
     }
 
@@ -196,7 +196,7 @@ DataCheck_TrLength <- function(trlength) {
 
     # coerce to data.frame
     if (!is.data.frame(trlength)) {
-        cat("Converting input to data.frame.\n")
+        message("Converting input to data.frame.\n")
         trlength <- as.data.frame(trlength)
     }
 
@@ -205,8 +205,8 @@ DataCheck_TrLength <- function(trlength) {
 
     # check if required colnames are present
     if (!all(c("hgnc_symbol", "transcript_length") %in% colnames(trlength)))
-        stop(cat("Transcript length data must contain the following colnames:",
-            "hgnc_symbol, transcript_length\n"))
+        stop(paste("Transcript length data must contain the following",
+            "colnames: hgnc_symbol, transcript_length\n"))
 
     # check if columns have the right format
     if (!(is.factor(trlength$hgnc_symbol) | is.character(trlength$hgnc_symbol)))

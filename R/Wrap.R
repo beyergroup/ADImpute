@@ -18,7 +18,9 @@
 #' @usage EvaluateMethods(data, do = c('Baseline', 'DrImpute', 'Network'),
 #' write = FALSE, train.ratio = .7, train.only = TRUE, mask.ratio = .1,
 #' outdir = getwd(), scale = 1, pseudo.count = 1, labels = NULL,
-#' cell.clusters = 2, drop_thre = NULL, type = 'count', cores = 4,
+#' cell.clusters = 2, drop_thre = NULL, type = 'count',
+#' cores = BiocParallel::bpworkers(BPPARAM),
+#' BPPARAM = BiocParallel::SnowParam(type = "SOCK"),
 #' net.coef = ADImpute::network.coefficients, net.implementation = 'iteration',
 #' tr.length = ADImpute::transcript_length, bulk = NULL, ...)
 #'
@@ -50,6 +52,8 @@
 #' @param type A character specifying the type of values in the expression
 #' matrix. Can be 'count' or 'TPM'
 #' @param cores integer; number of cores used for paralell computation
+#' @param BPPARAM parallel back-end to be used during parallel computation.
+#' See \code{\link[BiocParallel]{BiocParallelParam-class}}.
 #' @param net.coef matrix; network coefficients. Please provide if you don't
 #' want to use ADImpute's network model. Must contain one first column 'O'
 #' acconting for the intercept of the model and otherwise be an adjacency matrix
@@ -88,7 +92,9 @@
 EvaluateMethods <- function(data, do = c("Baseline", "DrImpute", "Network"),
     write = FALSE, train.ratio = 0.7, train.only = TRUE, mask.ratio = 0.1,
     outdir = getwd(), scale = 1, pseudo.count = 1, labels = NULL,
-    cell.clusters = 2, drop_thre = NULL, type = "count", cores = 4,
+    cell.clusters = 2, drop_thre = NULL, type = "count",
+    cores = BiocParallel::bpworkers(BPPARAM),
+    BPPARAM = BiocParallel::SnowParam(type = "SOCK"),
     net.coef = ADImpute::network.coefficients, net.implementation = "iteration",
     tr.length = ADImpute::transcript_length, bulk = NULL, ...) {
 
@@ -120,8 +126,8 @@ EvaluateMethods <- function(data, do = c("Baseline", "DrImpute", "Network"),
         write = write, outdir = getwd(), scale = scale,
         pseudo.count = pseudo.count, labels = labels,
         cell.clusters = cell.clusters, drop_thre = drop_thre, type = type,
-        tr.length = tr.length, bulk = bulk, cores = cores, net.coef = net.coef,
-        net.implementation = net.implementation, ...)
+        tr.length = tr.length, bulk = bulk, cores = cores, BPPARAM = BPPARAM,
+        net.coef = net.coef, net.implementation = net.implementation, ...)
 
     # Run optimum choice
     choice <- ChooseMethod(real = round(train_data$train, 2),
@@ -132,18 +138,19 @@ EvaluateMethods <- function(data, do = c("Baseline", "DrImpute", "Network"),
 }
 
 
-#' @title Dropout imputation using gene-specific best-performing methods
+#' @title Dropout imputation using different methods
 #'
 #' @usage Impute(data, do = 'Ensemble', write = FALSE, outdir = getwd(),
 #' method.choice = NULL, scale = 1, pseudo.count = 1, labels = NULL,
 #' cell.clusters = 2, drop_thre = NULL, type = 'count',
-#' tr.length = ADImpute::transcript_length, cores = 4, net.coef =
-#' ADImpute::network.coefficients, net.implementation = 'iteration',
+#' tr.length = ADImpute::transcript_length,
+#' cores = BiocParallel::bpworkers(BPPARAM),
+#' BPPARAM = BiocParallel::SnowParam(type = "SOCK"),
+#' net.coef = ADImpute::network.coefficients, net.implementation = 'iteration',
 #' bulk = NULL, true.zero.thr = NULL, prob.mat = NULL, ...)
 #'
-#' @description \code{Impute} performs dropout imputation based on the
-#' performance results obtained in the training data, coupled to normalization
-#' using \code{normalization.function}
+#' @description \code{Impute} performs dropout imputation on normalized data,
+#' based on the choice of imputation methods.
 #'
 #' @param data matrix; raw counts (genes as rows and samples as columns)
 #' @param do character; choice of methods to be used for imputation. Currently
@@ -170,6 +177,8 @@ EvaluateMethods <- function(data, do = c("Baseline", "DrImpute", "Network"),
 #' @param tr.length matrix with at least 2 columns: 'hgnc_symbol' and
 #' 'transcript_length'
 #' @param cores integer; number of cores used for paralell computation
+#' @param BPPARAM parallel back-end to be used during parallel computation.
+#' See \code{\link[BiocParallel]{BiocParallelParam-class}}.
 #' @param net.coef matrix; network coefficients. Please provide if you don't
 #' want to use ADImpute's network model. Must contain one first column 'O'
 #' acconting for the intercept of the model and otherwise be an adjacency matrix
@@ -201,18 +210,18 @@ EvaluateMethods <- function(data, do = c("Baseline", "DrImpute", "Network"),
 #' best-performing methods indicated in \code{method.choice}. Currently
 #' supported methods are:
 #' \itemize{
-#'  \item \code{Baseline}: imputation with average expression across all cells
-#'  in the dataset. See \code{\link{ImputeBaseline}}.
-#'  \item Previously published approaches: \code{DrImpute}, \code{scImpute} and
-#'  \code{SCRABBLE}.
-#'  \item \code{Network}: leverages information from a gene regulatory network
-#'  to predicted expression of genes that are not quantified based on
-#'  quantified interacting genes, in the same cell. See
-#'  \code{\link{ImputeNetwork}}.
-#'  \item \code{Ensemble}: is based on results on a training subset of the data
-#'  at hand, indicating which method best predicts the expression of each gene.
-#'  These results are supplied via \code{method.choice}. Applies the imputation
-#'  results of the best performing method to the zero entries of each gene.
+#'     \item \code{Baseline}: imputation with average expression across all
+#'     cells in the dataset. See \code{\link{ImputeBaseline}}.
+#'     \item Previously published approaches: \code{DrImpute} and \code{SAVER}.
+#'     \item \code{Network}: leverages information from a gene regulatory
+#'     network to predicted expression of genes that are not quantified based on
+#'     quantified interacting genes, in the same cell. See
+#'     \code{\link{ImputeNetwork}}.
+#'     \item \code{Ensemble}: is based on results on a training subset of the
+#'     data at hand, indicating which method best predicts the expression of
+#'     each gene. These results are supplied via \code{method.choice}. Applies
+#'     the imputation results of the best performing method to the zero entries
+#'     of each gene.
 #' }
 #' If \code{'Ensemble'} is included in \code{do}, \code{method.choice} has to
 #' be provided (use output from \code{EvaluateMethods()}).
@@ -229,10 +238,9 @@ EvaluateMethods <- function(data, do = c("Baseline", "DrImpute", "Network"),
 #' norm_data <- NormalizeRPM(demo_data)
 #' # Impute with particular method(s)
 #' imputed_data <- Impute(do = 'Network', data = norm_data[,1:10],
-#' net.coef = ADImpute::demo_net, cores = 2)
+#' net.coef = ADImpute::demo_net)
 #' imputed_data <- Impute(do = 'Network', data = norm_data[,1:10],
-#' net.implementation = 'pseudoinv', net.coef = ADImpute::demo_net,
-#' cores = 2)
+#' net.implementation = 'pseudoinv', net.coef = ADImpute::demo_net)
 #'
 #' @seealso \code{\link{EvaluateMethods}},
 #' \code{\link{ImputeBaseline}},
@@ -245,7 +253,9 @@ EvaluateMethods <- function(data, do = c("Baseline", "DrImpute", "Network"),
 Impute <- function(data, do = "Ensemble", write = FALSE, outdir = getwd(),
     method.choice = NULL, scale = 1, pseudo.count = 1, labels = NULL,
     cell.clusters = 2, drop_thre = NULL, type = "count",
-    tr.length = ADImpute::transcript_length, cores = 4,
+    tr.length = ADImpute::transcript_length,
+    cores = BiocParallel::bpworkers(BPPARAM),
+    BPPARAM = BiocParallel::SnowParam(type = "SOCK"),
     net.coef = ADImpute::network.coefficients, net.implementation = "iteration",
     bulk = NULL, true.zero.thr = NULL, prob.mat = NULL, ...) {
 
@@ -273,7 +283,7 @@ Impute <- function(data, do = "Ensemble", write = FALSE, outdir = getwd(),
         imputed$Baseline <- ImputeBaseline(log_masked_norm, write = write)
     if ("network" %in% tolower(do))
         imputed$Network <- ImputeNetwork(log_masked_norm, net.coef,
-            type = net.implementation, cores, write = write, ...)
+            type = net.implementation, cores, BPPARAM, write = write, ...)
     if ("drimpute" %in% tolower(do))
         imputed$DrImpute <- ImputeDrImpute(log_masked_norm, write = write)
     if ("ensemble" %in% tolower(do))
@@ -285,7 +295,7 @@ Impute <- function(data, do = "Ensemble", write = FALSE, outdir = getwd(),
         results <- c(list(imputations = imputed),
             HandleBiologicalZeros(data = data, imputed = imputed,
             thre = true.zero.thr, cell.clusters = cell.clusters,
-            labels = labels, type = type, ncores = cores, genelen = tr.length,
-            prob.mat)); return(results)
+            labels = labels, type = type, cores = cores, BPPARAM = BPPARAM,
+            genelen = tr.length, prob.mat)); return(results)
     } else { return(imputed) }
 }

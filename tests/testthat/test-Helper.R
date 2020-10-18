@@ -49,20 +49,20 @@ test_that("DataCheck_TrLength works", {
 
   # Throws error when required colnames not present
   expect_error(DataCheck_TrLength(testtrlength1),
-              cat("Transcript length data must contain the following colnames:",
-                   "hgnc_symbol, transcript_length\n"))
+      paste("Transcript length data must contain the following colnames:",
+          "hgnc_symbol, transcript_length\n"))
   expect_error(DataCheck_TrLength(testtrlength2),
-              cat("Transcript length data must contain the following colnames:",
-                   "hgnc_symbol, transcript_length\n"))
+      paste("Transcript length data must contain the following colnames:",
+          "hgnc_symbol, transcript_length\n"))
   # when gene names are not character/factor
   expect_error(DataCheck_TrLength(testtrlength3),
-               "hgnc_symbol column must be character/factor.\n")
+      "hgnc_symbol column must be character/factor.\n")
   # when there are no rows
   expect_error(DataCheck_TrLength(testtrlength3[0,]),
-               "Not enough rows in transcript length data.\n")
+      "Not enough rows in transcript length data.\n")
   # when all gene symbols are empty strings
   expect_error(DataCheck_TrLength(testtrlength4),
-               "Not enough non-empty gene symbols in transcript length data.\n")
+      "Not enough non-empty gene symbols in transcript length data.\n")
 
   # Converts character lengths to numeric
   expect_is(DataCheck_TrLength(as.matrix(

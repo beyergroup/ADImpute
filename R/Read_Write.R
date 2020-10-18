@@ -32,14 +32,14 @@ ReadData <- function(path, ...) {
         data <- data.frame(data.table::fread(file = path, header = TRUE,
             sep = "\t",  showProgress = TRUE, ...), row.names = 1)
 
-        cat("Data loaded\n")
+        message("Data loaded\n")
 
     } else if (grepl(path, pattern = ".csv")) {
 
         data <- data.frame(data.table::fread(file = path, header = TRUE,
             sep = ",", showProgress = TRUE, ...), row.names = 1)
 
-        cat("Data loaded\n")
+        message("Data loaded\n")
 
     } else {
 
@@ -50,7 +50,7 @@ ReadData <- function(path, ...) {
     if (sum(is.na(data)) > 0) {
 
         data[is.na(data)] <- 0
-        cat("NAs converted to 0\n")
+        message("NAs converted to 0\n")
     }
 
     return(as.matrix(data))

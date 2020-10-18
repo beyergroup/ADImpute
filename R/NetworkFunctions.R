@@ -67,7 +67,7 @@ ArrangeData <- function(data, net.coef = NULL) {
 #'
 CenterData <- function(data) {
 
-    cat("Centering expression of each gene at 0\n")
+    message("Centering expression of each gene at 0\n")
 
 
     center <- apply(data, 1, function(x) mean(x[x != 0], na.rm = TRUE))
@@ -84,8 +84,9 @@ CenterData <- function(data) {
 
 #' @title Network-based parallel imputation
 #'
-#' @usage ImputeNetParallel(drop.mat, arranged, cores = 4, type = 'iteration',
-#' max.iter = 50)
+#' @usage ImputeNetParallel(drop.mat, arranged, cores =
+#' BiocParallel::bpworkers(BPPARAM), type = 'iteration', max.iter = 50,
+#' BPPARAM = BiocParallel::SnowParam(type = "SOCK"))
 #' #'
 #' @description \code{ImputeNetParallel} implements network-based imputation
 #' in parallel
@@ -98,11 +99,14 @@ CenterData <- function(data) {
 #' 'pseudoinv', to use Moore-Penrose pseudo-inversion as a solution.
 #' @param max.iter numeric; maximum number of iterations for network
 #' imputation. Set to -1 to remove limit (not recommended)
+#' @param BPPARAM parallel back-end to be used during parallel computation.
+#' See \code{\link[BiocParallel]{BiocParallelParam-class}}.
 #'
 #' @return matrix; imputation results incorporating network information
 #'
-ImputeNetParallel <- function(drop.mat, arranged, cores = 4,
-    type = "iteration", max.iter = 50) {
+ImputeNetParallel <- function(drop.mat, arranged,
+    cores = BiocParallel::bpworkers(BPPARAM), type = "iteration", max.iter = 50,
+    BPPARAM = BiocParallel::SnowParam(type = "SOCK")) {
 
     d <- intersect(rownames(drop.mat)[rowSums(drop.mat) != 0],
         rownames(arranged$network))  # dropouts in >= 1 cell
@@ -112,14 +116,14 @@ ImputeNetParallel <- function(drop.mat, arranged, cores = 4,
     arranged$network <- arranged$network[d, p]
 
     if (type == "iteration") {
-        cat("Starting network iterative imputation\n")
+        message("Starting network iterative imputation\n")
         i <- 1
         repeat {
             if ((max.iter != -1) & (i > max.iter)) {
                 break
             }
             if ((i%%5) == 0) {
-                cat("Iteration", i, "/", max.iter, "\n")
+                message("Iteration", i, "/", max.iter, "\n")
             }
 
             new <- round(arranged$network %*% arranged$centered[p, ], 2)
@@ -137,14 +141,13 @@ ImputeNetParallel <- function(drop.mat, arranged, cores = 4,
         imp <- arranged$centered
     } else {
         arranged$network <- as.matrix(arranged$network)
-        cl <- parallel::makeCluster(cores)
-        imp <- parallel::parSapply(cl, seq_len(ncol(arranged$centered)),
+        imp <- BiocParallel::bplapply(seq_len(ncol(arranged$centered)),
             function(i) { PseudoInverseSolution_percell(arranged$centered[, i],
-                arranged$network, drop.mat[, i])})
-        parallel::stopCluster(cl)
+                arranged$network, drop.mat[, i]) }, BPPARAM = BPPARAM)
+        imp <- do.call(cbind, imp)
         colnames(imp) <- colnames(arranged$centered)
     }
-    cat("Network imputation complete\n")
+    message("Network imputation complete\n")
     return(imp)
 }
 
@@ -202,14 +205,14 @@ ImputePredictiveDropouts <- function(net, thr = 0.01, expr) {
     squared_A <- net[rownames(net), rownames(net), drop = FALSE]
 
     # I - squared_A can be inverted
-    cat("Computing pseudoinverse\n")
+    message("Computing pseudoinverse\n")
     pinv <- MASS::ginv(diag(nrow(squared_A)) - as.matrix(squared_A), tol = thr)
     dimnames(pinv) <- dimnames(squared_A)
     rm(squared_A)
     gc()
 
     # find C (quantified predictors)
-    cat("Computing constant contribution C\n")
+    message("Computing constant contribution C\n")
     net <- net[, !(colnames(net) %in% rownames(net)), drop = FALSE]
     net <- net[, Matrix::colSums(net != 0) != 0, drop = FALSE]
     C <- net %*% expr[colnames(net)]
@@ -240,7 +243,7 @@ ImputePredictiveDropouts <- function(net, thr = 0.01, expr) {
 #'
 PseudoInverseSolution_percell <- function(expr, net, drop_ind, thr = 0.01) {
 
-    cat("Starting cell pseudo-inversion\n")
+    message("Starting cell pseudo-inversion\n")
 
     # restrict network rows to the dropouts in the data
     net <- net[intersect(rownames(net), names(expr)[drop_ind]),
@@ -260,7 +263,7 @@ PseudoInverseSolution_percell <- function(expr, net, drop_ind, thr = 0.01) {
     pd_imputed <- ImputePredictiveDropouts(net[pd, , drop = FALSE], thr, expr)
 
     # Non-dropout-based contribution
-    cat("Adding remaining genes\n")
+    message("Adding remaining genes\n")
     npd <- names(expr)[drop_ind][!(names(expr)[drop_ind] %in%
         rownames(pd_imputed))]
     if (length(npd) > 0) {

@@ -7,7 +7,9 @@
 EvaluateMethods(data, do = c('Baseline', 'DrImpute', 'Network'),
 write = FALSE, train.ratio = .7, train.only = TRUE, mask.ratio = .1,
 outdir = getwd(), scale = 1, pseudo.count = 1, labels = NULL,
-cell.clusters = 2, drop_thre = NULL, type = 'count', cores = 4,
+cell.clusters = 2, drop_thre = NULL, type = 'count',
+cores = BiocParallel::bpworkers(BPPARAM),
+BPPARAM = BiocParallel::SnowParam(type = "SOCK"),
 net.coef = ADImpute::network.coefficients, net.implementation = 'iteration',
 tr.length = ADImpute::transcript_length, bulk = NULL, ...)
 }
@@ -50,6 +52,9 @@ determine dropout values}
 matrix. Can be 'count' or 'TPM'}
 
 \item{cores}{integer; number of cores used for paralell computation}
+
+\item{BPPARAM}{parallel back-end to be used during parallel computation.
+See \code{\link[BiocParallel]{BiocParallelParam-class}}.}
 
 \item{net.coef}{matrix; network coefficients. Please provide if you don't
 want to use ADImpute's network model. Must contain one first column 'O'

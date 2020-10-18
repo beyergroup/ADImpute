@@ -4,8 +4,9 @@
 \alias{ImputeNetParallel}
 \title{Network-based parallel imputation}
 \usage{
-ImputeNetParallel(drop.mat, arranged, cores = 4, type = 'iteration',
-max.iter = 50)
+ImputeNetParallel(drop.mat, arranged, cores =
+BiocParallel::bpworkers(BPPARAM), type = 'iteration', max.iter = 50,
+BPPARAM = BiocParallel::SnowParam(type = "SOCK"))
 #'
 }
 \arguments{
@@ -21,6 +22,9 @@ max.iter = 50)
 
 \item{max.iter}{numeric; maximum number of iterations for network
 imputation. Set to -1 to remove limit (not recommended)}
+
+\item{BPPARAM}{parallel back-end to be used during parallel computation.
+See \code{\link[BiocParallel]{BiocParallelParam-class}}.}
 }
 \value{
 matrix; imputation results incorporating network information

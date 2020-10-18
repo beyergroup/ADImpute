@@ -5,7 +5,7 @@
 \title{Get dropout probabilities}
 \usage{
 GetDropoutProbabilities(data, thre, cell.clusters, labels = NULL,
-type = 'count', ncores, genelen = ADImpute::transcript_length)
+type = 'count', cores, BPPARAM, genelen = ADImpute::transcript_length)
 }
 \arguments{
 \item{data}{matrix; original data before imputation}
@@ -21,7 +21,10 @@ zeros}
 \item{type}{A character specifying the type of values in the expression
 matrix. Can be 'count' or 'TPM'}
 
-\item{ncores}{integer; number of cores used for paralell computation}
+\item{cores}{integer; number of cores used for paralell computation}
+
+\item{BPPARAM}{parallel back-end to be used during parallel computation.
+See \code{\link[BiocParallel]{BiocParallelParam-class}}.}
 
 \item{genelen}{matrix with at least 2 columns: 'hgnc_symbol' and
 'transcript_length'}

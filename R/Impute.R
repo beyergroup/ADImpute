@@ -34,7 +34,7 @@
 #'
 Combine <- function(data, imputed, method.choice, write = FALSE) {
 
-    cat("Combining imputation results into ensemble\n")
+    message("Combining imputation results into ensemble\n")
 
     # all zeros are imputed
     dropouts <- data == 0
@@ -80,7 +80,7 @@ Combine <- function(data, imputed, method.choice, write = FALSE) {
 #'
 ImputeBaseline <- function(data, write = FALSE, ...) {
 
-    cat("Imputing data using average expression\n")
+    message("Imputing data using average expression\n")
 
     if (missing(data) | is.null(data))
         stop("Please provide an input data matrix\n")
@@ -125,7 +125,7 @@ ImputeBaseline <- function(data, write = FALSE, ...) {
 #'
 ImputeDrImpute <- function(data, write = FALSE) {
 
-    cat("Imputing data using DrImpute\n")
+    message("Imputing data using DrImpute\n")
 
     if (missing(data) | is.null(data))
         stop("Please provide an input data matrix\n")
@@ -145,13 +145,17 @@ ImputeDrImpute <- function(data, write = FALSE) {
 
 #' @title Network-based imputation
 #'
-#' @usage ImputeNetwork(data, net.coef = NULL, cores = 4, type = 'iteration',
-#' write = FALSE, ...)
+#' @usage ImputeNetwork(data, net.coef = NULL,
+#' cores = BiocParallel::bpworkers(BPPARAM),
+#' BPPARAM = BiocParallel::SnowParam(type = "SOCK"),
+#' type = 'iteration', write = FALSE, ...)
 #'
 #' @param data matrix with entries equal to zero to be imputed, normalized
 #' and log2-transformed (genes as rows and samples as columns)
 #' @param net.coef matrix; network coefficients.
 #' @param cores integer; number of cores to use
+#' @param BPPARAM parallel back-end to be used during parallel computation.
+#' See \code{\link[BiocParallel]{BiocParallelParam-class}}.
 #' @param type character; either 'iteration', for an iterative solution, or
 #' 'pseudoinv', to use Moore-Penrose pseudo-inversion as a solution.
 #' @param write logical; should a file with the imputation results be written?
@@ -166,10 +170,12 @@ ImputeDrImpute <- function(data, write = FALSE) {
 #'
 #' @seealso \code{\link{ImputeNetParallel}}
 #'
-ImputeNetwork <- function(data, net.coef = NULL, cores = 4, type = "iteration",
-    write = FALSE, ...) {
+ImputeNetwork <- function(data, net.coef = NULL,
+    cores = BiocParallel::bpworkers(BPPARAM),
+    BPPARAM = BiocParallel::SnowParam(type = "SOCK"),
+    type = "iteration", write = FALSE, ...) {
 
-    cat("Imputing data using network information\n")
+    message("Imputing data using network information\n")
 
     # Check arguments
     Check <- CreateArgCheck(match = list(type = type), acceptable =
@@ -179,8 +185,8 @@ ImputeNetwork <- function(data, net.coef = NULL, cores = 4, type = "iteration",
     # Limit data and network to genes common to both
     arranged <- ArrangeData(data, net.coef)
 
-    cat("Data dim:", paste(dim(arranged$data), collapse = " x "), "\n")
-    cat("Network dim:", paste(dim(arranged$network), collapse = " x "), "\n")
+    message("Data dim:", paste(dim(arranged$data), collapse=" x "), "\n")
+    message("Network dim:", paste(dim(arranged$network), collapse=" x "), "\n")
 
     # Center expression of each gene
     centered <- CenterData(arranged$data)
@@ -188,8 +194,9 @@ ImputeNetwork <- function(data, net.coef = NULL, cores = 4, type = "iteration",
 
     dropout_mat <- arranged$data == 0  # dropout indexes in the data matrix
 
-    cat("Calling network-based imputation\n")
-    new_imp <- ImputeNetParallel(dropout_mat, arranged, cores, type, ...)
+    message("Calling network-based imputation\n")
+    new_imp <- ImputeNetParallel(drop.mat = dropout_mat, arranged = arranged,
+        cores = cores, type = type, BPPARAM = BPPARAM, ...)
 
     res <- data
     # add back gene means
@@ -229,7 +236,7 @@ ImputeNetwork <- function(data, net.coef = NULL, cores = 4, type = "iteration",
 #'
 ImputeSAVER <- function(data, cores, try.mean = FALSE, write = FALSE) {
 
-    cat("Imputing data using SAVER\n")
+    message("Imputing data using SAVER\n")
 
     if (missing(data) | is.null(data))
         stop("Please provide an input data matrix.\n")
@@ -239,13 +246,13 @@ ImputeSAVER <- function(data, cores, try.mean = FALSE, write = FALSE) {
         dir.create("SAVER")
 
     if (try.mean) {
-        imp_mean <- SAVER::saver(data, size.factor = 1, ncores = cores,
+        imp_mean <- SAVER::saver(data, size.factor = 1, cores = cores,
         null.model = TRUE)
         if (write)
             saveRDS(object = imp_mean, file = "SAVER/SAVER_nullmodel.rds")
     }
 
-    res <- SAVER::saver(data, size.factor = 1, ncores = cores,
+    res <- SAVER::saver(data, size.factor = 1, cores = cores,
         estimates.only = TRUE)
 
     if (write) {

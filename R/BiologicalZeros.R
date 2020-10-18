@@ -19,7 +19,7 @@
 #' biological zero) using an adaptation of scImpute's approach
 #'
 #' @usage GetDropoutProbabilities(data, thre, cell.clusters, labels = NULL,
-#' type = 'count', ncores, genelen = ADImpute::transcript_length)
+#' type = 'count', cores, BPPARAM, genelen = ADImpute::transcript_length)
 #'
 #' @param data matrix; original data before imputation
 #' @param thre numeric; probability threshold to classify entries as biological
@@ -29,7 +29,9 @@
 #' \code{data}
 #' @param type A character specifying the type of values in the expression
 #' matrix. Can be 'count' or 'TPM'
-#' @param ncores integer; number of cores used for paralell computation
+#' @param cores integer; number of cores used for paralell computation
+#' @param BPPARAM parallel back-end to be used during parallel computation.
+#' See \code{\link[BiocParallel]{BiocParallelParam-class}}.
 #' @param genelen matrix with at least 2 columns: 'hgnc_symbol' and
 #' 'transcript_length'
 #'
@@ -41,7 +43,8 @@
 #' probabilities for the corresponding entries
 #'
 GetDropoutProbabilities <- function(data, thre, cell.clusters = 2,
-    labels = NULL, type = "count", ncores,
+    labels = NULL, type = "count", cores = BiocParallel::bpworkers(BPPARAM),
+    BPPARAM = BiocParallel::SnowParam(type = "SOCK"),
     genelen = ADImpute::transcript_length) {
 
     labeled <- !is.null(labels)
@@ -56,11 +59,12 @@ GetDropoutProbabilities <- function(data, thre, cell.clusters = 2,
     if (!labeled) {
         dropmat = imputation_model8(count = count_lnorm, labeled = labeled,
             point = log10(1.01), drop_thre = thre, Kcluster = cell.clusters,
-            ncores = ncores)
+            cores = cores, BPPARAM = BPPARAM)
     } else {
         dropmat = imputation_wlabel_model8(count = count_lnorm,
             labeled = labeled, cell_labels = labels, point = log10(1.01),
-            drop_thre = thre, ncores = ncores, Kcluster = NULL)
+            drop_thre = thre, cores = cores, BPPARAM = BPPARAM,
+            Kcluster = NULL)
     }
     return(dropmat)
 }
@@ -73,8 +77,9 @@ GetDropoutProbabilities <- function(data, thre, cell.clusters = 2,
 #' biological zero) using an adaptation of scImpute's approach
 #'
 #' @usage HandleBiologicalZeros(data, imputed, thre = 0.5, cell.clusters,
-#' labels = NULL, type = 'count', ncores, genelen = ADImpute::transcript_length,
-#' prob.mat = NULL)
+#' labels = NULL, type = 'count', cores = BiocParallel::bpworkers(BPPARAM),
+#' BPPARAM = BiocParallel::SnowParam(type = "SOCK"),
+#' genelen = ADImpute::transcript_length, prob.mat = NULL)
 #'
 #' @param data matrix; original data before imputation
 #' @param imputed list; imputation results for considered methods
@@ -85,7 +90,9 @@ GetDropoutProbabilities <- function(data, thre, cell.clusters = 2,
 #' \code{data}
 #' @param type A character specifying the type of values in the expression
 #' matrix. Can be 'count' or 'TPM'
-#' @param ncores integer; number of cores used for paralell computation
+#' @param cores integer; number of cores used for paralell computation
+#' @param BPPARAM parallel back-end to be used during parallel computation.
+#' See \code{\link[BiocParallel]{BiocParallelParam-class}}.
 #' @param genelen matrix with at least 2 columns: 'hgnc_symbol' and
 #' 'transcript_length'
 #' @param prob.mat matrix with same dimensions as \code{data} containing the
@@ -102,19 +109,19 @@ GetDropoutProbabilities <- function(data, thre, cell.clusters = 2,
 #' probabilities for the corresponding entries
 #'
 HandleBiologicalZeros <- function(data, imputed, thre = 0.5, cell.clusters,
-    labels = NULL, type = "count", ncores,
+    labels = NULL, type = "count", cores = BiocParallel::bpworkers(BPPARAM),
+    BPPARAM = BiocParallel::SnowParam(type = "SOCK"),
     genelen = ADImpute::transcript_length, prob.mat = NULL) {
 
     # the probability is not given - compute it
     if (is.null(prob.mat))
         prob.mat <- GetDropoutProbabilities(data = data, thre = thre,
             cell.clusters = cell.clusters, labels = labels, type = type,
-            ncores = ncores, genelen = genelen)
+            cores = cores, BPPARAM = BPPARAM, genelen = genelen)
     # use probability matrix
-    cl <- parallel::makeCluster(ncores)
-    zerofiltered <- parallel::parLapply(cl, imputed, SetBiologicalZeros,
-        drop_probs = prob.mat, thre = thre, was_zero = data == 0)
-    parallel::stopCluster(cl)
+    zerofiltered <- BiocParallel::bplapply(imputed, SetBiologicalZeros,
+        drop_probs = prob.mat, thre = thre, was_zero = data == 0,
+        BPPARAM = BPPARAM)
 
     return(list(zerofiltered = zerofiltered, dropoutprobabilities = prob.mat))
 }

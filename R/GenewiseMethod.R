@@ -59,7 +59,7 @@ ChooseMethod <- function(real, masked, imputed, write.to.file = TRUE) {
     # keep cases where at least 2 methods are available for comparison
     MSE <- MSE[which(rowSums(!is.na(MSE)) >= 2), ]
 
-    cat("Imputation errors computed for", nrow(MSE), "genes\n")
+    message("Imputation errors computed for", nrow(MSE), "genes\n")
 
     best_method <- vapply(apply(MSE, 1, which.min),
         function(x) colnames(MSE)[x], FUN.VALUE = "Method_name")
@@ -164,13 +164,13 @@ CreateTrainData <- function(data, train.ratio = 0.7, train.only = TRUE,
 #'
 MaskData <- function(data, write.to.file = FALSE, mask = 0.1) {
 
-    cat("Masking training data\n")
+    message("Masking training data\n")
 
     data <- DataCheck_Matrix(data)
 
     # Original matrix sparcity
     sparcity <- sprintf("%.2f", sum(data == 0)/length(data))
-    cat("original sparcity", sparcity, "\n")
+    message("original sparcity", sparcity, "\n")
 
     rowmask <- round(mask * ncol(data))  # samples to be masked per gene
     maskable <- data != 0  # maskable samples (originally not dropouts)
@@ -181,7 +181,7 @@ MaskData <- function(data, write.to.file = FALSE, mask = 0.1) {
 
     data[maskidx] <- 0
     sparcity <- sprintf("%.2f", sum(data == 0)/length(data))
-    cat("final sparcity", sparcity, "\n")
+    message("final sparcity", sparcity, "\n")
 
     # Write to file
     if (write.to.file)
@@ -240,7 +240,7 @@ MaskerPerGene <- function(x, rowmask) {
 SplitData <- function(data, ratio = 0.7, write.to.file = FALSE,
     train.only = TRUE) {
 
-    cat("Selecting training data\n")
+    message("Selecting training data\n")
 
     # Randomly select samples according to given ratio
     train_samples <- sample(colnames(data))[seq_len(round(ncol(data) * ratio))]

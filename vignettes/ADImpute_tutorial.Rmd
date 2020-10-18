@@ -2,14 +2,14 @@
 title: "ADImpute tutorial"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{ADImpute_tutorial}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+    %\VignetteIndexEntry{ADImpute_tutorial}
+    %\VignetteEngine{knitr::rmarkdown}
+    %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include = FALSE}
 is_check <- ("CheckExEnv" %in% search()) || any(c("_R_CHECK_TIMINGS_",
-             "_R_CHECK_LICENSE_") %in% names(Sys.getenv()))
+    "_R_CHECK_LICENSE_") %in% names(Sys.getenv()))
 knitr::opts_chunk$set(eval = !is_check, collapse = TRUE, comment = "#>")
 ```
 
@@ -32,9 +32,9 @@ genes in the cell.
 ```{r warning=FALSE}
 RPM <- ADImpute::NormalizeRPM(ADImpute::demo_data)
 imputed <- Impute(data = RPM,
-                  do = c("Baseline","Network","DrImpute"),
-                  cores = 2,
-                  net.coef = ADImpute::demo_net)
+    do = c("Baseline","Network","DrImpute"),
+    cores = 2,
+    net.coef = ADImpute::demo_net)
 ```
 
 ## Imputation with ensemble
@@ -49,14 +49,12 @@ which method imputes values with the lowest errors for each gene.
 ```{r, warning=FALSE}
 RPM <- ADImpute::NormalizeRPM(ADImpute::demo_data)
 methods_pergene <- EvaluateMethods(data = RPM,
-                                   do = c("Baseline", "DrImpute",
-                                          "Network"), # these are the default
-                                                      # methods to test. Exclude
-                                                      # any of them by removing
-                                                      # them from the vector
-                                   cores = 2,
-                                   train.ratio = .7, mask.ratio = .2,
-                                   net.coef = ADImpute::demo_net)
+    do = c("Baseline", "DrImpute",
+        "Network"), # these are the default methods to test. Exclude
+                    # any of them by removing them from the vector
+    cores = 2,
+    train.ratio = .7, mask.ratio = .2,
+    net.coef = ADImpute::demo_net)
 head(methods_pergene)
 ```
 After determining which method performs best for each gene, ADImpute redoes the
@@ -64,10 +62,10 @@ imputation on the original data and combines the results of different methods
 into an ensemble.
 ```{r, warning=FALSE}
 imputed <- Impute(do = "Ensemble",
-                  method.choice = methods_pergene,
-                  data = RPM,
-                  cores = 2,
-                  net.coef = ADImpute::demo_net)
+    method.choice = methods_pergene,
+    data = RPM,
+    cores = 2,
+    net.coef = ADImpute::demo_net)
 str(imputed)
 ```
 
@@ -83,14 +81,10 @@ as below. To activate this option, provide a value for true.zero.thr in the call
 to Impute(), as exemplified below:
 ```{r, warning=FALSE}
 imputed <- Impute(do = "Baseline",
-                  data = RPM,
-                  cores = 2,
-                  true.zero.thr = .3)
+    data = RPM,
+    cores = 2,
+    true.zero.thr = .3)
 str(imputed)
-```
-
-```{r}
-library(ADImpute)
 ```
 
 ```{r}
