@@ -137,8 +137,3 @@ After these steps, \code{scImpute} and \code{SCRABBLE} can be run with
 \code{EvaluateMethods} or \code{Impute()} with
 \code{do = c("scImpute","SCRABBLE")}.
 
-
-## About the R session
-```{r}
-sessionInfo()
-```
