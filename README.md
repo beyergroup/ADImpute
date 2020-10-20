@@ -8,10 +8,10 @@
 ADImpute predicts unmeasured gene expression values from single cell
 RNA-sequencing data (dropout imputation). This R-package combines multiple
 dropout imputation methods. ADImpute currently supports, by default,
-\code{DrImpute} and \code{SAVER} and two novel imputation methods:
-\code{Baseline} and \code{Network}. \code{Baseline} imputes dropouts with the
+```DrImpute``` and ```SAVER``` and two novel imputation methods:
+```Baseline``` and ```Network```. ```Baseline``` imputes dropouts with the
 average quantified expression level of the respective gene across the dataset.
-\code{Network} uses previously learnt regulatory models of gene expression to
+```Network``` uses previously learnt regulatory models of gene expression to
 infer the expression of dropout genes from the expression of other relevant
 (predictive) genes in the cell.
 For more details refer to the [preprint](https://www.biorxiv.org/content/10.1101/611517v2).
@@ -31,9 +31,9 @@ library(ADImpute)
 ## Quick start
 
 ### Imputation with method(s) of choice
-The \code{Impute()} function allows for dropout imputation with one or more of
+The ```Impute()``` function allows for dropout imputation with one or more of
 the supported methods. In order to specify which imputation method(s) to run,
-pass them via the \code{do} argument:
+pass them via the ```do``` argument:
 ```
 RPM <- ADImpute::NormalizeRPM(ADImpute::demo_data)
 imputed <- Impute(data = RPM, do = c("Network"), cores = 2,
@@ -45,7 +45,7 @@ imputed <- Impute(data = RPM, do = c("Network"), cores = 2,
 In addition to running different methods on the data, ADImpute can also
 determine which of these performs best for each gene and perform an "Ensemble"
 imputation, which combines the best performing methods for different genes.
-First, evaluate methods using \code{EvaluateMethods} to determine the best
+First, evaluate methods using ```EvaluateMethods``` to determine the best
 performing imputation method for each gene. This step sets a fraction of the
 quantified entries in the input data to zero, applies different imputation
 methods to the data and compares the imputation results to the original values.
@@ -72,12 +72,12 @@ available for further examination.
 Some zeros in the data correspond to genes expressed in the cell, but not
 captured upon sequencing - the technical dropouts - while others correspond to
 genes truly not expressed in the cell - the biological zeros. In order to avoid
-imputation of biological zeros, \code{ADImpute} adapts the well-established
-approach of \code{scImpute} for the computation of the probability of each entry
+imputation of biological zeros, ```ADImpute``` adapts the well-established
+approach of ```scImpute``` for the computation of the probability of each entry
 to be a technical dropout. A matrix of such probabilities, of the same size as
-the original data, can be provided by the user, or computed by \code{ADImpute}
-using \code{scImpute}'s approach, as below. To activate this option, provide a
-value for \code{true.zero.thr} in the call to \code{Impute()}, as exemplified
+the original data, can be provided by the user, or computed by ```ADImpute```
+using ```scImpute```'s approach, as below. To activate this option, provide a
+value for ```true.zero.thr``` in the call to ```Impute()```, as exemplified
 below:
 ```
 imputed <- Impute(do = "Baseline",
@@ -88,12 +88,12 @@ imputed <- Impute(do = "Baseline",
 
 
 ### Imputation of a SingleCellExperiment
-\code{ADImpute} can also take a \code{SingleCellExperiment} object as input.
-In this case, \code{EvaluateMethods()} will result in new internal row metadata
-being added to the \code{SingleCellExperiment} object, with the best performing
-methods per gene. \code{Impute()} results in new assays being added to the
-object. If \code{true.zero.thr} is specified, only the results after setting
-biological zeros back to zero will be added to the \code{SingleCellExperiment}
+```ADImpute``` can also take a ```SingleCellExperiment``` object as input.
+In this case, ```EvaluateMethods()``` will result in new internal row metadata
+being added to the ```SingleCellExperiment``` object, with the best performing
+methods per gene. ```Impute()``` results in new assays being added to the
+object. If ```true.zero.thr``` is specified, only the results after setting
+biological zeros back to zero will be added to the ```SingleCellExperiment```
 object.
 ```
 sce <- NormalizeRPM(sce = ADImpute::demo_sce)
@@ -102,10 +102,10 @@ sce <- Impute(sce = sce)
 ```
 
 ### Additional imputation methods
-\code{ADImpute} is built in a modular way, which facilitates the addition of
+```ADImpute``` is built in a modular way, which facilitates the addition of
 custom functions supporting other imputation methods. Two such methods are
-\code{scImpute} and \code{SCRABBLE}, with wrapper functions already contained
-within \code{ADImpute}. To call these methods, please follow these steps:
+```scImpute``` and ```SCRABBLE```, with wrapper functions already contained
+within ```ADImpute```. To call these methods, please follow these steps:
 1) install scImpute and/or SCRABBLE from their github repositories
 2) clone the ADImpute repository
 3) copy the lines below to the file Wrap.R in the source R/ folder of ADImpute,
@@ -133,7 +133,7 @@ if('scrabble' %in% tolower(do)){
     rm(res);gc()
 }
 ```
-After these steps, \code{scImpute} and \code{SCRABBLE} can be run with
-\code{EvaluateMethods} or \code{Impute()} with
-\code{do = c("scImpute","SCRABBLE")}.
+After these steps, ```scImpute``` and ```SCRABBLE``` can be run with
+```EvaluateMethods``` or ```Impute()``` with
+```do = c("scImpute","SCRABBLE")```.
 
