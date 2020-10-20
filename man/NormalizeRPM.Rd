@@ -4,10 +4,13 @@
 \alias{NormalizeRPM}
 \title{RPM normalization}
 \usage{
-NormalizeRPM(data, log = FALSE, scale = 1, pseudo.count = 1)
+NormalizeRPM(data, sce = NULL, log = FALSE, scale = 1,
+pseudo.count = 1)
 }
 \arguments{
 \item{data}{matrix; raw data (genes as rows and samples as columns)}
+
+\item{sce}{SingleCellExperiment; raw data}
 
 \item{log}{logical; log RPMs?}
 

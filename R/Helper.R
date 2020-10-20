@@ -57,6 +57,37 @@ CreateArgCheck <- function(missing = NULL, match = NULL, acceptable = NULL,
 }
 
 
+#' @title Argument check to Impute()
+#'
+#' @usage CheckArguments_Impute(data, method.choice, do, tr.length, labels,
+#' cell.clusters, true.zero.thr, drop_thre)
+#'
+#' @param data matrix; raw counts (genes as rows and samples as columns)
+#' @param method.choice character; best performing method in training data for
+#' each gene
+#' @param do character; choice of methods to be used for imputation. Currently
+#' supported methods are \code{'Baseline'}, \code{'DrImpute'},
+#' \code{'Network'}, and \code{'Ensemble'}. Defaults to \code{'Ensemble'}.
+#' Not case-sensitive. Can include one or more methods. Non-supported methods
+#' will be ignored.
+#' @param tr.length matrix with at least 2 columns: 'hgnc_symbol' and
+#' 'transcript_length'
+#' @param labels character; vector specifying the cell type of each column of
+#' \code{data}
+#' @param cell.clusters integer; number of cell subpopulations
+#' @param true.zero.thr if set to NULL (default), no true zero estimation is
+#' performed. Set to numeric value between 0 and 1 for estimation. Value
+#' corresponds to the threshold used to determine true zeros: if the probability
+#' of dropout is lower than \code{true.zero.thr}, the imputed entries are set
+#' to zero.
+#' @param drop_thre numeric; between 0 and 1 specifying the threshold to
+#' determine dropout values
+#'
+#' @description \code{CheckArguments_Impute} checks whether the arguments passed
+#' to \code{Impute} are correct.
+#'
+#' @return NULL object
+#'
 CheckArguments_Impute <- function(data, method.choice, do, tr.length, labels,
     cell.clusters, true.zero.thr, drop_thre) {
 
@@ -120,6 +151,12 @@ CheckArguments_Impute <- function(data, method.choice, do, tr.length, labels,
 #'
 DataCheck_Matrix <- function(data) {
 
+    # wrongly passed a SingleCellExperiment object
+    if(class(data)[1] == "SingleCellExperiment"){
+        stop(paste("SingleCellExperiment object passed as matrix. Please use",
+            "argument 'sce' instead of 'data'.\n"))
+    }
+
     # check format
     if (!is.matrix(data)) {
         message("Converting input to matrix.\n")
@@ -180,6 +217,34 @@ DataCheck_Network <- function(network) {
 }
 
 
+#' @title Data check (SingleCellExperiment)
+#'
+#' @usage DataCheck_SingleCellExperiment(sce, normalized = TRUE)
+#'
+#' @description \code{DataCheck_SingleCellExperiment} tests for existence of the
+#' appropriate assays in \code{sce}. Helper function to ADImpute.
+#'
+#' @param sce SingleCellExperiment; data for normalization or imputation
+#' @param normalized logical; is the data expected to be normalized?
+#'
+#' @return NULL object.
+#'
+DataCheck_SingleCellExperiment <- function(sce, normalized = TRUE){
+
+    if(normalized & (!("normcounts" %in%
+        names(SummarizedExperiment::assays(sce))))){
+        stop(paste("Normalized counts not found in 'normcounts' assay of",
+            "SingleCellExperiment object.\n"))
+    } else if((!normalized) & (!("counts" %in%
+        names(SummarizedExperiment::assays(sce))))){
+        stop(paste("Raw counts not found in 'counts' assay of",
+            "SingleCellExperiment object.\n"))
+    }
+
+    return(NULL)
+}
+
+
 #' @title Data check (transcript length)
 #'
 #' @usage DataCheck_TrLength(trlength)
@@ -221,4 +286,78 @@ DataCheck_TrLength <- function(trlength) {
         stop("Not enough non-empty gene symbols in transcript length data.\n")
 
     return(trlength)
+}
+
+
+#' @title Wrapper for return of EvaluateMethods()
+#'
+#' @usage ReturnChoice(sce, choice)
+#'
+#' @description \code{ReturnChoice} Adjusts the output of \code{EvaluateMethods}
+#' to a character vector or a SingleCellExperiment object. Helper function to
+#' ADImpute.
+#'
+#' @param sce SingleCellExperiment; a SingleCellExperiment object if available;
+#' NULL otherwise
+#' @param choice character; best performing method in the training set for each
+#' gene
+#'
+#' @return
+#'  \itemize{
+#'     \item if \code{sce} is provided: returns a SingleCellExperiment with the
+#'     best performing method per gene stored as row-features. Access via
+#'     \code{SingleCellExperiment::int_elementMetadata(sce)$ADImpute$methods}.
+#'     \item if \code{sce} is not provided: returns a character with the best
+#'     performing method in the training set for each gene
+#' }
+#'
+ReturnChoice <- function(sce, choice){
+    if(is.null(sce)){
+        message("Returning method choice vector.\n")
+        return(choice)
+    } else{
+        message("Returning SingleCellExperiment object.\n")
+        v <- rep(NA, nrow(sce))
+        names(v) <- rownames(sce)
+        v[names(choice)] <- choice
+        SingleCellExperiment::int_elementMetadata(sce)$ADImpute <-
+            S4Vectors::DataFrame(method = v)
+        return(sce)
+    }
+}
+
+
+#' @title Wrapper for return of Impute()
+#'
+#' @usage ReturnOut(result, sce)
+#'
+#' @description \code{ReturnOut} Adjusts the output of \code{Impute} to a list
+#' of matrices or a SingleCellExperiment object. Helper function to ADImpute.
+#'
+#' @param result list; imputation result
+#' @param sce SingleCellExperiment; a SingleCellExperiment object if available;
+#' NULL otherwise
+#'
+#' @return imputation results. A SingleCellExperiment if \code{!is.null(sce)},
+#' or a list with imputed results in matrix format otherwise.
+#'
+ReturnOut <- function(result, sce){
+
+    if(is.null(sce)){
+        message("Returning matrix lists.\n")
+        return(result)
+    } else{
+        message("Returning SingleCellExperiment object.\n")
+        if(length(result) == 0){
+            return(sce)
+        }
+        if(!is.list(result[[1]])){
+            SummarizedExperiment::assays(sce) <-
+                c(SummarizedExperiment::assays(sce), result)
+        } else{
+            SummarizedExperiment::assays(sce) <-
+                c(SummarizedExperiment::assays(sce), result$zerofiltered)
+        }
+        return(sce)
+    }
 }

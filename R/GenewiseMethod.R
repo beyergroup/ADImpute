@@ -59,7 +59,7 @@ ChooseMethod <- function(real, masked, imputed, write.to.file = TRUE) {
     # keep cases where at least 2 methods are available for comparison
     MSE <- MSE[which(rowSums(!is.na(MSE)) >= 2), ]
 
-    message("Imputation errors computed for", nrow(MSE), "genes\n")
+    message(paste("Imputation errors computed for", nrow(MSE), "genes\n"))
 
     best_method <- vapply(apply(MSE, 1, which.min),
         function(x) colnames(MSE)[x], FUN.VALUE = "Method_name")

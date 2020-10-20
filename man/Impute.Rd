@@ -4,9 +4,9 @@
 \alias{Impute}
 \title{Dropout imputation using different methods}
 \usage{
-Impute(data, do = 'Ensemble', write = FALSE, outdir = getwd(),
-method.choice = NULL, scale = 1, pseudo.count = 1, labels = NULL,
-cell.clusters = 2, drop_thre = NULL, type = 'count',
+Impute(data, sce = NULL, do = 'Ensemble', write = FALSE,
+outdir = getwd(), method.choice = NULL, scale = 1, pseudo.count = 1,
+labels = NULL, cell.clusters = 2, drop_thre = NULL, type = 'count',
 tr.length = ADImpute::transcript_length,
 cores = BiocParallel::bpworkers(BPPARAM),
 BPPARAM = BiocParallel::SnowParam(type = "SOCK"),
@@ -15,6 +15,8 @@ bulk = NULL, true.zero.thr = NULL, prob.mat = NULL, ...)
 }
 \arguments{
 \item{data}{matrix; raw counts (genes as rows and samples as columns)}
+
+\item{sce}{SingleCellExperiment; normalized counts and associated metadata.}
 
 \item{do}{character; choice of methods to be used for imputation. Currently
 supported methods are \code{'Baseline'}, \code{'DrImpute'},
@@ -80,13 +82,20 @@ probabilities for each gene in each cell}
 \item{...}{additional parameters to pass to network-based imputation}
 }
 \value{
-list of imputation results (normalized, log-transformed) for all
-selected methods in \code{do}. If \code{true.zero.thr} is defined, returns a
-list of 3 elements: 1) a list, \code{imputations}, containing the
-direct imputation results from each method; 2) a list, \code{zerofiltered},
-containing the results of imputation in \code{imputations} after setting
-biological zeros back to zero; 3) a matrix, \code{dropoutprobabilities},
-containing the dropout probability matrix used to set biological zeros.
+\itemize{
+    \item if \code{sce} is not set: returns a list of imputation results
+    (normalized, log-transformed) for all selected methods in \code{do}. If
+    \code{true.zero.thr} is defined, returns a list of 3 elements: 1) a list,
+    \code{imputations}, containing the direct imputation results from each
+    method; 2) a list, \code{zerofiltered}, containing the results of
+    imputation in \code{imputations} after setting biological zeros back to
+    zero; 3) a matrix, \code{dropoutprobabilities}, containing the dropout
+    probability matrix used to set biological zeros.
+    \item if \code{sce} is set: returns a SingleCellExperiment with new
+    assays, each corresponding to one of the imputation methods applied. If
+    \code{true.zero.thr} is defined, the assays will contain the results
+    after imputation and setting biological zeros back to zero.
+}
 }
 \description{
 \code{Impute} performs dropout imputation on normalized data,
@@ -112,13 +121,19 @@ supported methods are:
 }
 If \code{'Ensemble'} is included in \code{do}, \code{method.choice} has to
 be provided (use output from \code{EvaluateMethods()}).
-\code{Impute} creates a directory \code{imputation} containing the
+\code{Impute} can create a directory \code{imputation} containing the
 imputation results of all methods in \code{do}.
 If \code{true.zero.thr} is set, dropout probabilities are computed using
 scImpute's framework. Expression values with dropout probabilities below
 \code{true.zero.thr} will be set back to 0 if imputed, as they likely
 correspond to true biological zeros (genes not expressed in cell) rather than
 technical dropouts (genes expressed but not captured).
+If \code{sce} is set, imputed values by the different methods are added as
+new assays to \code{sce}. Each assay corresponds to one imputation method. If
+\code{true.zero.thr} is set, only the values after filtering for biological
+zeros will be added. This is different from the output if \code{sce} is not
+set, where the original values before filtering and the dropout probability
+matrix are returned.
 }
 \examples{
 # Normalize demo data

@@ -4,11 +4,13 @@
 \alias{NormalizeTPM}
 \title{TPM normalization}
 \usage{
-NormalizeTPM(data, tr_length = NULL, log = FALSE, scale = 1,
-pseudo.count = 1)
+NormalizeTPM(data, sce = NULL, tr_length = NULL, log = FALSE,
+scale = 1, pseudo.count = 1)
 }
 \arguments{
 \item{data}{matrix; raw data (genes as rows and samples as columns)}
+
+\item{sce}{SingleCellExperiment; raw data}
 
 \item{tr_length}{data.frame with at least 2 columns: 'hgnc_symbol'
 and 'transcript_length'}

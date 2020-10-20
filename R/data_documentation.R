@@ -10,6 +10,18 @@
 #'
 "demo_data"
 
+#' @title Small dataset for example purposes
+#'
+#' @description A small dataset to use on vignettes and examples (50 cells).
+#'
+#' @format SingleCellExperiment; a subset of the Grun pancreas dataset, obtained
+#' with the \code{scRNAseq} R package, to use in the vignette and examples.
+#'
+#' @references Grun D et al. (2016). De novo prediction of stem cell identity
+#' using single-cell transcriptome data. Cell Stem Cell 19(2), 266-277.
+#'
+"demo_sce"
+
 #' @title Small regulatory network for example purposes
 #'
 #' @description Subset of the Gene Regulatory Network used by ADImpute's Network
@@ -45,7 +57,3 @@
 #' }
 #'
 "transcript_length"
-4
-4
-4
-4

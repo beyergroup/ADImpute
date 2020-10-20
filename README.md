@@ -5,7 +5,16 @@
 <!-- badges: end -->
 
 # ADImpute
-ADImpute predicts unmeasured gene expression values from single cell RNA-sequencing data (dropout imputation). This R-package combines multiple dropout imputation methods, including a novel gene regulatory network-based method.
+ADImpute predicts unmeasured gene expression values from single cell
+RNA-sequencing data (dropout imputation). This R-package combines multiple
+dropout imputation methods. ADImpute currently supports, by default,
+\code{DrImpute} and \code{SAVER} and two novel imputation methods:
+\code{Baseline} and \code{Network}. \code{Baseline} imputes dropouts with the
+average quantified expression level of the respective gene across the dataset.
+\code{Network} uses previously learnt regulatory models of gene expression to
+infer the expression of dropout genes from the expression of other relevant
+(predictive) genes in the cell.
+For more details refer to the [preprint](https://www.biorxiv.org/content/10.1101/611517v2).
 
 ADImpute was developed in R 4.0.2, under Linux Mint 20, and tested in Linux, OS X and Windows.
 For further questions, please contact: ana.carolina.leote@uni-koeln.de
@@ -22,75 +31,114 @@ library(ADImpute)
 ## Quick start
 
 ### Imputation with method(s) of choice
-ADImpute currently supports, by default, DrImpute and two novel imputation
-methods: a baseline method, "Baseline", where genes are imputed with their
-average quantified expression across the dataset, and a regulatory-network-
--based method, which uses previously learnt regulatory models of gene expression
-to infer the expression of dropout genes from the expression of other relevant
-genes in the cell.
+The \code{Impute()} function allows for dropout imputation with one or more of
+the supported methods. In order to specify which imputation method(s) to run,
+pass them via the \code{do} argument:
 ```
 RPM <- ADImpute::NormalizeRPM(ADImpute::demo_data)
-imputed <- Impute(data = RPM,
-                  do = c("Baseline","Network","DrImpute"),
-                  cores = 2,
-                  net.coef = ADImpute::demo_net)
+imputed <- Impute(data = RPM, do = c("Network"), cores = 2,
+    net.coef = ADImpute::demo_net)
 ```
+
 
 ### Imputation with ensemble
 In addition to running different methods on the data, ADImpute can also
 determine which of these performs best for each gene and perform an "Ensemble"
 imputation, which combines the best performing methods for different genes.
-First, evaluate methods to determine the best performing imputation method for
-each gene. This step sets a fraction of the quantified entries in the input data
-to zero, applies different imputation methods to the data and compares the
-imputation results to the original values. This allows ADImpute to determine
-which method imputes values with the lowest errors for each gene.
+First, evaluate methods using \code{EvaluateMethods} to determine the best
+performing imputation method for each gene. This step sets a fraction of the
+quantified entries in the input data to zero, applies different imputation
+methods to the data and compares the imputation results to the original values.
+This allows ADImpute to determine which method imputes values with the lowest
+errors for each gene.
 ```
 RPM <- ADImpute::NormalizeRPM(ADImpute::demo_data)
 methods_pergene <- EvaluateMethods(data = RPM,
-                                   do = c("Baseline", "DrImpute",
-                                          "Network"), # these are the default
-                                                      # methods to test. Exclude
-                                                      # any of them by removing
-                                                      # them from the vector
-                                   cores = 2,
-                                   train.ratio = .7, mask.ratio = .2,
-                                   net.coef = ADImpute::demo_net)
+    do = c("Baseline", "DrImpute", "Network"),
+    cores = 2, net.coef = ADImpute::demo_net)
 ```
-After determining which method performs best for each gene, ADImpute redoes the
-imputation on the original data and combines the results of different methods
-into an ensemble.
+After determining which method performs best for each gene, the imputation can
+be re-done on the original data and the results of different methods combined
+into an ensemble:
 ```
-imputed <- Impute(do = "Ensemble",
-                  method.choice = methods_pergene,
-                  data = RPM,
-                  cores = 2,
-                  net.coef = ADImpute::demo_net)
+imputed <- Impute(do = "Ensemble", method.choice = methods_pergene,
+    data = RPM, cores = 2, net.coef = ADImpute::demo_net)
 ```
+Both the method-specific imputations and the final ensemble results are
+available for further examination.
+
 
 ### Determination of biological zeros
 Some zeros in the data correspond to genes expressed in the cell, but not
 captured upon sequencing - the technical dropouts - while others correspond to
 genes truly not expressed in the cell - the biological zeros. In order to avoid
-imputation of biological zeros, ADImpute adapts the well-established approach of
-scImpute for the computation of the probability of each entry to be a technical
-dropout. A matrix of such probabilities, of the same size as the original data,
-can be provided by the user, or computed by ADImpute using scImpute's approach,
-as below. To activate this option, provide a value for true.zero.thr in the call
-to Impute(), as exemplified below:
+imputation of biological zeros, \code{ADImpute} adapts the well-established
+approach of \code{scImpute} for the computation of the probability of each entry
+to be a technical dropout. A matrix of such probabilities, of the same size as
+the original data, can be provided by the user, or computed by \code{ADImpute}
+using \code{scImpute}'s approach, as below. To activate this option, provide a
+value for \code{true.zero.thr} in the call to \code{Impute()}, as exemplified
+below:
 ```
 imputed <- Impute(do = "Baseline",
-                  data = RPM,
-                  cores = 2,
-                  true.zero.thr = .3)
+    data = RPM,
+    cores = 2,
+    true.zero.thr = .3)
 ```
 
-### Imputation with SCRABBLE and scImpute
-In order to use SCRABBLE and/or scImpute imputation, please follow these steps:
+
+### Imputation of a SingleCellExperiment
+\code{ADImpute} can also take a \code{SingleCellExperiment} object as input.
+In this case, \code{EvaluateMethods()} will result in new internal row metadata
+being added to the \code{SingleCellExperiment} object, with the best performing
+methods per gene. \code{Impute()} results in new assays being added to the
+object. If \code{true.zero.thr} is specified, only the results after setting
+biological zeros back to zero will be added to the \code{SingleCellExperiment}
+object.
+```
+sce <- NormalizeRPM(sce = ADImpute::demo_sce)
+sce <- EvaluateMethods(sce = sce)
+sce <- Impute(sce = sce)
+```
+
+### Additional imputation methods
+\code{ADImpute} is built in a modular way, which facilitates the addition of
+custom functions supporting other imputation methods. Two such methods are
+\code{scImpute} and \code{SCRABBLE}, with wrapper functions already contained
+within \code{ADImpute}. To call these methods, please follow these steps:
 1) install scImpute and/or SCRABBLE from their github repositories
 2) clone the ADImpute repository
-2) open the file Impute_extra.R in the source R/ folder of ADImpute
-3) copy the commented lines at the end of the script to the file Wrap.R in the
-source R/ folder of ADImpute, line #270.
+3) copy the lines below to the file Wrap.R in the source R/ folder of ADImpute,
+line #309.
 4) re-load ADImpute using devtools::load_all() on ADImpute's folder
+```
+# # call to scImpute
+if('scimpute' %in% tolower(do)){
+    message('Make sure you have previously installed scImpute via GitHub.\n')
+    res <- tryCatch(ImputeScImpute(count_path, labeled = is.null(labels),
+            Kcluster = cell.clusters, labels = labels, drop_thre = drop_thre,
+            cores = cores, type = type, tr.length = tr.length),
+        error = function(e){ stop(paste('Error:', e$message,
+            '\nTry sourcing the Impute_extra.R file.'))})
+    imputed$scImpute <- log2( (res / scale) + pseudo.count)
+}
 
+# call to SCRABBLE
+if('scrabble' %in% tolower(do)){
+    message('Make sure you have previously installed SCRABBLE via GitHub.\n')
+    res <- tryCatch(ImputeSCRABBLE(data, bulk),
+                    error = function(e) { stop(paste('Error:', e$message,
+                        '\nTry sourcing the Impute_extra.R file.'))})
+    imputed$SCRABBLE <- log2( (res / scale) + pseudo.count)
+    rm(res);gc()
+}
+```
+After these steps, \code{scImpute} and \code{SCRABBLE} can be run with
+\code{EvaluateMethods} or \code{Impute()} with
+\code{do = c("scImpute","SCRABBLE")}.
+
+
+## About the R session
+```{r}
+sessionInfo()
+```

@@ -246,13 +246,13 @@ ImputeSAVER <- function(data, cores, try.mean = FALSE, write = FALSE) {
         dir.create("SAVER")
 
     if (try.mean) {
-        imp_mean <- SAVER::saver(data, size.factor = 1, cores = cores,
+        imp_mean <- SAVER::saver(data, size.factor = 1, ncores = cores,
         null.model = TRUE)
         if (write)
             saveRDS(object = imp_mean, file = "SAVER/SAVER_nullmodel.rds")
     }
 
-    res <- SAVER::saver(data, size.factor = 1, cores = cores,
+    res <- SAVER::saver(data, size.factor = 1, ncores = cores,
         estimates.only = TRUE)
 
     if (write) {

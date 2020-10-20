@@ -15,10 +15,10 @@
 
 #' @title Imputation method evaluation on training set
 #'
-#' @usage EvaluateMethods(data, do = c('Baseline', 'DrImpute', 'Network'),
-#' write = FALSE, train.ratio = .7, train.only = TRUE, mask.ratio = .1,
-#' outdir = getwd(), scale = 1, pseudo.count = 1, labels = NULL,
-#' cell.clusters = 2, drop_thre = NULL, type = 'count',
+#' @usage EvaluateMethods(data, sce = NULL, do = c('Baseline', 'DrImpute',
+#' 'Network'), write = FALSE, train.ratio = .7, train.only = TRUE,
+#' mask.ratio = .1, outdir = getwd(), scale = 1, pseudo.count = 1,
+#' labels = NULL, cell.clusters = 2, drop_thre = NULL, type = 'count',
 #' cores = BiocParallel::bpworkers(BPPARAM),
 #' BPPARAM = BiocParallel::SnowParam(type = "SOCK"),
 #' net.coef = ADImpute::network.coefficients, net.implementation = 'iteration',
@@ -29,6 +29,7 @@
 #'
 #' @param data matrix; normalized counts, not logged (genes as rows and samples
 #' as columns)
+#' @param sce SingleCellExperiment; normalized counts and associated metadata.
 #' @param do character; choice of methods to be used for imputation. Currently
 #' supported methods are \code{'Baseline'}, \code{'DrImpute'} and
 #' \code{'Network'}. Not case-sensitive. Can include one or more methods. Non-
@@ -75,7 +76,14 @@
 #' values in the original dataset that was set to 0, for each method. The
 #' method resulting in a lowest imputation error for each gene is chosen.
 #'
-#' @return character; best performing method in the training set for each gene
+#' @return
+#'  \itemize{
+#'     \item if \code{sce} is provided: returns a SingleCellExperiment with the
+#'     best performing method per gene stored as row-features. Access via
+#'     \code{SingleCellExperiment::int_elementMetadata(sce)$ADImpute$methods}.
+#'     \item if \code{sce} is not provided: returns a character with the best
+#'     performing method in the training set for each gene
+#' }
 #'
 #' @examples
 #' # Normalize demo data
@@ -89,16 +97,20 @@
 #'
 #' @export
 #'
-EvaluateMethods <- function(data, do = c("Baseline", "DrImpute", "Network"),
-    write = FALSE, train.ratio = 0.7, train.only = TRUE, mask.ratio = 0.1,
-    outdir = getwd(), scale = 1, pseudo.count = 1, labels = NULL,
-    cell.clusters = 2, drop_thre = NULL, type = "count",
+EvaluateMethods <- function(data, sce = NULL, do = c("Baseline", "DrImpute",
+        "Network"), write = FALSE, train.ratio = 0.7, train.only = TRUE,
+    mask.ratio = 0.1, outdir = getwd(), scale = 1, pseudo.count = 1,
+    labels = NULL, cell.clusters = 2, drop_thre = NULL, type = "count",
     cores = BiocParallel::bpworkers(BPPARAM),
     BPPARAM = BiocParallel::SnowParam(type = "SOCK"),
     net.coef = ADImpute::network.coefficients, net.implementation = "iteration",
     tr.length = ADImpute::transcript_length, bulk = NULL, ...) {
 
     # Check arguments
+    if(!is.null(sce)){
+        DataCheck_SingleCellExperiment(sce)
+        data <- SingleCellExperiment::normcounts(sce)
+    }
     Check <- CreateArgCheck(missing = list(data = missing(data)),
         match = list(type = type), acceptable = list(type = c("TPM", "count")),
         null = list(net.coef = is.null(net.coef), data = is.null(data)))
@@ -106,11 +118,10 @@ EvaluateMethods <- function(data, do = c("Baseline", "DrImpute", "Network"),
     data <- DataCheck_Matrix(data)
     tr.length <- DataCheck_TrLength(tr.length)
 
-    if (sum(tolower(do) %in% c("baseline", "drimpute", "network")) < 2) {
+    if (sum(tolower(do) %in% c("baseline", "drimpute", "network")) < 2)
         warning(paste0("You are using less than 2 of the default supported ",
             "methods. Make sure you pass at least 2 viable methods ",
             "for performance comparison.\n"))
-    }
 
     if (write) {
         savedir <- getwd()
@@ -134,15 +145,15 @@ EvaluateMethods <- function(data, do = c("Baseline", "DrImpute", "Network"),
             masked = round(train_data$mask, 2),
         imputed = train_imputed, write.to.file = write)
 
-    return(choice)
+    return(ReturnChoice(sce, choice))
 }
 
 
 #' @title Dropout imputation using different methods
 #'
-#' @usage Impute(data, do = 'Ensemble', write = FALSE, outdir = getwd(),
-#' method.choice = NULL, scale = 1, pseudo.count = 1, labels = NULL,
-#' cell.clusters = 2, drop_thre = NULL, type = 'count',
+#' @usage Impute(data, sce = NULL, do = 'Ensemble', write = FALSE,
+#' outdir = getwd(), method.choice = NULL, scale = 1, pseudo.count = 1,
+#' labels = NULL, cell.clusters = 2, drop_thre = NULL, type = 'count',
 #' tr.length = ADImpute::transcript_length,
 #' cores = BiocParallel::bpworkers(BPPARAM),
 #' BPPARAM = BiocParallel::SnowParam(type = "SOCK"),
@@ -153,6 +164,7 @@ EvaluateMethods <- function(data, do = c("Baseline", "DrImpute", "Network"),
 #' based on the choice of imputation methods.
 #'
 #' @param data matrix; raw counts (genes as rows and samples as columns)
+#' @param sce SingleCellExperiment; normalized counts and associated metadata.
 #' @param do character; choice of methods to be used for imputation. Currently
 #' supported methods are \code{'Baseline'}, \code{'DrImpute'},
 #' \code{'Network'}, and \code{'Ensemble'}. Defaults to \code{'Ensemble'}.
@@ -198,40 +210,54 @@ EvaluateMethods <- function(data, do = c("Baseline", "DrImpute", "Network"),
 #' probabilities for each gene in each cell
 #' @param ... additional parameters to pass to network-based imputation
 #'
-#' @return list of imputation results (normalized, log-transformed) for all
-#' selected methods in \code{do}. If \code{true.zero.thr} is defined, returns a
-#' list of 3 elements: 1) a list, \code{imputations}, containing the
-#' direct imputation results from each method; 2) a list, \code{zerofiltered},
-#' containing the results of imputation in \code{imputations} after setting
-#' biological zeros back to zero; 3) a matrix, \code{dropoutprobabilities},
-#' containing the dropout probability matrix used to set biological zeros.
+#' @return
+#' \itemize{
+#'     \item if \code{sce} is not set: returns a list of imputation results
+#'     (normalized, log-transformed) for all selected methods in \code{do}. If
+#'     \code{true.zero.thr} is defined, returns a list of 3 elements: 1) a list,
+#'     \code{imputations}, containing the direct imputation results from each
+#'     method; 2) a list, \code{zerofiltered}, containing the results of
+#'     imputation in \code{imputations} after setting biological zeros back to
+#'     zero; 3) a matrix, \code{dropoutprobabilities}, containing the dropout
+#'     probability matrix used to set biological zeros.
+#'     \item if \code{sce} is set: returns a SingleCellExperiment with new
+#'     assays, each corresponding to one of the imputation methods applied. If
+#'     \code{true.zero.thr} is defined, the assays will contain the results
+#'     after imputation and setting biological zeros back to zero.
+#'}
 #'
 #' @details Values that are 0 in \code{data} are imputed according to the
 #' best-performing methods indicated in \code{method.choice}. Currently
 #' supported methods are:
 #' \itemize{
 #'     \item \code{Baseline}: imputation with average expression across all
-#'     cells in the dataset. See \code{\link{ImputeBaseline}}.
+#' cells in the dataset. See \code{\link{ImputeBaseline}}.
 #'     \item Previously published approaches: \code{DrImpute} and \code{SAVER}.
 #'     \item \code{Network}: leverages information from a gene regulatory
-#'     network to predicted expression of genes that are not quantified based on
-#'     quantified interacting genes, in the same cell. See
-#'     \code{\link{ImputeNetwork}}.
+#' network to predicted expression of genes that are not quantified based on
+#' quantified interacting genes, in the same cell. See
+#' \code{\link{ImputeNetwork}}.
 #'     \item \code{Ensemble}: is based on results on a training subset of the
-#'     data at hand, indicating which method best predicts the expression of
-#'     each gene. These results are supplied via \code{method.choice}. Applies
-#'     the imputation results of the best performing method to the zero entries
-#'     of each gene.
+#' data at hand, indicating which method best predicts the expression of
+#' each gene. These results are supplied via \code{method.choice}. Applies
+#' the imputation results of the best performing method to the zero entries
+#' of each gene.
 #' }
 #' If \code{'Ensemble'} is included in \code{do}, \code{method.choice} has to
 #' be provided (use output from \code{EvaluateMethods()}).
-#' \code{Impute} creates a directory \code{imputation} containing the
+#' \code{Impute} can create a directory \code{imputation} containing the
 #' imputation results of all methods in \code{do}.
 #' If \code{true.zero.thr} is set, dropout probabilities are computed using
 #' scImpute's framework. Expression values with dropout probabilities below
 #' \code{true.zero.thr} will be set back to 0 if imputed, as they likely
 #' correspond to true biological zeros (genes not expressed in cell) rather than
 #' technical dropouts (genes expressed but not captured).
+#' If \code{sce} is set, imputed values by the different methods are added as
+#' new assays to \code{sce}. Each assay corresponds to one imputation method. If
+#' \code{true.zero.thr} is set, only the values after filtering for biological
+#' zeros will be added. This is different from the output if \code{sce} is not
+#' set, where the original values before filtering and the dropout probability
+#' matrix are returned.
 #'
 #' @examples
 #' # Normalize demo data
@@ -250,16 +276,19 @@ EvaluateMethods <- function(data, do = c("Baseline", "DrImpute", "Network"),
 #'
 #' @export
 #'
-Impute <- function(data, do = "Ensemble", write = FALSE, outdir = getwd(),
-    method.choice = NULL, scale = 1, pseudo.count = 1, labels = NULL,
-    cell.clusters = 2, drop_thre = NULL, type = "count",
-    tr.length = ADImpute::transcript_length,
-    cores = BiocParallel::bpworkers(BPPARAM),
-    BPPARAM = BiocParallel::SnowParam(type = "SOCK"),
-    net.coef = ADImpute::network.coefficients, net.implementation = "iteration",
+Impute <- function(data, sce = NULL, do = "Ensemble", write = FALSE,
+    outdir = getwd(), method.choice = NULL, scale = 1, pseudo.count = 1,
+    labels = NULL, cell.clusters = 2, drop_thre = NULL, type = "count",
+    tr.length = ADImpute::transcript_length, cores = BiocParallel::bpworkers(
+        BPPARAM), BPPARAM = BiocParallel::SnowParam(type = "SOCK"), net.coef =
+        ADImpute::network.coefficients, net.implementation = "iteration",
     bulk = NULL, true.zero.thr = NULL, prob.mat = NULL, ...) {
 
     # Check arguments
+    if(!is.null(sce)){ DataCheck_SingleCellExperiment(sce)
+        data <- SingleCellExperiment::normcounts(sce)
+        method.choice <- stats::na.omit(
+            SingleCellExperiment::int_elementMetadata(sce)$ADImpute$method) }
     check <- CreateArgCheck(missing = list(data = missing(data)),
         match = list(type = type), acceptable = list(type = c("TPM", "count")),
         null = list(net.coef = is.null(net.coef), data = is.null(data)))
@@ -270,8 +299,8 @@ Impute <- function(data, do = "Ensemble", write = FALSE, outdir = getwd(),
     if (write) { savedir <- getwd(); dir.create(paste0(outdir, "/imputation"))
         setwd(paste0(outdir, "/imputation")); on.exit(setwd(savedir)) }
 
-    if ("ensemble" %in% tolower(do)) {
-        do <- c(do, "Network", unique(method.choice)) }
+    if ("ensemble" %in% tolower(do))
+        do <- c(do, "Network", unique(method.choice))
 
     imputed <- list()
     if ("saver" %in% tolower(do)) {
@@ -291,11 +320,9 @@ Impute <- function(data, do = "Ensemble", write = FALSE, outdir = getwd(),
             write)
 
     # Estimate true zeros
-    if (!is.null(true.zero.thr)) {
-        results <- c(list(imputations = imputed),
-            HandleBiologicalZeros(data = data, imputed = imputed,
-            thre = true.zero.thr, cell.clusters = cell.clusters,
-            labels = labels, type = type, cores = cores, BPPARAM = BPPARAM,
-            genelen = tr.length, prob.mat)); return(results)
-    } else { return(imputed) }
+    if (!is.null(true.zero.thr)) { results <- c(list(imputations = imputed),
+            HandleBiologicalZeros(data, imputed, true.zero.thr, cell.clusters,
+            labels, type, cores, BPPARAM, tr.length, prob.mat))
+        return(ReturnOut(results, sce))
+    } else { return(ReturnOut(imputed, sce)) }
 }

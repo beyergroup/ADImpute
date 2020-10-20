@@ -1,7 +1,7 @@
 methods <- EvaluateMethods(data = ADImpute::demo_data,
-                            net.coef = ADImpute::demo_net, cores = 2)
+    net.coef = ADImpute::demo_net, cores = 2)
 
-test_that("EvaluateMethods works", {
+test_that("EvaluateMethods works with matrix input", {
 
     # output is a character vector
     expect_is(methods, "character")
@@ -26,11 +26,37 @@ test_that("EvaluateMethods works", {
                    paste0("Please provide at least one supported method"))
 })
 
+sce <- NormalizeRPM(sce = ADImpute::demo_sce)
+sce <- EvaluateMethods(sce = sce, net.coef = ADImpute::demo_net, cores = 2)
+
+test_that("EvaluateMethods works with SingleCellExperiment input", {
+
+    # output is a character vector in the SingleCellExperiment
+    expect_is(sce, "SingleCellExperiment")
+    expect_is(SingleCellExperiment::int_elementMetadata(sce)$ADImpute$method,
+        "character")
+    # entries are within appropriate methods
+    methods <- SingleCellExperiment::int_elementMetadata(sce)$ADImpute$method
+    expect_true(all(stats::na.omit(methods) %in% c("Baseline","Network",
+        "DrImpute")))
+
+    # when no network coefficients
+    expect_error(EvaluateMethods(sce = sce, net.coef = NULL, cores = 2),
+        "'net.coef' must have non-NULL value")
+    # when no valid methods
+    expect_error(EvaluateMethods(sce = sce, net.coef = ADImpute::demo_net,
+        cores = 2, do = NULL), "Please provide appropriate imputation methods")
+    # when wrong methods are passed
+    expect_error(EvaluateMethods(sce = sce, net.coef = ADImpute::demo_net,
+        cores = 2, do = "wrong"),
+        paste0("Please provide at least one supported method"))
+
+})
 
 imputation <- Impute(data = ADImpute::demo_data, method.choice = methods,
                      net.coef = ADImpute::network.coefficients, cores = 2)
 
-test_that("Impute works", {
+test_that("Impute works with matrix input", {
 
     # output is a list
     expect_is(imputation, "list")
@@ -88,4 +114,32 @@ test_that("Impute works with biological zero determination", {
     # works when providing labels
     expect_is(Impute(data = ADImpute::demo_data, do = "Baseline", cores = 2,
            labels = c(rep("A",20),rep("B",30)), true.zero.thr = .3), "list")
+})
+
+sce <- Impute(sce = sce, cores = 2)
+
+test_that("Impute works with SingleCellExperiment input", {
+
+    # output is a list
+    expect_is(sce, "SingleCellExperiment")
+    # elements are matrices
+    lapply(SummarizedExperiment::assays(sce),
+        function(m) expect_is(m, c("matrix", "dgCMatrix")))
+
+    # when no network coefficients
+    expect_error(Impute(sce = sce, net.coef = NULL, cores = 2),
+        "'net.coef' must have non-NULL value")
+    # when wrong methods are passed
+    expect_error(Impute(sce = sce, net.coef = ADImpute::demo_net, cores = 2,
+        do = "wrong"), "Please provide at least one supported method")
+    expect_warning(Impute(sce = sce, net.coef = ADImpute::demo_net,
+        cores = 2, do = c("Baseline", "wrong")),
+        paste0("The following methods were detected as input but ",
+            "are not supported and will be ignored: 'wrong'"))
+    # warning for SCRABBLE and scImpute
+    expect_warning(tryCatch(Impute(sce = sce, cores = 2, do = "scImpute",
+        net.coef = ADImpute::network.coefficients)))
+    expect_warning(tryCatch(Impute(sce = sce, cores = 2, do = "SCRABBLE",
+        net.coef = ADImpute::network.coefficients)))
+
 })

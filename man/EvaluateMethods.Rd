@@ -4,10 +4,10 @@
 \alias{EvaluateMethods}
 \title{Imputation method evaluation on training set}
 \usage{
-EvaluateMethods(data, do = c('Baseline', 'DrImpute', 'Network'),
-write = FALSE, train.ratio = .7, train.only = TRUE, mask.ratio = .1,
-outdir = getwd(), scale = 1, pseudo.count = 1, labels = NULL,
-cell.clusters = 2, drop_thre = NULL, type = 'count',
+EvaluateMethods(data, sce = NULL, do = c('Baseline', 'DrImpute',
+'Network'), write = FALSE, train.ratio = .7, train.only = TRUE,
+mask.ratio = .1, outdir = getwd(), scale = 1, pseudo.count = 1,
+labels = NULL, cell.clusters = 2, drop_thre = NULL, type = 'count',
 cores = BiocParallel::bpworkers(BPPARAM),
 BPPARAM = BiocParallel::SnowParam(type = "SOCK"),
 net.coef = ADImpute::network.coefficients, net.implementation = 'iteration',
@@ -16,6 +16,8 @@ tr.length = ADImpute::transcript_length, bulk = NULL, ...)
 \arguments{
 \item{data}{matrix; normalized counts, not logged (genes as rows and samples
 as columns)}
+
+\item{sce}{SingleCellExperiment; normalized counts and associated metadata.}
 
 \item{do}{character; choice of methods to be used for imputation. Currently
 supported methods are \code{'Baseline'}, \code{'DrImpute'} and
@@ -75,7 +77,13 @@ samples)}
 \item{...}{additional parameters to pass to network-based imputation}
 }
 \value{
-character; best performing method in the training set for each gene
+\itemize{
+    \item if \code{sce} is provided: returns a SingleCellExperiment with the
+    best performing method per gene stored as row-features. Access via
+    \code{SingleCellExperiment::int_elementMetadata(sce)$ADImpute$methods}.
+    \item if \code{sce} is not provided: returns a character with the best
+    performing method in the training set for each gene
+}
 }
 \description{
 \code{EvaluateMethods} returns the best-performing imputation

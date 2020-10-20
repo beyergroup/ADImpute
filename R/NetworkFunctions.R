@@ -123,7 +123,7 @@ ImputeNetParallel <- function(drop.mat, arranged,
                 break
             }
             if ((i%%5) == 0) {
-                message("Iteration", i, "/", max.iter, "\n")
+                message(paste("Iteration", i, "/", max.iter, "\n"))
             }
 
             new <- round(arranged$network %*% arranged$centered[p, ], 2)

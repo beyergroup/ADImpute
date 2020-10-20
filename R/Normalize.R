@@ -18,9 +18,11 @@
 #' @description \code{NormalizeRPM} performs RPM normalization, with possibility
 #' to log the result
 #'
-#' @usage NormalizeRPM(data, log = FALSE, scale = 1, pseudo.count = 1)
+#' @usage NormalizeRPM(data, sce = NULL, log = FALSE, scale = 1,
+#' pseudo.count = 1)
 #'
 #' @param data matrix; raw data (genes as rows and samples as columns)
+#' @param sce SingleCellExperiment; raw data
 #' @param log logical; log RPMs?
 #' @param scale integer; scale factor to divide RPMs by
 #' @param pseudo.count numeric; if \code{log = TRUE}, value to add to RPMs in
@@ -33,7 +35,13 @@
 #'
 #' @export
 #'
-NormalizeRPM <- function(data, log = FALSE, scale = 1, pseudo.count = 1) {
+NormalizeRPM <- function(data, sce = NULL, log = FALSE, scale = 1,
+    pseudo.count = 1) {
+
+    if(!is.null(sce)){
+        DataCheck_SingleCellExperiment(sce, normalized = FALSE)
+        data <- SingleCellExperiment::counts(sce)
+    }
 
     # check input data
     data <- DataCheck_Matrix(data)
@@ -41,16 +49,29 @@ NormalizeRPM <- function(data, log = FALSE, scale = 1, pseudo.count = 1) {
     # divide by million RPK in sample - transcripts per million (TPM)
     data <- sweep(data, 2, STATS = colSums(data)/(10^6), FUN = "/")
 
+    if(!is.null(sce))
+        SingleCellExperiment::cpm(sce) <- data
+
     data <- data/scale
+
+    if(!is.null(sce))
+        SingleCellExperiment::normcounts(sce) <- data
 
     if (log) {
         if (pseudo.count == 0) {
             warning("Using 0 pseudocount: Inf may be generated.\n")
         }
         data <- log2(data + pseudo.count)
+
+        if(!is.null(sce))
+            SingleCellExperiment::logcounts(sce) <- data
     }
 
-    return(data)
+    if(is.null(sce)){
+        return(data)
+    } else{
+        return(sce)
+    }
 }
 
 
@@ -59,10 +80,11 @@ NormalizeRPM <- function(data, log = FALSE, scale = 1, pseudo.count = 1) {
 #' @description \code{NormalizeTPM} performs TPM normalization, with possibility
 #' to log the result
 #'
-#' @usage NormalizeTPM(data, tr_length = NULL, log = FALSE, scale = 1,
-#' pseudo.count = 1)
+#' @usage NormalizeTPM(data, sce = NULL, tr_length = NULL, log = FALSE,
+#' scale = 1, pseudo.count = 1)
 #'
 #' @param data matrix; raw data (genes as rows and samples as columns)
+#' @param sce SingleCellExperiment; raw data
 #' @param tr_length data.frame with at least 2 columns: 'hgnc_symbol'
 #' and 'transcript_length'
 #' @param log logical; log TPMs?
@@ -81,13 +103,18 @@ NormalizeRPM <- function(data, log = FALSE, scale = 1, pseudo.count = 1) {
 #'
 #' @export
 #'
-NormalizeTPM <- function(data, tr_length = NULL, log = FALSE, scale = 1,
-    pseudo.count = 1) {
+NormalizeTPM <- function(data, sce = NULL, tr_length = NULL, log = FALSE,
+    scale = 1, pseudo.count = 1) {
 
     if (is.null(tr_length))
         tr_length <- ADImpute::transcript_length
 
     tr_length <- DataCheck_TrLength(tr_length)
+
+    if(!is.null(sce)){
+        DataCheck_SingleCellExperiment(sce, normalized = FALSE)
+        data <- SingleCellExperiment::counts(sce)
+    }
 
     # check input data
     data <- DataCheck_Matrix(data)
@@ -107,14 +134,21 @@ NormalizeTPM <- function(data, tr_length = NULL, log = FALSE, scale = 1,
     # divide by million RPK in sample - transcripts per million (TPM)
     data <- sweep(data, 2, STATS = colSums(data)/(10^6), FUN = "/")
 
+    if(!is.null(sce))
+        SingleCellExperiment::tpm(sce) <- data
+
     data <- data/scale
 
+    if(!is.null(sce))
+        SingleCellExperiment::normcounts(sce) <- data
+
     if (log) {
-        if (pseudo.count == 0) {
+        if (pseudo.count == 0)
             warning("Using 0 pseudocount: Inf may be generated.\n")
-        }
         data <- log2(data + pseudo.count)
+        if(!is.null(sce))
+            SingleCellExperiment::logcounts(sce) <- data
     }
 
-    return(data)
+    if(is.null(sce)){ return(data) } else{ return(sce) }
 }
