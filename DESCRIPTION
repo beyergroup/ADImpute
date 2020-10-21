@@ -1,7 +1,7 @@
 Package: ADImpute
 Type: Package
 Title: Adaptive Dropout Imputer (ADImpute)
-Version: 0.99.2
+Version: 0.99.3
 Description: Single-cell RNA sequencing (scRNA-seq) methods are typically unable
     to quantify the expression levels of all genes in a cell, creating a need
     for the computational prediction of missing values (‘dropout imputation’).
