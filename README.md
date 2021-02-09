@@ -2,6 +2,7 @@
 <!-- badges: start -->
 [![Build Status](https://travis-ci.com/anacarolinaleote/ADImpute.svg?branch=master)](https://travis-ci.com/anacarolinaleote/ADImpute)
   [![Build status](https://ci.appveyor.com/api/projects/status/qsslj60tuvcg75vr?svg=true)](https://ci.appveyor.com/project/anacarolinaleote/adimpute)
+[![Codecov test coverage](https://codecov.io/gh/anacarolinaleote/ADImpute/branch/master/graph/badge.svg)](https://codecov.io/gh/anacarolinaleote/ADImpute?branch=master)
 <!-- badges: end -->
 
 # ADImpute

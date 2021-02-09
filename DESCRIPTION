@@ -41,7 +41,8 @@ Suggests:
     BiocStyle,
     knitr,
     rmarkdown,
-    testthat
+    testthat,
+    covr
 biocViews:
     GeneExpression,
     Network,
