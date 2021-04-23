@@ -21,39 +21,39 @@
 CreateArgCheck <- function(missing = NULL, match = NULL, acceptable = NULL,
     null = NULL) {
 
-    Check <- ArgumentCheck::newArgCheck()
-
+    coll <- checkmate::makeAssertCollection()
+    
     # errors for missing arguments
-    if (!is.null(missing)) {
-        for (varname in names(missing)) {
-            if (missing[[varname]]) {
-                ArgumentCheck::addError(paste("A value for ", varname,
-                    " was not provided", sep = "'"), Check)
+    if (!is.null(missing)){
+        for(varname in names(missing)){
+            if (missing[[varname]]){
+                coll$push(paste0("A value for ", varname, 
+                                 " was not provided", sep = "'"))
             }
         }
     }
 
     # errors for arguments outside of predefined options
-    if (!(is.null(match)) & !(is.null(acceptable))) {
+    if (!is.null(match) & !is.null(acceptable))){
         for (varname in names(match)) {
-            if (!(match[[varname]] %in% acceptable[[varname]]))
-                ArgumentCheck::addError(paste(NULL, varname, " must be one of ",
-                    paste(acceptable[[varname]], collapse = "', '"), NULL,
-                    sep = "'"), Check)
+            checkmate::assert_subset(x = match[[varname]], 
+                                     choices = acceptable[[varname]], 
+                                     .var.name = varname, 
+                                     add = coll)
         }
     }
 
-    # errors for NULL arguments
-    if (!is.null(null)) {
+    # error for NULL arguments
+    if (!is.null(null)){
         for (varname in names(null)) {
-            if (null[[varname]]) {
-                ArgumentCheck::addError(paste(NULL, varname,
-                    " must have non-NULL value", sep = "'"), Check)
+            if (null[[varname]]){
+                coll$push(paste(NULL, varname, " must have a non-NULL value",
+                                sep = "'"))
             }
         }
     }
 
-    return(Check)
+    return(coll)
 }
 
 
