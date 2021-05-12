@@ -22,24 +22,24 @@ CreateArgCheck <- function(missing = NULL, match = NULL, acceptable = NULL,
     null = NULL) {
 
     coll <- checkmate::makeAssertCollection()
-    
+
     # errors for missing arguments
     if (!is.null(missing)){
         for(varname in names(missing)){
             if (missing[[varname]]){
-                coll$push(paste0("A value for ", varname, 
-                                 " was not provided", sep = "'"))
+                coll$push(paste0("A value for ", varname,
+                    " was not provided", sep = "'"))
             }
         }
     }
 
     # errors for arguments outside of predefined options
-    if (!is.null(match) & !is.null(acceptable))){
+    if (!is.null(match) & !is.null(acceptable)){
         for (varname in names(match)) {
-            checkmate::assert_subset(x = match[[varname]], 
-                                     choices = acceptable[[varname]], 
-                                     .var.name = varname, 
-                                     add = coll)
+            checkmate::assert_subset(x = match[[varname]],
+                choices = acceptable[[varname]],
+                .var.name = varname,
+                add = coll)
         }
     }
 

@@ -107,17 +107,17 @@ best-performing methods indicated in \code{method.choice}. Currently
 supported methods are:
 \itemize{
     \item \code{Baseline}: imputation with average expression across all
-    cells in the dataset. See \code{\link{ImputeBaseline}}.
+cells in the dataset. See \code{\link{ImputeBaseline}}.
     \item Previously published approaches: \code{DrImpute} and \code{SAVER}.
     \item \code{Network}: leverages information from a gene regulatory
-    network to predicted expression of genes that are not quantified based on
-    quantified interacting genes, in the same cell. See
-    \code{\link{ImputeNetwork}}.
+network to predicted expression of genes that are not quantified based on
+quantified interacting genes, in the same cell. See
+\code{\link{ImputeNetwork}}.
     \item \code{Ensemble}: is based on results on a training subset of the
-    data at hand, indicating which method best predicts the expression of
-    each gene. These results are supplied via \code{method.choice}. Applies
-    the imputation results of the best performing method to the zero entries
-    of each gene.
+data at hand, indicating which method best predicts the expression of
+each gene. These results are supplied via \code{method.choice}. Applies
+the imputation results of the best performing method to the zero entries
+of each gene.
 }
 If \code{'Ensemble'} is included in \code{do}, \code{method.choice} has to
 be provided (use output from \code{EvaluateMethods()}).
