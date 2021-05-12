@@ -8,7 +8,7 @@ test_that("EvaluateMethods works with matrix input", {
     # entries are within appropriate methods
     expect_true(all(methods %in% c("Baseline","Network","DrImpute")))
 
-    # test that it throws an appropriate error when no data
+    # test that it throws an error when no data
     expect_error(EvaluateMethods(data = NULL, net.coef = ADImpute::demo_net,
                                     cores = 2))
     # when no network coefficients
@@ -19,8 +19,7 @@ test_that("EvaluateMethods works with matrix input", {
                     net.coef = ADImpute::demo_net, cores = 2, do = NULL))
     # when wrong methods are passed
     expect_error(EvaluateMethods(data = ADImpute::demo_data,
-                    net.coef = ADImpute::demo_net, cores = 2, do = "wrong"),
-                   paste0("Please provide at least one supported method"))
+                    net.coef = ADImpute::demo_net, cores = 2, do = "wrong"))
 })
 
 sce <- NormalizeRPM(sce = ADImpute::demo_sce)
@@ -37,7 +36,7 @@ test_that("EvaluateMethods works with SingleCellExperiment input", {
     expect_true(all(stats::na.omit(methods) %in% c("Baseline","Network",
         "DrImpute")))
 
-    # when no network coefficients
+    # when no network coefficientsD
     expect_error(EvaluateMethods(sce = sce, net.coef = NULL, cores = 2))
     # when no valid methods
     expect_error(EvaluateMethods(sce = sce, net.coef = ADImpute::demo_net,
@@ -68,8 +67,7 @@ test_that("Impute works with matrix input", {
     # when wrong methods are passed
     expect_error(Impute(data = ADImpute::demo_data,
                         net.coef = ADImpute::demo_net,
-                        method.choice = methods, cores = 2, do = "wrong"),
-                 "Please provide at least one supported method")
+                        method.choice = methods, cores = 2, do = "wrong"))
     expect_warning(Impute(data = ADImpute::demo_data,
                           net.coef = ADImpute::demo_net,
                           method.choice = methods, cores = 2, do = c("Baseline",

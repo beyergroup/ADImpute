@@ -113,10 +113,14 @@ EvaluateMethods <- function(data, sce = NULL, do = c("Baseline", "DrImpute",
         DataCheck_SingleCellExperiment(sce)
         data <- SingleCellExperiment::normcounts(sce)
     }
+<<<<<<< HEAD
     Check <- CreateArgCheck(missing = list(data = missing(data)),
         match = list(type = type), acceptable = list(type = c("TPM", "count")),
         null = list(net.coef = is.null(net.coef), data = is.null(data)))
     checkmate::reportAssertions(Check)
+=======
+    CheckArguments(environment())
+>>>>>>> Removed dependency ArgumentCheck
     data <- DataCheck_Matrix(data)
     tr.length <- DataCheck_TrLength(tr.length)
 

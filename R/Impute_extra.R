@@ -48,7 +48,7 @@ ImputeScImpute <- function(data, labeled, drop_thre, Kcluster, labels = NULL,
         common <- intersect(rownames(data), tr_length$hgnc_symbol)
         data <- data[common, ]
         genelen <- tr_length[match(common, tr_length$hgnc_symbol),
-                             "transcript_length"]
+            "transcript_length"]
     }
 
     if (labeled == TRUE & is.null(labels))

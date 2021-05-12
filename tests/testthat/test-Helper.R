@@ -1,3 +1,15 @@
+
+test_that("CheckArguments works", {
+
+  do = "Baseline"; write = FALSE; train.ratio = .7; sce = NULL; data = NULL;
+  drop_thre = 4; labels = NULL; tr.length = NULL; bulk = NULL; mask.ratio = -1;
+  folds = 2; scale = 2; pseudocount = 1; cell.clusters = NULL; cores = 1;
+  type = "oops"; net.implementation = "wrong"; train.only = "yes"
+  expect_error(CheckArguments(environment()))
+
+})
+
+
 testdata1 <- matrix(data = as.numeric(NA), nrow = 5, ncol = 5,
                     dimnames = list(paste("Gene", seq_len(5)),
                                     paste("Cell", seq_len(5))))
