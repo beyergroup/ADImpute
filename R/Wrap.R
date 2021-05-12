@@ -17,7 +17,7 @@
 #'
 #' @usage EvaluateMethods(data, sce = NULL, do = c('Baseline', 'DrImpute',
 #' 'Network'), write = FALSE, train.ratio = .7, train.only = TRUE,
-#' mask.ratio = .1, outdir = getwd(), scale = 1, pseudo.count = 1,
+#' mask.ratio = .1, folds = 1, outdir = getwd(), scale = 1, pseudo.count = 1,
 #' labels = NULL, cell.clusters = 2, drop_thre = NULL, type = 'count',
 #' cores = BiocParallel::bpworkers(BPPARAM),
 #' BPPARAM = BiocParallel::SnowParam(type = "SOCK"),
@@ -39,6 +39,8 @@
 #' @param train.only logical; if TRUE define only a training dataset, if
 #' FALSE writes and returns both training and validation sets (defaults to TRUE)
 #' @param mask.ratio numeric; ratio of samples to be masked per gene
+#' @param folds numeric; number of cross-validation repeats to determine the
+#' best method per gene (defaults to 1)
 #' @param outdir character; path to directory where output files are written.
 #' Defaults to working directory
 #' @param scale integer; scaling factor to divide all expression levels by
@@ -99,7 +101,7 @@
 #'
 EvaluateMethods <- function(data, sce = NULL, do = c("Baseline", "DrImpute",
         "Network"), write = FALSE, train.ratio = 0.7, train.only = TRUE,
-    mask.ratio = 0.1, outdir = getwd(), scale = 1, pseudo.count = 1,
+    mask.ratio = 0.1, folds = 1, outdir = getwd(), scale = 1, pseudo.count = 1,
     labels = NULL, cell.clusters = 2, drop_thre = NULL, type = "count",
     cores = BiocParallel::bpworkers(BPPARAM),
     BPPARAM = BiocParallel::SnowParam(type = "SOCK"),
@@ -130,20 +132,21 @@ EvaluateMethods <- function(data, sce = NULL, do = c("Baseline", "DrImpute",
         on.exit(setwd(savedir))
     }
 
-    train_data <- CreateTrainData(data, train.ratio = train.ratio,
-        train.only = train.only, mask = mask.ratio, write = write)
+    # repeatedly create, impute and evaluate training data
+    MSE_array <- replicate(folds, CrossValidateImputation(data = data,
+        train.ratio = train.ratio, train.only = train.only,
+        mask.ratio = mask.ratio, do = do, write = write, scale = scale,
+        pseudo.count = pseudo.count, labels = labels, cell.clusters =
+            cell.clusters, drop_thre = drop_thre, type = type, tr.length =
+            tr.length, bulk = bulk, cores = cores, BPPARAM = BPPARAM, net.coef =
+            net.coef, net.implementation = net.implementation, ...),
+        simplify = "array")
 
-    train_imputed <- Impute(data = train_data$mask, do = do[do != "Ensemble"],
-        write = write, outdir = getwd(), scale = scale,
-        pseudo.count = pseudo.count, labels = labels,
-        cell.clusters = cell.clusters, drop_thre = drop_thre, type = type,
-        tr.length = tr.length, bulk = bulk, cores = cores, BPPARAM = BPPARAM,
-        net.coef = net.coef, net.implementation = net.implementation, ...)
+    # aggregate MSE results from folds
+    MSE <- AggregateMSEArray(MSE_array, aggr.method = "median")
 
     # Run optimum choice
-    choice <- ChooseMethod(real = round(train_data$train, 2),
-            masked = round(train_data$mask, 2),
-        imputed = train_imputed, write.to.file = write)
+    choice <- ChooseMethod(MSE, write.to.file = write)
 
     return(ReturnChoice(sce, choice))
 }

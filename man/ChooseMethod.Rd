@@ -4,17 +4,11 @@
 \alias{ChooseMethod}
 \title{Method choice per gene}
 \usage{
-ChooseMethod(real, masked, imputed, write.to.file = TRUE)
+ChooseMethod(MSE, write.to.file = TRUE)
 }
 \arguments{
-\item{real}{matrix; original gene expression data, i.e. before masking
-(genes as rows and samples as columns)}
-
-\item{masked}{matrix, logical indicating which entries were masked
-(genes as rows and samples as columns)}
-
-\item{imputed}{list; list of matrices with imputation results for all
-considered methods}
+\item{MSE}{matrix; matrix with genes in rows and methods in columns, where
+entries correspond to the the method's MSE for the specific gene.}
 
 \item{write.to.file}{logical; should the output be written to a file?}
 }
@@ -26,11 +20,9 @@ character; best performing method in the training set for each gene
 imputation based on performance on each gene in training data
 }
 \details{
-The imputed values are compared to the real ones for every masked
-entry in \code{real}. The Mean Squared Error
-is computed for all masked entries per gene and the method with the best
-performance is chosen for each gene.
+The method with the best performance (lowest MSE) is chosen for each
+gene.
 }
 \seealso{
-\code{\link{ComputeMSEGenewise}}
+\code{\link{ComputeMSE}}
 }

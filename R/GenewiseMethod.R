@@ -13,11 +13,78 @@
 # <https://www.gnu.org/licenses/>.
 
 
+#' @title MSE aggregation across folds
+#'
+#' @usage AggregateMSEArray(MSE_array, aggr.method = "median")
+#'
+#' @description \code{AggregateMSEArray} aggregates the results of imputation
+#' across different cross-validation folds into one value of imputation error
+#' per gene and imputation method
+#'
+#' @param MSE_array array; array of matrices with genes in rows and methods in
+#' columns, where entries correspond to the the method's MSE for the specific
+#' gene.
+#' @param aggr.method character; method used to aggregate MSE results from
+#' different folds. One of 'mean', 'median' (defaults to 'median')
+#'
+#' @details The MSE results from different folds are aggregated into a single
+#' value per gene, according to \code{aggr.method}.
+#'
+#' @return matrix; matrix with genes in rows and methods in columns, where
+#' entries correspond to the MSE of the method when imputing the given gene
+#'
+#' @seealso \code{\link{ComputeMSE}}
+#'
+AggregateMSEArray <- function(MSE_array, aggr.method = "median"){
+
+    MSE <- switch(aggr.method,
+        "mean" = apply(MSE_array, 2, rowMeans),
+        "median" = apply(MSE_array, 1:2, stats::median))
+
+    return(MSE)
+}
+
+
 #' @title Method choice per gene
 #'
-#' @usage ChooseMethod(real, masked, imputed, write.to.file = TRUE)
+#' @usage ChooseMethod(MSE, write.to.file = TRUE)
 #'
 #' @description \code{ChooseMethod} determines the method for dropout
+#' imputation based on performance on each gene in training data
+#'
+#' @param MSE matrix; matrix with genes in rows and methods in columns, where
+#' entries correspond to the the method's MSE for the specific gene.
+#' @param write.to.file logical; should the output be written to a file?
+#'
+#' @details The method with the best performance (lowest MSE) is chosen for each
+#' gene.
+#'
+#' @return character; best performing method in the training set for each gene
+#'
+#' @seealso \code{\link{ComputeMSE}}
+#'
+ChooseMethod <- function(MSE, write.to.file = TRUE) {
+
+    # keep cases where at least 2 methods are available for comparison
+    MSE <- MSE[which(rowSums(!is.na(MSE)) >= 2), ]
+
+    message(paste("Imputation errors compared for", nrow(MSE), "genes\n"))
+
+    best_method <- vapply(apply(MSE, 1, which.min),
+        function(x) colnames(MSE)[x], FUN.VALUE = "Method_name")
+
+    if (write.to.file)
+        WriteTXT(cbind(MSE, best_method), "method_choices.txt")
+
+    return(best_method)
+}
+
+
+#' @title MSE computation
+#'
+#' @usage ComputeMSE(real, masked, imputed)
+#'
+#' @description \code{ComputeMSE} determines the method for dropout
 #' imputation based on performance on each gene in training data
 #'
 #' @param real matrix; original gene expression data, i.e. before masking
@@ -26,22 +93,24 @@
 #' (genes as rows and samples as columns)
 #' @param imputed list; list of matrices with imputation results for all
 #' considered methods
-#' @param write.to.file logical; should the output be written to a file?
 #'
 #' @details The imputed values are compared to the real ones for every masked
-#' entry in \code{real}. The Mean Squared Error
-#' is computed for all masked entries per gene and the method with the best
-#' performance is chosen for each gene.
+#' entry in \code{real}. The Mean Squared Error is computed for all masked
+#' entries per gene.
 #'
-#' @return character; best performing method in the training set for each gene
+#' @return matrix; matrix with genes in rows and methods in columns, where
+#' entries correspond to the the method's MSE for the specific gene.
 #'
 #' @seealso \code{\link{ComputeMSEGenewise}}
 #'
-ChooseMethod <- function(real, masked, imputed, write.to.file = TRUE) {
+ComputeMSE <- function(real, masked, imputed){
 
-    if (!all(colnames(real) == colnames(masked)) &&
-        all(rownames(real) == rownames(masked)))
+    if (!(all(colnames(real) == colnames(masked)) &&
+        all(rownames(real) == rownames(masked))))
         stop("Error! Dimnames before and after masking don't match.\n")
+
+    if(!is.list(imputed))
+        stop("Error! Imputation result for MSE computation is not a list.\n")
 
     which_masked <- (real != 0) & (masked == 0)  # distinguishes masked values
     # from dropouts in the original data
@@ -56,18 +125,7 @@ ChooseMethod <- function(real, masked, imputed, write.to.file = TRUE) {
     }, FUN.VALUE = 1))
     MSE <- do.call(cbind, MSE)
 
-    # keep cases where at least 2 methods are available for comparison
-    MSE <- MSE[which(rowSums(!is.na(MSE)) >= 2), ]
-
-    message(paste("Imputation errors computed for", nrow(MSE), "genes\n"))
-
-    best_method <- vapply(apply(MSE, 1, which.min),
-        function(x) colnames(MSE)[x], FUN.VALUE = "Method_name")
-
-    if (write.to.file)
-        WriteTXT(cbind(MSE, best_method), "method_choices.txt")
-
-    return(best_method)
+    return(MSE)
 }
 
 
@@ -144,6 +202,89 @@ CreateTrainData <- function(data, train.ratio = 0.7, train.only = TRUE,
 }
 
 
+#' @title Preparation of training data for method evaluation
+#'
+#' @usage CrossValidateImputation(data, train.ratio = 0.7, train.only = TRUE,
+#' mask.ratio = 0.1, do = c("Baseline", "DrImpute", "Network"), write = FALSE,
+#' scale = 1, pseudo.count = 1, labels = NULL, cell.clusters = 2,
+#' drop_thre = NULL, type = "count", cores = BiocParallel::bpworkers(BPPARAM),
+#' BPPARAM = BiocParallel::SnowParam(type = "SOCK"),
+#' net.coef = ADImpute::network.coefficients, net.implementation = "iteration",
+#' tr.length = ADImpute::transcript_length, bulk = NULL, ...)
+#'
+#' @description \code{CreateTrainingData} selects a subset of cells to use as
+#' training set and sets a portion (\code{mask}) of the non-zero entries in each
+#' row of the subset to zero
+#'
+#' @param data matrix; raw counts (genes as rows and samples as columns)
+#' @param train.ratio numeric; ratio of samples to be used for training
+#' @param train.only logical; if TRUE define only a training dataset, if
+#' FALSE writes and returns both training and validation sets (defaults to TRUE)
+#' @param mask.ratio numeric; ratio of samples to be masked per gene
+#' @param do character; choice of methods to be used for imputation. Currently
+#' supported methods are \code{'Baseline'}, \code{'DrImpute'} and
+#' \code{'Network'}. Not case-sensitive. Can include one or more methods. Non-
+#' supported methods will be ignored.
+#' @param write logical; write intermediary and imputed objects to files?
+#' @param scale integer; scaling factor to divide all expression levels by
+#' (defaults to 1)
+#' @param pseudo.count integer; pseudo-count to be added to expression levels
+#' to avoid log(0) (defaults to 1)
+#' @param labels character; vector specifying the cell type of each column of
+#' \code{data}
+#' @param cell.clusters integer; number of cell subpopulations
+#' @param drop_thre numeric; between 0 and 1 specifying the threshold to
+#' determine dropout values
+#' @param type A character specifying the type of values in the expression
+#' matrix. Can be 'count' or 'TPM'
+#' @param cores integer; number of cores used for paralell computation
+#' @param BPPARAM parallel back-end to be used during parallel computation.
+#' See \code{\link[BiocParallel]{BiocParallelParam-class}}.
+#' @param net.coef matrix; network coefficients. Please provide if you don't
+#' want to use ADImpute's network model. Must contain one first column 'O'
+#' acconting for the intercept of the model and otherwise be an adjacency matrix
+#' with hgnc_symbols in rows and columns. Doesn't have to be squared. See
+#' \code{ADImpute::demo_net} for a small example.
+#' @param net.implementation character; either 'iteration', for an iterative
+#' solution, or 'pseudoinv', to use Moore-Penrose pseudo-inversion as a
+#' solution. 'pseudoinv' is not advised for big data.
+#' @param tr.length matrix with at least 2 columns: 'hgnc_symbol' and
+#' 'transcript_length'
+#' @param bulk vector of reference bulk RNA-seq, if available (average across
+#' samples)
+#' @param ... additional parameters from \code{EvaluateMethods}
+#'
+#' @return matrix; matrix with genes in rows and methods in columns, where
+#' entries correspond to the the method's MSE for the specific gene.
+#'
+CrossValidateImputation <- function(data, train.ratio = 0.7, train.only = TRUE,
+    mask.ratio = 0.1, do = c("Baseline", "DrImpute", "Network"), write = FALSE,
+    scale = 1, pseudo.count = 1, labels = NULL, cell.clusters = 2,
+    drop_thre = NULL, type = "count", cores = BiocParallel::bpworkers(BPPARAM),
+    BPPARAM = BiocParallel::SnowParam(type = "SOCK"),
+    net.coef = ADImpute::network.coefficients, net.implementation = "iteration",
+    tr.length = ADImpute::transcript_length, bulk = NULL, ...){
+
+    # create training data
+    train_data <- CreateTrainData(data, train.ratio = train.ratio,
+        train.only = train.only, mask = mask.ratio)
+
+    # impute training data
+    train_imputed <- Impute(data = train_data$mask, sce = NULL,
+        do = do[do != "Ensemble"], write = write, outdir = getwd(),
+        scale = scale, pseudo.count = pseudo.count, labels = labels,
+        cell.clusters = cell.clusters, drop_thre = drop_thre, type = type,
+        tr.length = tr.length, bulk = bulk, cores = cores, BPPARAM = BPPARAM,
+        net.coef = net.coef, net.implementation = net.implementation, ...)
+
+    # compute MSE on training data
+    MSE <- ComputeMSE(real = round(train_data$train, 2),
+        masked = round(train_data$mask, 2), imputed = train_imputed)
+
+    return(MSE)
+}
+
+
 #' @title Masking of entries for performance evaluation
 #'
 #' @usage MaskData(data, write.to.file = FALSE, mask = .1)
@@ -170,7 +311,7 @@ MaskData <- function(data, write.to.file = FALSE, mask = 0.1) {
 
     # Original matrix sparcity
     sparcity <- sprintf("%.2f", sum(data == 0)/length(data))
-    message("original sparcity", sparcity, "\n")
+    message("original sparcity ", sparcity, "\n")
 
     rowmask <- round(mask * ncol(data))  # samples to be masked per gene
     maskable <- data != 0  # maskable samples (originally not dropouts)
@@ -181,7 +322,7 @@ MaskData <- function(data, write.to.file = FALSE, mask = 0.1) {
 
     data[maskidx] <- 0
     sparcity <- sprintf("%.2f", sum(data == 0)/length(data))
-    message("final sparcity", sparcity, "\n")
+    message("final sparcity ", sparcity, "\n")
 
     # Write to file
     if (write.to.file)
@@ -244,7 +385,9 @@ SplitData <- function(data, ratio = 0.7, write.to.file = FALSE,
 
     # Randomly select samples according to given ratio
     train_samples <- sample(colnames(data))[seq_len(round(ncol(data) * ratio))]
-    train_data <- data[, train_samples]
+    if(length(train_samples) == 0)
+        stop("No samples in training data - increase train.ratio\n")
+    train_data <- data[, train_samples, drop = FALSE]
 
     # Write to file
     if (write.to.file)
@@ -252,7 +395,8 @@ SplitData <- function(data, ratio = 0.7, write.to.file = FALSE,
 
     # Optionally create and write validation dataset
     if (!train.only) {
-        validation_data <- data[, !(colnames(data) %in% train_samples)]
+        validation_data <- data[, !(colnames(data) %in% train_samples),
+            drop = FALSE]
         if (write.to.file)
             WriteTXT(validation_data, "validation.txt")
     }

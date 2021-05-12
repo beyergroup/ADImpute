@@ -6,7 +6,7 @@
 \usage{
 EvaluateMethods(data, sce = NULL, do = c('Baseline', 'DrImpute',
 'Network'), write = FALSE, train.ratio = .7, train.only = TRUE,
-mask.ratio = .1, outdir = getwd(), scale = 1, pseudo.count = 1,
+mask.ratio = .1, folds = 1, outdir = getwd(), scale = 1, pseudo.count = 1,
 labels = NULL, cell.clusters = 2, drop_thre = NULL, type = 'count',
 cores = BiocParallel::bpworkers(BPPARAM),
 BPPARAM = BiocParallel::SnowParam(type = "SOCK"),
@@ -32,6 +32,9 @@ supported methods will be ignored.}
 FALSE writes and returns both training and validation sets (defaults to TRUE)}
 
 \item{mask.ratio}{numeric; ratio of samples to be masked per gene}
+
+\item{folds}{numeric; number of cross-validation repeats to determine the
+best method per gene (defaults to 1)}
 
 \item{outdir}{character; path to directory where output files are written.
 Defaults to working directory}
