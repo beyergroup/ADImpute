@@ -10,7 +10,7 @@ os:
 
 r:
   - devel
-  - bioc-devel
+  - release
 
 script:
     - R CMD build .
