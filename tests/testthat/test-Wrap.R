@@ -8,18 +8,22 @@ test_that("EvaluateMethods works with matrix input", {
     # entries are within appropriate methods
     expect_true(all(methods %in% c("Baseline","Network","DrImpute")))
 
-    # test that it throws an error when no data
+    # test that it throws an appropriate error when no data
     expect_error(EvaluateMethods(data = NULL, net.coef = ADImpute::demo_net,
-                                    cores = 2))
+                                    cores = 2),
+                 "'data' must have non-NULL value")
     # when no network coefficients
     expect_error(EvaluateMethods(data = ADImpute::demo_data, net.coef = NULL,
-                                    cores = 2))
+                                    cores = 2),
+                 "'net.coef' must have non-NULL value")
     # when no valid methods
     expect_error(EvaluateMethods(data = ADImpute::demo_data,
-                    net.coef = ADImpute::demo_net, cores = 2, do = NULL))
+                    net.coef = ADImpute::demo_net, cores = 2, do = NULL),
+                 "Please provide appropriate imputation methods")
     # when wrong methods are passed
     expect_error(EvaluateMethods(data = ADImpute::demo_data,
-                    net.coef = ADImpute::demo_net, cores = 2, do = "wrong"))
+                    net.coef = ADImpute::demo_net, cores = 2, do = "wrong"),
+                   paste0("Please provide at least one supported method"))
 })
 
 sce <- NormalizeRPM(sce = ADImpute::demo_sce)
@@ -60,14 +64,17 @@ test_that("Impute works with matrix input", {
 
     # test that it throws an appropriate error when no data
     expect_error(Impute(data = NULL, net.coef = ADImpute::demo_net,
-                        method.choice = methods, cores = 2))
+                        method.choice = methods, cores = 2),
+                 "'data' must have non-NULL value")
     # when no network coefficients
     expect_error(Impute(data = ADImpute::demo_data, net.coef = NULL,
-                        method.choice = methods, cores = 2))
+                        method.choice = methods, cores = 2),
+                 "'net.coef' must have non-NULL value")
     # when wrong methods are passed
     expect_error(Impute(data = ADImpute::demo_data,
                         net.coef = ADImpute::demo_net,
-                        method.choice = methods, cores = 2, do = "wrong"))
+                        method.choice = methods, cores = 2, do = "wrong"),
+                 "Please provide at least one supported method")
     expect_warning(Impute(data = ADImpute::demo_data,
                           net.coef = ADImpute::demo_net,
                           method.choice = methods, cores = 2, do = c("Baseline",
@@ -119,7 +126,8 @@ test_that("Impute works with SingleCellExperiment input", {
         function(m) expect_is(m, c("matrix", "dgCMatrix")))
 
     # when no network coefficients
-    expect_error(Impute(sce = sce, net.coef = NULL, cores = 2))
+    expect_error(Impute(sce = sce, net.coef = NULL, cores = 2),
+        "'net.coef' must have non-NULL value")
     # when wrong methods are passed
     expect_error(Impute(sce = sce, net.coef = ADImpute::demo_net, cores = 2,
         do = "wrong"), "Please provide at least one supported method")

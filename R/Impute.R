@@ -178,8 +178,9 @@ ImputeNetwork <- function(data, net.coef = NULL,
     message("Imputing data using network information\n")
 
     # Check arguments
-    checkmate::checkChoice(type, choices = c("iteration","pseudoinv"),
-        null.ok = FALSE)
+    Check <- CreateArgCheck(match = list(type = type), acceptable =
+                                list(type = c("iteration", "pseudoinv")))
+    ArgumentCheck::finishArgCheck(Check)
 
     # Limit data and network to genes common to both
     arranged <- ArrangeData(data, net.coef)

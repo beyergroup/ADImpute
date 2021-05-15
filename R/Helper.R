@@ -2,7 +2,8 @@
 
 #' @title Argument check
 #'
-<<<<<<< HEAD
+
+
 #' @usage CreateArgCheck(missing = NULL, match = NULL, acceptable = NULL,
 #' null = NULL)
 #'
@@ -86,15 +87,7 @@ CheckArguments <- function(env) {
     sapply(c("do","type","net.implementation"), function(x)
         checkmate::assertCharacter(get(x, env), add = checks, null.ok = FALSE))
 
-    checkmate::assertChoice(get("type", envir = env),
-        choices = c("count","tpm"), add = checks, null.ok = FALSE)
-    checkmate::assertChoice(get("net.implementation"),
-        choices = c("iteration","pseudoinv"), add = checks, null.ok = FALSE)
-
-    sapply(c("write","train.only"), function(x)
-        checkmate::assertLogical(get(x, env), add = checks, null.ok = FALSE))
-
-    return(checkmate::reportAssertions(checks))
+    return(Check)
 }
 
 
