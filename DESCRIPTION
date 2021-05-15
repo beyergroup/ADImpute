@@ -22,8 +22,8 @@ LazyData: true
 Depends:
     R (>= 4.0)
 Imports:
-    ArgumentCheck,
     BiocParallel,
+    checkmate,
     data.table,
     DrImpute,
     kernlab,

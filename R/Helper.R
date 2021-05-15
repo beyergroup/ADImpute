@@ -56,38 +56,6 @@ CreateArgCheck <- function(missing = NULL, match = NULL, acceptable = NULL,
     }
 
     return(coll)
-
-#' @usage CheckArguments(env)
-#'
-#' @description \code{CheckArguments} tests for argument correctness.
-#'
-#' @param env environment where variables to test are located.
-#'
-#' @return collection of all messages.
-#'
-CheckArguments <- function(env) {
-
-    initial_check <- checkmate::checkEnvironment(env, contains = c("data","sce",
-        "drop_thre","labels","tr.length","bulk","train.ratio","mask.ratio",
-        "folds","scale","pseudocount","cell.clusters","cores","do","type",
-        "net.implementation","write","train.only"), null.ok = TRUE)
-    if(initial_check != TRUE)
-        return(initial_check)
-
-    checks <- checkmate::makeAssertCollection()
-
-    sapply(c("train.ratio","mask.ratio","folds","scale","pseudocount",
-        "cell.clusters","cores"), function(x)
-            checkmate::assertNumber(get(x, env), add = checks, null.ok = FALSE))
-
-    sapply(c("train.ratio","mask.ratio"),
-        function(x) checkmate::assertNumeric(get(x, env), lower = 0,
-                upper = 1, add = checks, null.ok = FALSE))
-
-    sapply(c("do","type","net.implementation"), function(x)
-        checkmate::assertCharacter(get(x, env), add = checks, null.ok = FALSE))
-
-    return(Check)
 }
 
 

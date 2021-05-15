@@ -118,7 +118,6 @@ EvaluateMethods <- function(data, sce = NULL, do = c("Baseline", "DrImpute",
         match = list(type = type), acceptable = list(type = c("TPM", "count")),
         null = list(net.coef = is.null(net.coef), data = is.null(data)))
     checkmate::reportAssertions(Check)
-    CheckArguments(environment())
 
     data <- DataCheck_Matrix(data)
     tr.length <- DataCheck_TrLength(tr.length)
@@ -298,11 +297,7 @@ Impute <- function(data, sce = NULL, do = "Ensemble", write = FALSE,
     check <- CreateArgCheck(missing = list(data = missing(data)),
         match = list(type = type), acceptable = list(type = c("TPM", "count")),
         null = list(net.coef = is.null(net.coef), data = is.null(data)))
-<<<<<<< HEAD
     checkmate::reportAssertions(check)
-=======
-    ArgumentCheck::finishArgCheck(check)
->>>>>>> Revert "Removed dependency ArgumentCheck"
     CheckArguments_Impute(data, method.choice, do, tr.length, labels,
         cell.clusters, true.zero.thr, drop_thre)
     data <- DataCheck_Matrix(data); tr.length <- DataCheck_TrLength(tr.length)
