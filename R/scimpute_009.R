@@ -60,10 +60,10 @@ find_neighbors_labeled <- function(count_hv, J, Kcluster = NULL, cores,
     if (npc < 3) { npc <- 3 }
     mat_pcs <- t(pca$x[, seq_len(npc)])
     dist_cells_list <- BiocParallel::bplapply(seq_along(cell_inds),
-                                              function(id1) { d <- vapply(seq_len(id1), function(id2) {
-                                                sse <- sum((mat_pcs[, id1] - mat_pcs[, id2])^2)
-                                                sqrt(sse) }, FUN.VALUE = 1)
-                                              return(c(d, rep(0, length(cell_inds) - id1))) }, BPPARAM = BPPARAM)
+        function(id1) { d <- vapply(seq_len(id1), function(id2) {
+          sse <- sum((mat_pcs[, id1] - mat_pcs[, id2])^2)
+          sqrt(sse) }, FUN.VALUE = 1)
+          return(c(d, rep(0, length(cell_inds) - id1))) }, BPPARAM = BPPARAM)
     dist_cells <- matrix(0, nrow = length(cell_inds),
                          ncol = length(cell_inds))
     for (cellid in seq_along(cell_inds)) {
@@ -127,7 +127,7 @@ find_va_genes <- function(parslist, subcount) {
   dcheck1 <- stats::dgamma(mu + 1, shape = parslist[, "alpha"],
                            rate = parslist[, "beta"])
   dcheck2 <- stats::dnorm(mu + 1, mean = parslist[, "mu"], sd = parslist[,
-                                                                         "sigma"])
+      "sigma"])
   sgene3 <- which(dcheck1 >= dcheck2 & mu <= 1)
   sgene <- union(sgene1, sgene3)
   valid_genes <- setdiff(valid_genes, sgene)
@@ -201,8 +201,8 @@ get_mix_parameters <- function(count, point = log10(1.01), path,
 
 
 imputation_model8 <- function(count, labeled = FALSE, point, drop_thre = 0.5,
-                              Kcluster = 10, cores = BiocParallel::bpworkers(BPPARAM),
-                              BPPARAM = BiocParallel::SnowParam(type = "SOCK")) {
+    Kcluster = 10, cores = BiocParallel::bpworkers(BPPARAM),
+    BPPARAM = BiocParallel::SnowParam(type = "SOCK")) {
 
   count <- as.matrix(count); I <- nrow(count)
   J <- ncol(count); count_imp <- count; count_hv <- find_hv_genes(count, I, J)
@@ -234,15 +234,15 @@ imputation_model8 <- function(count, labeled = FALSE, point, drop_thre = 0.5,
   dist_cells <- dist_cells + t(dist_cells)
   } else { message("inferring cell similarities ...")
     neighbors_res <- find_neighbors_unlabeled(count_hv = count_hv, J = J,
-                                              Kcluster = Kcluster, cores = cores, BPPARAM = BPPARAM)
+        Kcluster = Kcluster, cores = cores, BPPARAM = BPPARAM)
     dist_cells <- neighbors_res$dist_cells; clust <- neighbors_res$clust }
   return(MixtureModel(count, clust, cores, BPPARAM = BPPARAM, drop_thre))
 }
 
 
 imputation_wlabel_model8 <- function(count, labeled, cell_labels = NULL, point,
-                                     drop_thre, Kcluster = NULL, cores = BiocParallel::bpworkers(BPPARAM),
-                                     BPPARAM = BiocParallel::SnowParam(type = "SOCK")) {
+    drop_thre, Kcluster = NULL, cores = BiocParallel::bpworkers(BPPARAM),
+    BPPARAM = BiocParallel::SnowParam(type = "SOCK")) {
 
   if (!(is.character(cell_labels) | is.numeric(cell_labels) |
         is.integer(cell_labels))) {
@@ -253,7 +253,7 @@ imputation_wlabel_model8 <- function(count, labeled, cell_labels = NULL, point,
   count_hv <- find_hv_genes(count, I, J)
   message("searching candidate neighbors ... ")
   neighbors_res <- find_neighbors_labeled(count_hv = count_hv, J = J,
-                                          cores = cores, BPPARAM = BPPARAM, cell_labels = cell_labels)
+      cores = cores, BPPARAM = BPPARAM, cell_labels = cell_labels)
   dist_list <- neighbors_res$dist_list; clust <- neighbors_res$clust
 
   nclust <- sum(!is.na(unique(clust)))
@@ -262,8 +262,8 @@ imputation_wlabel_model8 <- function(count, labeled, cell_labels = NULL, point,
   for (cc in seq_len(nclust)) {
     message(paste("estimating dropout probability for type", cc, "..."))
     parslist <- get_mix_parameters(count = count[, which(clust == cc),
-                                                 drop = FALSE], point = log10(1.01), cores = cores,
-                                   BPPARAM = BPPARAM)
+        drop = FALSE], point = log10(1.01), cores = cores,
+        BPPARAM = BPPARAM)
     cells <- which(clust == cc); if (length(cells) <= 1) { next }
     message("searching for valid genes ...")
     valid_genes <- find_va_genes(parslist, subcount = count[, cells])
@@ -298,8 +298,8 @@ MixtureModel <- function(count, clust, cores, BPPARAM, drop_thre) {
   for (cc in seq_len(nclust)) {
     message(paste("estimating dropout probability for type", cc, "..."))
     parslist <- get_mix_parameters(count = count[, which(clust == cc),
-                                                 drop = FALSE], point = log10(1.01), cores = cores,
-                                   BPPARAM = BPPARAM)
+        drop = FALSE], point = log10(1.01), cores = cores,
+        BPPARAM = BPPARAM)
     cells <- which(clust == cc)
     if (length(cells) <= 1) {
       next

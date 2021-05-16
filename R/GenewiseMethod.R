@@ -47,7 +47,7 @@ AggregateMSEArray <- function(MSE_array, aggr.method = "median"){
 
 #' @title Method choice per gene
 #'
-#' @usage ChooseMethod(MSE, write.to.file = TRUE)
+#' @usage ChooseMethod(MSE, write.to.file = FALSE)
 #'
 #' @description \code{ChooseMethod} determines the method for dropout
 #' imputation based on performance on each gene in training data
@@ -63,7 +63,10 @@ AggregateMSEArray <- function(MSE_array, aggr.method = "median"){
 #'
 #' @seealso \code{\link{ComputeMSE}}
 #'
-ChooseMethod <- function(MSE, write.to.file = TRUE) {
+ChooseMethod <- function(MSE, write.to.file = FALSE) {
+
+    checkmate::makeAssertion(MSE, var.name = "MSE matrix",
+        res = checkmate::checkMatrix(MSE, min.cols = 2), collection = NULL)
 
     # keep cases where at least 2 methods are available for comparison
     MSE <- MSE[which(rowSums(!is.na(MSE)) >= 2), ]

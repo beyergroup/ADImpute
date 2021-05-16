@@ -4,7 +4,7 @@
 \alias{ChooseMethod}
 \title{Method choice per gene}
 \usage{
-ChooseMethod(MSE, write.to.file = TRUE)
+ChooseMethod(MSE, write.to.file = FALSE)
 }
 \arguments{
 \item{MSE}{matrix; matrix with genes in rows and methods in columns, where

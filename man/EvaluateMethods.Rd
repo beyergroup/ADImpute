@@ -6,7 +6,7 @@
 \usage{
 EvaluateMethods(data, sce = NULL, do = c('Baseline', 'DrImpute',
 'Network'), write = FALSE, train.ratio = .7, train.only = TRUE,
-mask.ratio = .1, folds = 1, outdir = getwd(), scale = 1, pseudo.count = 1,
+mask.ratio = .1, folds = 5, outdir = getwd(), scale = 1, pseudo.count = 1,
 labels = NULL, cell.clusters = 2, drop_thre = NULL, type = 'count',
 cores = BiocParallel::bpworkers(BPPARAM),
 BPPARAM = BiocParallel::SnowParam(type = "SOCK"),
@@ -104,7 +104,7 @@ method resulting in a lowest imputation error for each gene is chosen.
 # Normalize demo data
 norm_data <- NormalizeRPM(ADImpute::demo_data)
 method_choice <- EvaluateMethods(norm_data, do = c('Baseline','DrImpute'),
-cores = 2)
+cores = 2, folds = 1)
 
 }
 \seealso{

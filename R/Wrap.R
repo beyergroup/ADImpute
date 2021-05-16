@@ -17,7 +17,7 @@
 #'
 #' @usage EvaluateMethods(data, sce = NULL, do = c('Baseline', 'DrImpute',
 #' 'Network'), write = FALSE, train.ratio = .7, train.only = TRUE,
-#' mask.ratio = .1, folds = 1, outdir = getwd(), scale = 1, pseudo.count = 1,
+#' mask.ratio = .1, folds = 5, outdir = getwd(), scale = 1, pseudo.count = 1,
 #' labels = NULL, cell.clusters = 2, drop_thre = NULL, type = 'count',
 #' cores = BiocParallel::bpworkers(BPPARAM),
 #' BPPARAM = BiocParallel::SnowParam(type = "SOCK"),
@@ -91,7 +91,7 @@
 #' # Normalize demo data
 #' norm_data <- NormalizeRPM(ADImpute::demo_data)
 #' method_choice <- EvaluateMethods(norm_data, do = c('Baseline','DrImpute'),
-#' cores = 2)
+#' cores = 2, folds = 1)
 #'
 #' @seealso \code{\link{ImputeBaseline}},
 #' \code{\link{ImputeDrImpute}},
@@ -101,7 +101,7 @@
 #'
 EvaluateMethods <- function(data, sce = NULL, do = c("Baseline", "DrImpute",
         "Network"), write = FALSE, train.ratio = 0.7, train.only = TRUE,
-    mask.ratio = 0.1, folds = 1, outdir = getwd(), scale = 1, pseudo.count = 1,
+    mask.ratio = 0.1, folds = 5, outdir = getwd(), scale = 1, pseudo.count = 1,
     labels = NULL, cell.clusters = 2, drop_thre = NULL, type = "count",
     cores = BiocParallel::bpworkers(BPPARAM),
     BPPARAM = BiocParallel::SnowParam(type = "SOCK"),
@@ -113,12 +113,10 @@ EvaluateMethods <- function(data, sce = NULL, do = c("Baseline", "DrImpute",
         DataCheck_SingleCellExperiment(sce)
         data <- SingleCellExperiment::normcounts(sce)
     }
-
     Check <- CreateArgCheck(missing = list(data = missing(data)),
         match = list(type = type), acceptable = list(type = c("TPM", "count")),
         null = list(net.coef = is.null(net.coef), data = is.null(data)))
     checkmate::reportAssertions(Check)
-
     data <- DataCheck_Matrix(data)
     tr.length <- DataCheck_TrLength(tr.length)
 
@@ -136,14 +134,12 @@ EvaluateMethods <- function(data, sce = NULL, do = c("Baseline", "DrImpute",
 
     # repeatedly create, impute and evaluate training data
     MSE_array <- replicate(folds, CrossValidateImputation(data = data,
-        train.ratio = train.ratio, train.only = train.only,
-        mask.ratio = mask.ratio, do = do, write = write, scale = scale,
-        pseudo.count = pseudo.count, labels = labels, cell.clusters =
-            cell.clusters, drop_thre = drop_thre, type = type, tr.length =
-            tr.length, bulk = bulk, cores = cores, BPPARAM = BPPARAM, net.coef =
-            net.coef, net.implementation = net.implementation, ...),
-        simplify = "array")
-
+        train.ratio = train.ratio, train.only = train.only, mask.ratio =
+            mask.ratio, do = do, write = write, scale = scale, pseudo.count =
+            pseudo.count, labels = labels, cell.clusters = cell.clusters,
+        drop_thre = drop_thre, type = type, tr.length = tr.length, bulk = bulk,
+        cores = cores, BPPARAM = BPPARAM, net.coef = net.coef,
+        net.implementation = net.implementation, ...), simplify = "array")
     # aggregate MSE results from folds
     MSE <- AggregateMSEArray(MSE_array, aggr.method = "median")
 

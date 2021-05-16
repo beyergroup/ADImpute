@@ -90,43 +90,78 @@ test_that("ComputeMSE works", {
         imputed = testimplist))
 })
 
+mse_mat <- CrossValidateImputation(data = ADImpute::demo_data)
+mse_array <- replicate(2,
+        CrossValidateImputation(data = cbind(ADImpute::demo_data,
+            ADImpute::demo_data)))
 
 test_that("CrossValidateImputation works", {
-
-    mse_mat <- CrossValidateImputation(data = ADImpute::demo_data)
 
     # returns MSE matrix, of the right dimensions (ncol = # tested methods)
     expect_is(mse_mat, "matrix")
     expect_equal(ncol(mse_mat),3)
 
+    # there is randomness in it
+    expect_false(identical(mse_array[,,1], mse_array[,,2]))
 })
 
 
-test_that("AggregateMSE works", {
+mse_array_1 <- replicate(1, CrossValidateImputation(data = ADImpute::demo_data))
+mse_array_7 <- replicate(7, CrossValidateImputation(data = ADImpute::demo_data,
+        do = "Baseline"))
 
-    # works with array of 3rd dim 1
+test_that("AggregateMSEArray works", {
 
     # does the median correctly
+    expect_equivalent(median(mse_array_7[1,1,]),
+        AggregateMSEArray(mse_array_7)[1,])
 
     # does the mean correctly
+    expect_equivalent(median(mse_array_7[1,1,]),
+        AggregateMSEArray(mse_array_7, aggr.method = "median")[1,])
 
     # returns a matrix
+    expect_is(AggregateMSEArray(mse_array), "matrix")
+
+    # works with array of 3rd dim 1 (1 fold)
+    expect_is(AggregateMSEArray(mse_array_1), "matrix")
+    expect_equal(dim(AggregateMSEArray(mse_array_1)),
+                 dim(mse_array_1)[1:2])
 
 })
 
+
+mse <- AggregateMSEArray(mse_array)
+mse_7 <- AggregateMSEArray(mse_array_7)
+
+methods <- ChooseMethod(mse)
 
 test_that("ChooseMethod works", {
 
     # outputs a character vector
+    expect_is(methods, "character")
+    expect_vector(methods)
 
     # picks the lowest MSE method
+    expect_true(all(sapply(names(methods),
+        function(gene) min(na.omit(mse[gene,])) == mse[gene, methods[gene]])))
 
     # gets rid of MSEs non-NA in less than 2 methods
-
-
-    # it writes when supposed to
-
+    expect_false(any(names(which(rowSums(!is.na(mse)) < 2)) %in%
+        names(methods)))
 
     # outputs message
+    expect_message(ChooseMethod(mse))
+
+    # writes when supposed to
+    dir.create(dir1 <- file.path(tempdir(), "testdir"))
+    cur_dir <- getwd(); setwd(dir1)
+    expect_false(file.exists("method_choices.txt"))
+    ChooseMethod(mse, write = TRUE)
+    expect_true(file.exists("method_choices.txt"))
+    setwd(cur_dir); unlink(dir1, recursive = TRUE)
+
+    # throws error when only 1 method is passed
+    expect_error(ChooseMethod(mse_7))
 })
 

@@ -48,7 +48,7 @@ ImputeScImpute <- function(data, labeled, drop_thre, Kcluster, labels = NULL,
         common <- intersect(rownames(data), tr_length$hgnc_symbol)
         data <- data[common, ]
         genelen <- tr_length[match(common, tr_length$hgnc_symbol),
-                             "transcript_length"]
+            "transcript_length"]
     }
 
     if (labeled == TRUE & is.null(labels))
@@ -77,7 +77,7 @@ ImputeScImpute <- function(data, labeled, drop_thre, Kcluster, labels = NULL,
     # Read scImpute output
     res <- as.matrix(readRDS(paste0(outdir, "scimpute_count.rds")))
 
-    tryCatch(unlink(outdir, recursive = T))
+    tryCatch(unlink(outdir, recursive = TRUE))
 
     return(res)
 }

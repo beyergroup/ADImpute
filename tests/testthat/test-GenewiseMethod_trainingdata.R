@@ -42,7 +42,7 @@ test_that("SplitData works", {
   cur_dir <- getwd(); setwd(dir1)
   expect_false(file.exists("training.txt"))
   expect_false(file.exists("validation.txt"))
-  SplitData(testdata, write.to.file = T)
+  SplitData(testdata, write.to.file = TRUE)
   expect_true(file.exists("training.txt"))
   # outputs correct validation when asked to
   out <- SplitData(testdata, train.only = FALSE, write.to.file = TRUE)
