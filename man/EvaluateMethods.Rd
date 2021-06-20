@@ -5,10 +5,10 @@
 \title{Imputation method evaluation on training set}
 \usage{
 EvaluateMethods(data, sce = NULL, do = c('Baseline', 'DrImpute',
-'Network'), write = FALSE, train.ratio = .7, train.only = TRUE,
-mask.ratio = .1, folds = 5, outdir = getwd(), scale = 1, pseudo.count = 1,
-labels = NULL, cell.clusters = 2, drop_thre = NULL, type = 'count',
-cores = BiocParallel::bpworkers(BPPARAM),
+'Network'), metric = "cor", write = FALSE, train.ratio = .7,
+train.only = TRUE, mask.ratio = .1, folds = 5, outdir = getwd(), scale = 1,
+pseudo.count = 1, labels = NULL, cell.clusters = 2, drop_thre = NULL,
+type = 'count', cores = BiocParallel::bpworkers(BPPARAM),
 BPPARAM = BiocParallel::SnowParam(type = "SOCK"),
 net.coef = ADImpute::network.coefficients, net.implementation = 'iteration',
 tr.length = ADImpute::transcript_length, bulk = NULL, ...)
@@ -23,6 +23,9 @@ as columns)}
 supported methods are \code{'Baseline'}, \code{'DrImpute'} and
 \code{'Network'}. Not case-sensitive. Can include one or more methods. Non-
 supported methods will be ignored.}
+
+\item{metric}{character; metric for evaluating the quality of imputation.
+Can be 'cor' for Pearson correlation or 'mse' for Mean Squared Error.}
 
 \item{write}{logical; write intermediary and imputed objects to files?}
 

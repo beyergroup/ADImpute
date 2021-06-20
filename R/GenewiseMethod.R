@@ -13,73 +13,167 @@
 # <https://www.gnu.org/licenses/>.
 
 
-#' @title MSE aggregation across folds
+#' @title Performance aggregation across folds
 #'
-#' @usage AggregateMSEArray(MSE_array, aggr.method = "median")
+#' @usage AggregateArray(array, aggr.method = "median")
 #'
-#' @description \code{AggregateMSEArray} aggregates the results of imputation
+#' @description \code{AggregateArray} aggregates the results of imputation
 #' across different cross-validation folds into one value of imputation error
 #' per gene and imputation method
 #'
-#' @param MSE_array array; array of matrices with genes in rows and methods in
-#' columns, where entries correspond to the the method's MSE for the specific
-#' gene.
-#' @param aggr.method character; method used to aggregate MSE results from
-#' different folds. One of 'mean', 'median' (defaults to 'median')
+#' @param array array; array of matrices with genes in rows and
+#' methods in columns, where entries correspond to the the method's performance
+#' for the specific gene.
+#' @param aggr.method character; method used to aggregate performance results
+#' from different folds. One of 'mean', 'median' (defaults to 'median').
 #'
-#' @details The MSE results from different folds are aggregated into a single
+#' @details The performances from different folds are aggregated into a single
 #' value per gene, according to \code{aggr.method}.
 #'
 #' @return matrix; matrix with genes in rows and methods in columns, where
-#' entries correspond to the MSE of the method when imputing the given gene
+#' entries correspond to the performance of the method when imputing the given
+#' gene.
 #'
 #' @seealso \code{\link{ComputeMSE}}
 #'
-AggregateMSEArray <- function(MSE_array, aggr.method = "median"){
+AggregateArray <- function(array, aggr.method = "median"){
 
-    MSE <- switch(aggr.method,
-        "mean" = apply(MSE_array, 2, rowMeans),
-        "median" = apply(MSE_array, 1:2, stats::median))
+    performance <- switch(aggr.method,
+        "mean" = apply(array, 2, rowMeans),
+        "median" = apply(array, 1:2, stats::median))
 
-    return(MSE)
+    return(performance)
 }
 
 
 #' @title Method choice per gene
 #'
-#' @usage ChooseMethod(MSE, write.to.file = FALSE)
+#' @usage ChooseMethod(performance, metric, write.to.file = FALSE)
 #'
 #' @description \code{ChooseMethod} determines the method for dropout
 #' imputation based on performance on each gene in training data
 #'
-#' @param MSE matrix; matrix with genes in rows and methods in columns, where
-#' entries correspond to the the method's MSE for the specific gene.
+#' @param performance matrix; matrix with genes in rows and methods in columns,
+#' where entries correspond to the the method's performance for the specific
+#' gene.
+#' @param metric character; metric for evaluating the quality of imputation.
+#' Can be 'cor' for Pearson correlation or 'mse' for Mean Squared Error.
 #' @param write.to.file logical; should the output be written to a file?
 #'
-#' @details The method with the best performance (lowest MSE) is chosen for each
-#' gene.
+#' @details The method with the best performance (lowest MSE or highest
+#' correlation) is chosen for each gene.
 #'
 #' @return character; best performing method in the training set for each gene
 #'
 #' @seealso \code{\link{ComputeMSE}}
 #'
-ChooseMethod <- function(MSE, write.to.file = FALSE) {
+ChooseMethod <- function(performance, metric, write.to.file = FALSE) {
 
-    checkmate::makeAssertion(MSE, var.name = "MSE matrix",
-        res = checkmate::checkMatrix(MSE, min.cols = 2), collection = NULL)
+    checkmate::makeAssertion(performance, var.name = "performance matrix",
+        res = checkmate::checkMatrix(performance, min.cols = 2),
+        collection = NULL)
 
     # keep cases where at least 2 methods are available for comparison
-    MSE <- MSE[which(rowSums(!is.na(MSE)) >= 2), ]
+    performance <- performance[which(rowSums(!is.na(performance)) >= 2), ]
 
-    message(paste("Imputation errors compared for", nrow(MSE), "genes\n"))
+    message(paste("Imputation performance compared for", nrow(performance),
+        "genes\n"))
 
-    best_method <- vapply(apply(MSE, 1, which.min),
-        function(x) colnames(MSE)[x], FUN.VALUE = "Method_name")
+    if(tolower(metric) == "mse"){
+        best_method <- vapply(apply(performance, 1, which.min),
+            function(x) colnames(performance)[x], FUN.VALUE = "Method_name")
+    } else if(tolower(metric) == "cor"){
+        best_method <- vapply(apply(performance, 1, which.max),
+            function(x) colnames(performance)[x], FUN.VALUE = "Method_name")
+    }
 
     if (write.to.file)
-        WriteTXT(cbind(MSE, best_method), "method_choices.txt")
+        WriteTXT(cbind(performance, best_method), "method_choices.txt")
 
     return(best_method)
+}
+
+
+#' @title Correlation computation
+#'
+#' @usage ComputeCor(real, masked, imputed)
+#'
+#' @description \code{ComputeCor} computes imputation performance based on
+#' Pearson correlation
+#'
+#' @param real matrix; original gene expression data, i.e. before masking
+#' (genes as rows and samples as columns)
+#' @param masked matrix, logical indicating which entries were masked
+#' (genes as rows and samples as columns)
+#' @param imputed list; list of matrices with imputation results for all
+#' considered methods
+#'
+#' @details The imputed values are compared to the real ones for every masked
+#' entry in \code{real}. The Pearson correlation is computed for all masked
+#' entries per gene.
+#'
+#' @return matrix; matrix with genes in rows and methods in columns, where
+#' entries correspond to the the method's Pearson correlation for the specific
+#' gene.
+#'
+#' @seealso \code{\link{ComputeCorGenewise}}
+#'
+ComputeCor <- function(real, masked, imputed){
+
+  if (!(all(colnames(real) == colnames(masked)) &&
+        all(rownames(real) == rownames(masked))))
+    stop("Error! Dimnames before and after masking don't match.\n")
+
+  if(!is.list(imputed))
+    stop("Error! Imputation result for MSE computation is not a list.\n")
+
+  which_masked <- (real != 0) & (masked == 0)  # distinguishes masked values
+  # from dropouts in the original data
+
+  cor <- lapply(imputed, function(x) vapply(rownames(real), function(g) {
+    if (g %in% rownames(x)) {
+      ComputeCorGenewise(real = real[g, ], masked = which_masked[g, ],
+          imputed = x[g, ], baseline = identical(x, imputed$Baseline))
+    } else {
+      NA
+    }
+  }, FUN.VALUE = 1))
+  cor <- do.call(cbind, cor)
+
+  return(cor)
+}
+
+
+#' @title Computation of Pearson correlation per gene
+#'
+#' @usage ComputeCorGenewise(real, masked, imputed, baseline)
+#'
+#' @description \code{ComputeCorGenewise} computes the Pearson correlation of
+#' dropout imputation for a given gene.
+#'
+#' @param real numeric; vector of original expression of a given gene (before
+#' masking)
+#' @param masked logical; vector indicating which entries were masked for a
+#' given gene
+#' @param imputed matrix; imputation results for a given imputation method
+#' @param baseline logical; is this baseline imputation?
+#'
+#' @return Pearson correlation of all imputations indicated by \code{masked}
+#'
+ComputeCorGenewise <- function(real, masked, imputed, baseline) {
+    if (baseline) {
+        cor <- NA
+    } else {
+        index <- masked & (imputed != 0)  # not assess if value is not imputed
+        if (sum(index) < 10) {
+            cor <- NA
+        } else {
+            cor <- stats::cor.test(imputed[index], real[index],
+                method = "pearson")$estimate
+        }
+    }
+
+    return(cor)
 }
 
 
@@ -87,8 +181,8 @@ ChooseMethod <- function(MSE, write.to.file = FALSE) {
 #'
 #' @usage ComputeMSE(real, masked, imputed)
 #'
-#' @description \code{ComputeMSE} determines the method for dropout
-#' imputation based on performance on each gene in training data
+#' @description \code{ComputeMSE} computes imputation performance based on the
+#' Mean Squared Error (MSE)
 #'
 #' @param real matrix; original gene expression data, i.e. before masking
 #' (genes as rows and samples as columns)
@@ -208,8 +302,8 @@ CreateTrainData <- function(data, train.ratio = 0.7, train.only = TRUE,
 #' @title Preparation of training data for method evaluation
 #'
 #' @usage CrossValidateImputation(data, train.ratio = 0.7, train.only = TRUE,
-#' mask.ratio = 0.1, do = c("Baseline", "DrImpute", "Network"), write = FALSE,
-#' scale = 1, pseudo.count = 1, labels = NULL, cell.clusters = 2,
+#' mask.ratio = 0.1, do = c("Baseline", "DrImpute", "Network"), metric = "cor",
+#' write = FALSE, scale = 1, pseudo.count = 1, labels = NULL, cell.clusters = 2,
 #' drop_thre = NULL, type = "count", cores = BiocParallel::bpworkers(BPPARAM),
 #' BPPARAM = BiocParallel::SnowParam(type = "SOCK"),
 #' net.coef = ADImpute::network.coefficients, net.implementation = "iteration",
@@ -228,6 +322,8 @@ CreateTrainData <- function(data, train.ratio = 0.7, train.only = TRUE,
 #' supported methods are \code{'Baseline'}, \code{'DrImpute'} and
 #' \code{'Network'}. Not case-sensitive. Can include one or more methods. Non-
 #' supported methods will be ignored.
+#' @param metric character; metric for evaluating the quality of imputation.
+#' Can be 'cor' for Pearson correlation or 'mse' for Mean Squared Error.
 #' @param write logical; write intermediary and imputed objects to files?
 #' @param scale integer; scaling factor to divide all expression levels by
 #' (defaults to 1)
@@ -261,9 +357,10 @@ CreateTrainData <- function(data, train.ratio = 0.7, train.only = TRUE,
 #' entries correspond to the the method's MSE for the specific gene.
 #'
 CrossValidateImputation <- function(data, train.ratio = 0.7, train.only = TRUE,
-    mask.ratio = 0.1, do = c("Baseline", "DrImpute", "Network"), write = FALSE,
-    scale = 1, pseudo.count = 1, labels = NULL, cell.clusters = 2,
-    drop_thre = NULL, type = "count", cores = BiocParallel::bpworkers(BPPARAM),
+    mask.ratio = 0.1, do = c("Baseline", "DrImpute", "Network"), metric = "cor",
+    write = FALSE, scale = 1, pseudo.count = 1, labels = NULL,
+    cell.clusters = 2, drop_thre = NULL, type = "count",
+    cores = BiocParallel::bpworkers(BPPARAM),
     BPPARAM = BiocParallel::SnowParam(type = "SOCK"),
     net.coef = ADImpute::network.coefficients, net.implementation = "iteration",
     tr.length = ADImpute::transcript_length, bulk = NULL, ...){
@@ -280,11 +377,13 @@ CrossValidateImputation <- function(data, train.ratio = 0.7, train.only = TRUE,
         tr.length = tr.length, bulk = bulk, cores = cores, BPPARAM = BPPARAM,
         net.coef = net.coef, net.implementation = net.implementation, ...)
 
-    # compute MSE on training data
-    MSE <- ComputeMSE(real = round(train_data$train, 2),
-        masked = round(train_data$mask, 2), imputed = train_imputed)
-
-    return(MSE)
+    # compute performance on training data
+    performance <- switch(tolower(metric),
+        "mse" = ComputeMSE(real = round(train_data$train, 2),
+            masked = round(train_data$mask, 2), imputed = train_imputed),
+        "cor" = ComputeCor(real = round(train_data$train, 2),
+            masked = round(train_data$mask, 2), imputed = train_imputed))
+    return(performance)
 }
 
 

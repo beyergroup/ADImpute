@@ -5,8 +5,8 @@
 \title{Preparation of training data for method evaluation}
 \usage{
 CrossValidateImputation(data, train.ratio = 0.7, train.only = TRUE,
-mask.ratio = 0.1, do = c("Baseline", "DrImpute", "Network"), write = FALSE,
-scale = 1, pseudo.count = 1, labels = NULL, cell.clusters = 2,
+mask.ratio = 0.1, do = c("Baseline", "DrImpute", "Network"), metric = "cor",
+write = FALSE, scale = 1, pseudo.count = 1, labels = NULL, cell.clusters = 2,
 drop_thre = NULL, type = "count", cores = BiocParallel::bpworkers(BPPARAM),
 BPPARAM = BiocParallel::SnowParam(type = "SOCK"),
 net.coef = ADImpute::network.coefficients, net.implementation = "iteration",
@@ -26,6 +26,9 @@ FALSE writes and returns both training and validation sets (defaults to TRUE)}
 supported methods are \code{'Baseline'}, \code{'DrImpute'} and
 \code{'Network'}. Not case-sensitive. Can include one or more methods. Non-
 supported methods will be ignored.}
+
+\item{metric}{character; metric for evaluating the quality of imputation.
+Can be 'cor' for Pearson correlation or 'mse' for Mean Squared Error.}
 
 \item{write}{logical; write intermediary and imputed objects to files?}
 

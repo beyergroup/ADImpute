@@ -4,11 +4,15 @@
 \alias{ChooseMethod}
 \title{Method choice per gene}
 \usage{
-ChooseMethod(MSE, write.to.file = FALSE)
+ChooseMethod(performance, metric, write.to.file = FALSE)
 }
 \arguments{
-\item{MSE}{matrix; matrix with genes in rows and methods in columns, where
-entries correspond to the the method's MSE for the specific gene.}
+\item{performance}{matrix; matrix with genes in rows and methods in columns,
+where entries correspond to the the method's performance for the specific
+gene.}
+
+\item{metric}{character; metric for evaluating the quality of imputation.
+Can be 'cor' for Pearson correlation or 'mse' for Mean Squared Error.}
 
 \item{write.to.file}{logical; should the output be written to a file?}
 }
@@ -20,8 +24,8 @@ character; best performing method in the training set for each gene
 imputation based on performance on each gene in training data
 }
 \details{
-The method with the best performance (lowest MSE) is chosen for each
-gene.
+The method with the best performance (lowest MSE or highest
+correlation) is chosen for each gene.
 }
 \seealso{
 \code{\link{ComputeMSE}}

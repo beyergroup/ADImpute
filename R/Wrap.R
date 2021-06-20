@@ -16,10 +16,10 @@
 #' @title Imputation method evaluation on training set
 #'
 #' @usage EvaluateMethods(data, sce = NULL, do = c('Baseline', 'DrImpute',
-#' 'Network'), write = FALSE, train.ratio = .7, train.only = TRUE,
-#' mask.ratio = .1, folds = 5, outdir = getwd(), scale = 1, pseudo.count = 1,
-#' labels = NULL, cell.clusters = 2, drop_thre = NULL, type = 'count',
-#' cores = BiocParallel::bpworkers(BPPARAM),
+#' 'Network'), metric = "cor", write = FALSE, train.ratio = .7,
+#' train.only = TRUE, mask.ratio = .1, folds = 5, outdir = getwd(), scale = 1,
+#' pseudo.count = 1, labels = NULL, cell.clusters = 2, drop_thre = NULL,
+#' type = 'count', cores = BiocParallel::bpworkers(BPPARAM),
 #' BPPARAM = BiocParallel::SnowParam(type = "SOCK"),
 #' net.coef = ADImpute::network.coefficients, net.implementation = 'iteration',
 #' tr.length = ADImpute::transcript_length, bulk = NULL, ...)
@@ -34,6 +34,8 @@
 #' supported methods are \code{'Baseline'}, \code{'DrImpute'} and
 #' \code{'Network'}. Not case-sensitive. Can include one or more methods. Non-
 #' supported methods will be ignored.
+#' @param metric character; metric for evaluating the quality of imputation.
+#' Can be 'cor' for Pearson correlation or 'mse' for Mean Squared Error.
 #' @param write logical; write intermediary and imputed objects to files?
 #' @param train.ratio numeric; ratio of samples to be used for training
 #' @param train.only logical; if TRUE define only a training dataset, if
@@ -100,10 +102,10 @@
 #' @export
 #'
 EvaluateMethods <- function(data, sce = NULL, do = c("Baseline", "DrImpute",
-        "Network"), write = FALSE, train.ratio = 0.7, train.only = TRUE,
-    mask.ratio = 0.1, folds = 5, outdir = getwd(), scale = 1, pseudo.count = 1,
-    labels = NULL, cell.clusters = 2, drop_thre = NULL, type = "count",
-    cores = BiocParallel::bpworkers(BPPARAM),
+        "Network"), metric = "cor", write = FALSE, train.ratio = 0.7,
+    train.only = TRUE, mask.ratio = 0.1, folds = 5, outdir = getwd(), scale = 1,
+    pseudo.count = 1, labels = NULL, cell.clusters = 2, drop_thre = NULL,
+    type = "count", cores = BiocParallel::bpworkers(BPPARAM),
     BPPARAM = BiocParallel::SnowParam(type = "SOCK"),
     net.coef = ADImpute::network.coefficients, net.implementation = "iteration",
     tr.length = ADImpute::transcript_length, bulk = NULL, ...) {
@@ -133,18 +135,19 @@ EvaluateMethods <- function(data, sce = NULL, do = c("Baseline", "DrImpute",
     }
 
     # repeatedly create, impute and evaluate training data
-    MSE_array <- replicate(folds, CrossValidateImputation(data = data,
+   performance_array <- replicate(folds, CrossValidateImputation(data = data,
         train.ratio = train.ratio, train.only = train.only, mask.ratio =
-            mask.ratio, do = do, write = write, scale = scale, pseudo.count =
-            pseudo.count, labels = labels, cell.clusters = cell.clusters,
-        drop_thre = drop_thre, type = type, tr.length = tr.length, bulk = bulk,
-        cores = cores, BPPARAM = BPPARAM, net.coef = net.coef,
-        net.implementation = net.implementation, ...), simplify = "array")
+            mask.ratio, do = do, metric = metric, write = write, scale = scale,
+        pseudo.count = pseudo.count, labels = labels, cell.clusters =
+            cell.clusters, drop_thre = drop_thre, type = type, tr.length =
+            tr.length, bulk = bulk, cores = cores, BPPARAM = BPPARAM, net.coef =
+            net.coef, net.implementation = net.implementation, ...),
+        simplify = "array")
     # aggregate MSE results from folds
-    MSE <- AggregateMSEArray(MSE_array, aggr.method = "median")
+    performance <- AggregateArray(performance_array, aggr.method = "median")
 
     # Run optimum choice
-    choice <- ChooseMethod(MSE, write.to.file = write)
+    choice <- ChooseMethod(performance, metric, write.to.file = write)
 
     return(ReturnChoice(sce, choice))
 }

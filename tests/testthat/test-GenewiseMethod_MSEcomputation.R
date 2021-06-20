@@ -90,10 +90,10 @@ test_that("ComputeMSE works", {
         imputed = testimplist))
 })
 
-mse_mat <- CrossValidateImputation(data = ADImpute::demo_data)
+mse_mat <- CrossValidateImputation(data = ADImpute::demo_data, metric = "mse")
 mse_array <- replicate(2,
         CrossValidateImputation(data = cbind(ADImpute::demo_data,
-            ADImpute::demo_data)))
+            ADImpute::demo_data), metric = "mse"))
 
 test_that("CrossValidateImputation works", {
 
@@ -106,35 +106,36 @@ test_that("CrossValidateImputation works", {
 })
 
 
-mse_array_1 <- replicate(1, CrossValidateImputation(data = ADImpute::demo_data))
+mse_array_1 <- replicate(1, CrossValidateImputation(data = ADImpute::demo_data,
+        metric = "mse"))
 mse_array_7 <- replicate(7, CrossValidateImputation(data = ADImpute::demo_data,
-        do = "Baseline"))
+        do = "Baseline", metric = "mse"))
 
-test_that("AggregateMSEArray works", {
+test_that("AggregateArray works", {
 
     # does the median correctly
     expect_equivalent(median(mse_array_7[1,1,]),
-        AggregateMSEArray(mse_array_7)[1,])
+        AggregateArray(mse_array_7)[1,])
 
     # does the mean correctly
     expect_equivalent(median(mse_array_7[1,1,]),
-        AggregateMSEArray(mse_array_7, aggr.method = "median")[1,])
+        AggregateArray(mse_array_7, aggr.method = "median")[1,])
 
     # returns a matrix
-    expect_is(AggregateMSEArray(mse_array), "matrix")
+    expect_is(AggregateArray(mse_array), "matrix")
 
     # works with array of 3rd dim 1 (1 fold)
-    expect_is(AggregateMSEArray(mse_array_1), "matrix")
-    expect_equal(dim(AggregateMSEArray(mse_array_1)),
+    expect_is(AggregateArray(mse_array_1), "matrix")
+    expect_equal(dim(AggregateArray(mse_array_1)),
                  dim(mse_array_1)[1:2])
 
 })
 
 
-mse <- AggregateMSEArray(mse_array)
-mse_7 <- AggregateMSEArray(mse_array_7)
+mse <- AggregateArray(mse_array)
+mse_7 <- AggregateArray(mse_array_7)
 
-methods <- ChooseMethod(mse)
+methods <- ChooseMethod(mse, metric = "mse")
 
 test_that("ChooseMethod works", {
 
@@ -151,17 +152,17 @@ test_that("ChooseMethod works", {
         names(methods)))
 
     # outputs message
-    expect_message(ChooseMethod(mse))
+    expect_message(ChooseMethod(mse, metric = "mse"))
 
     # writes when supposed to
     dir.create(dir1 <- file.path(tempdir(), "testdir"))
     cur_dir <- getwd(); setwd(dir1)
     expect_false(file.exists("method_choices.txt"))
-    ChooseMethod(mse, write = TRUE)
+    ChooseMethod(mse, metric = "mse", write = TRUE)
     expect_true(file.exists("method_choices.txt"))
     setwd(cur_dir); unlink(dir1, recursive = TRUE)
 
     # throws error when only 1 method is passed
-    expect_error(ChooseMethod(mse_7))
+    expect_error(ChooseMethod(mse_7, metric = "mse"))
 })
 
